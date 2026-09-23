@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-archive-settings-layout>
     <x-slot name="module_title">
         <div>
             <div class="text-gray-400 text-[10px] font-bold mb-0.5 tracking-wider">إعدادات النظام</div>
@@ -10,7 +10,7 @@
 
     <div class="max-w-4xl mx-auto pb-10" x-data="archiveTypeForm()">
         
-        <form action="{{ route('settings.archive-types.store') }}" method="POST" class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 overflow-hidden">
+        <form action="{{ route('settings.archive.types.store') }}" method="POST" class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 overflow-hidden">
             @csrf
 
             <!-- Basic Info -->
@@ -116,4 +116,4 @@
         })
     </script>
     @endpush
-</x-app-layout>
+</x-archive-settings-layout>

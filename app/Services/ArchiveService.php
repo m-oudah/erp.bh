@@ -17,6 +17,7 @@ class ArchiveService
         UploadedFile $file,
         $documentName,
         $documentNo = null,
+        $documentCategoryId = null,
         $addedBy = null
     ) {
         // Validate extension if needed
@@ -37,6 +38,7 @@ class ArchiveService
             'document_name' => $documentName,
             'document_type' => $extension,
             'document_path' => $path,
+            'document_category_id' => $documentCategoryId,
             'added_by' => $addedBy ?? auth()->id(),
         ]);
 

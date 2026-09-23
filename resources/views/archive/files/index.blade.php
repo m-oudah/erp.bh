@@ -9,8 +9,16 @@
     <div class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 overflow-hidden">
         <div class="p-6 border-b border-gray-100 bg-gray-50/50">
             <form action="{{ route('archive.files.index') }}" method="GET" class="flex gap-4">
-                <div class="flex-1">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث برقم الهوية، رقم الملف، أو اسم المواطن..." class="w-full rounded-xl border-gray-200 focus:border-orange focus:ring-orange shadow-sm text-sm">
+                <div class="flex-1 flex gap-3">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث برقم الهوية، رقم الملف، أو اسم المواطن..." class="flex-1 rounded-xl border-gray-200 focus:border-orange focus:ring-orange shadow-sm text-sm">
+                    <select name="type_id" class="w-64 rounded-xl border-gray-200 focus:border-orange focus:ring-orange shadow-sm text-sm">
+                        <option value="">جميع أنواع الملفات</option>
+                        @foreach($types as $type)
+                            <option value="{{ $type->id }}" {{ request('type_id') == $type->id ? 'selected' : '' }}>
+                                {{ $type->name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <button type="submit" class="bg-navy hover:bg-navy-light text-white px-8 py-2 rounded-xl font-bold shadow-sm transition-colors">
                     تصفية
@@ -26,8 +34,7 @@
                     <tr>
                         <th class="px-6 py-4 font-bold">رقم الملف</th>
                         <th class="px-6 py-4 font-bold">الاسم</th>
-                        <th class="px-6 py-4 font-bold">رقم الهوية</th>
-                        <th class="px-6 py-4 font-bold">الجوال</th>
+                        <th class="px-6 py-4 font-bold">نوع الملف</th>
                         <th class="px-6 py-4 text-center font-bold">إجراءات</th>
                     </tr>
                 </thead>
@@ -36,8 +43,7 @@
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4 font-bold text-navy">{{ $file->file_no }}</td>
                         <td class="px-6 py-4 font-bold text-gray-800">{{ $file->file_name }}</td>
-                        <td class="px-6 py-4">{{ $file->id_no ?? '-' }}</td>
-                        <td class="px-6 py-4">{{ $file->file_mobile ?? '-' }}</td>
+                        <td class="px-6 py-4 text-orange-dark font-medium">{{ $file->fileType->name ?? 'غير محدد' }}</td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('archive.files.show', $file->id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors" title="عرض">

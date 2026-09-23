@@ -4,82 +4,132 @@ namespace App\Http\Controllers\Archive;
 
 use App\Http\Controllers\Controller;
 use App\Models\ArchiveFile;
+use App\Models\ArchiveFileType;
 use Illuminate\Http\Request;
 
 class ArchiveFileController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ArchiveFile::query();
+        $query = ArchiveFile::with('fileType')->latest();
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where('file_name', 'like', "%{$search}%")
-                  ->orWhere('file_no', 'like', "%{$search}%")
-                  ->orWhere('id_no', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('file_no', 'like', "%{$search}%")
+                  ->orWhere('file_name', 'like', "%{$search}%");
+            });
         }
 
-        $files = $query->latest()->paginate(15);
+        if ($request->filled('type_id')) {
+            $query->where('archive_file_type_id', $request->type_id);
+        }
+
+        $files = $query->paginate(20)->withQueryString();
+        $types = ArchiveFileType::where('is_active', true)->get();
         
-        return view('archive.files.index', compact('files'));
+        return view('archive.files.index', compact('files', 'types'));
     }
 
     public function create()
     {
-        $types = \App\Models\ArchiveFileType::with('fields')->where('is_active', true)->get();
+        $types = ArchiveFileType::with('fields')->where('is_active', true)->get();
         return view('archive.files.create', compact('types'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'file_no' => 'required|string|unique:archive_files,file_no',
+        $request->validate([
+            'archive_file_type_id' => 'required|exists:archive_file_types,id',
+            'file_no' => 'required|string|max:255|unique:archive_files,file_no',
             'file_name' => 'required|string|max:255',
-            'id_no' => 'nullable|string|max:50',
-            'file_mobile' => 'nullable|string|max:50',
-            'qetaa' => 'nullable|string|max:50',
-            'qasema' => 'nullable|string|max:50',
-            'file_date' => 'nullable|date',
-            'notes' => 'nullable|string',
         ]);
 
-        $file = ArchiveFile::create($validated);
+        $type = ArchiveFileType::with('fields')->findOrFail($request->archive_file_type_id);
+        
+        // Build dynamic validation rules
+        $dynamicRules = [];
+        $dynamicAttributes = [];
+        foreach ($type->fields as $field) {
+            $rule = $field->is_required ? 'required' : 'nullable';
+            if ($field->field_type == 'number') {
+                $rule .= '|numeric';
+            } elseif ($field->field_type == 'date') {
+                $rule .= '|date';
+            } else {
+                $rule .= '|string';
+            }
+            $dynamicRules['dynamic_data.' . $field->field_name] = $rule;
+            $dynamicAttributes['dynamic_data.' . $field->field_name] = $field->field_label;
+        }
+        
+        $request->validate($dynamicRules, [], $dynamicAttributes);
 
-        return redirect()->route('archive.files.show', $file->id)->with('success', 'تم إنشاء الملف المادي بنجاح.');
+        ArchiveFile::create([
+            'archive_file_type_id' => $request->archive_file_type_id,
+            'file_no' => $request->file_no,
+            'file_name' => $request->file_name,
+            'dynamic_data' => $request->dynamic_data ?? [],
+            'department_id' => auth()->id(),
+        ]);
+
+        return redirect()->route('archive.files.index')->with('success', 'تم إنشاء الملف بنجاح.');
     }
 
     public function show(ArchiveFile $file)
     {
-        $file->load('documents.addedBy');
-        return view('archive.files.show', compact('file'));
+        $file->load(['documents', 'fileType.fields']);
+        $categories = \App\Models\ArchiveDocumentCategory::where('is_active', true)->get();
+        return view('archive.files.show', compact('file', 'categories'));
     }
 
     public function edit(ArchiveFile $file)
     {
-        return view('archive.files.edit', compact('file'));
+        $types = ArchiveFileType::with('fields')->where('is_active', true)->get();
+        return view('archive.files.edit', compact('file', 'types'));
     }
 
     public function update(Request $request, ArchiveFile $file)
     {
-        $validated = $request->validate([
-            'file_no' => 'required|string|unique:archive_files,file_no,' . $file->id,
+        $request->validate([
+            'archive_file_type_id' => 'required|exists:archive_file_types,id',
+            'file_no' => 'required|string|max:255|unique:archive_files,file_no,' . $file->id,
             'file_name' => 'required|string|max:255',
-            'id_no' => 'nullable|string|max:50',
-            'file_mobile' => 'nullable|string|max:50',
-            'qetaa' => 'nullable|string|max:50',
-            'qasema' => 'nullable|string|max:50',
-            'file_date' => 'nullable|date',
-            'notes' => 'nullable|string',
         ]);
 
-        $file->update($validated);
+        $type = ArchiveFileType::with('fields')->findOrFail($request->archive_file_type_id);
+        
+        // Build dynamic validation rules
+        $dynamicRules = [];
+        $dynamicAttributes = [];
+        foreach ($type->fields as $field) {
+            $rule = $field->is_required ? 'required' : 'nullable';
+            if ($field->field_type == 'number') {
+                $rule .= '|numeric';
+            } elseif ($field->field_type == 'date') {
+                $rule .= '|date';
+            } else {
+                $rule .= '|string';
+            }
+            $dynamicRules['dynamic_data.' . $field->field_name] = $rule;
+            $dynamicAttributes['dynamic_data.' . $field->field_name] = $field->field_label;
+        }
+        
+        $request->validate($dynamicRules, [], $dynamicAttributes);
 
-        return redirect()->route('archive.files.show', $file->id)->with('success', 'تم تحديث بيانات الملف.');
+        $file->update([
+            'archive_file_type_id' => $request->archive_file_type_id,
+            'file_no' => $request->file_no,
+            'file_name' => $request->file_name,
+            'dynamic_data' => $request->dynamic_data ?? [],
+        ]);
+
+        return redirect()->route('archive.files.show', $file->id)->with('success', 'تم تحديث الملف بنجاح.');
     }
 
     public function destroy(ArchiveFile $file)
     {
         $file->delete();
-        return redirect()->route('archive.files.index')->with('success', 'تم الحذف بنجاح.');
+        return redirect()->route('archive.files.index')->with('success', 'تم حذف الملف بنجاح.');
     }
 }

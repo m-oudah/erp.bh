@@ -26,7 +26,6 @@ class ArchiveSettingsController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'fields' => 'required|array|min:1',
-            'fields.*.field_name' => 'required|string|alpha_dash',
             'fields.*.field_label' => 'required|string|max:255',
             'fields.*.field_type' => 'required|in:text,number,date,textarea',
             'fields.*.is_required' => 'nullable|boolean',
@@ -40,7 +39,7 @@ class ArchiveSettingsController extends Controller
 
         foreach ($request->fields as $index => $field) {
             $type->fields()->create([
-                'field_name' => strtolower($field['field_name']),
+                'field_name' => 'field_' . uniqid(),
                 'field_label' => $field['field_label'],
                 'field_type' => $field['field_type'],
                 'is_required' => isset($field['is_required']) ? true : false,
@@ -48,7 +47,7 @@ class ArchiveSettingsController extends Controller
             ]);
         }
 
-        return redirect()->route('settings.archive-types.index')->with('success', 'تم إضافة نوع الملف بنجاح.');
+        return redirect()->route('settings.archive.types.index')->with('success', 'تم إضافة نوع الملف بنجاح.');
     }
 
     public function edit(ArchiveFileType $archiveType)
@@ -63,7 +62,7 @@ class ArchiveSettingsController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'fields' => 'required|array|min:1',
-            'fields.*.field_name' => 'required|string|alpha_dash',
+            'fields.*.field_name' => 'nullable|string',
             'fields.*.field_label' => 'required|string|max:255',
             'fields.*.field_type' => 'required|in:text,number,date,textarea',
             'fields.*.is_required' => 'nullable|boolean',
@@ -79,7 +78,7 @@ class ArchiveSettingsController extends Controller
 
         foreach ($request->fields as $index => $field) {
             $archiveType->fields()->create([
-                'field_name' => strtolower($field['field_name']),
+                'field_name' => !empty($field['field_name']) ? strtolower($field['field_name']) : 'field_' . uniqid(),
                 'field_label' => $field['field_label'],
                 'field_type' => $field['field_type'],
                 'is_required' => isset($field['is_required']) && $field['is_required'] ? true : false,
@@ -87,7 +86,7 @@ class ArchiveSettingsController extends Controller
             ]);
         }
 
-        return redirect()->route('settings.archive-types.index')->with('success', 'تم تحديث نوع الملف بنجاح.');
+        return redirect()->route('settings.archive.types.index')->with('success', 'تم تحديث نوع الملف بنجاح.');
     }
 
     public function destroy(ArchiveFileType $archiveType)
@@ -98,6 +97,6 @@ class ArchiveSettingsController extends Controller
         }
 
         $archiveType->delete();
-        return redirect()->route('settings.archive-types.index')->with('success', 'تم حذف النوع بنجاح.');
+        return redirect()->route('settings.archive.types.index')->with('success', 'تم حذف النوع بنجاح.');
     }
 }

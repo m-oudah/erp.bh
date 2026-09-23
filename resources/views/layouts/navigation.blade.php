@@ -51,6 +51,13 @@
                         الملف الشخصي
                     </x-dropdown-link>
                     
+                    <x-dropdown-link :href="route('settings.index')" class="flex items-center gap-2">
+                        <x-heroicon-o-cog-6-tooth class="w-5 h-5 text-gray-400" />
+                        إعدادات النظام
+                    </x-dropdown-link>
+                    
+                    <hr class="my-1 border-gray-100">
+                    
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();" class="flex items-center gap-2 text-red-600 hover:text-red-700">

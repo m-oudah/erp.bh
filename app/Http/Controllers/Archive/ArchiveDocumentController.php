@@ -23,19 +23,35 @@ class ArchiveDocumentController extends Controller
             'archive_file_id' => 'required|exists:archive_files,id',
             'document_name' => 'required|string|max:255',
             'document_no' => 'nullable|string|max:255',
+            'document_category_id' => 'nullable|exists:archive_document_categories,id',
             'document_file' => 'required|file|mimes:pdf,doc,docx,png,jpg,jpeg|max:10240', // 10MB max
         ]);
 
         try {
-            $this->archiveService->storeDocument(
+            $document = $this->archiveService->storeDocument(
                 $request->archive_file_id,
                 $request->file('document_file'),
                 $request->document_name,
-                $request->document_no
+                $request->document_no,
+                $request->document_category_id
             );
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تم رفع الوثيقة بنجاح.',
+                    'document' => $document
+                ]);
+            }
 
             return back()->with('success', 'تم رفع الوثيقة بنجاح.');
         } catch (\Exception $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
             return back()->with('error', $e->getMessage());
         }
     }
@@ -47,5 +63,22 @@ class ArchiveDocumentController extends Controller
         
         $document->delete();
         return back()->with('success', 'تم حذف الوثيقة بنجاح.');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:archive_documents,id'
+        ]);
+
+        $documents = ArchiveDocument::whereIn('id', $request->ids)->get();
+
+        foreach ($documents as $document) {
+            Storage::disk('public')->delete($document->document_path);
+            $document->delete();
+        }
+
+        return back()->with('success', 'تم حذف الوثائق المحددة بنجاح.');
     }
 }

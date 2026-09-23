@@ -13,13 +13,13 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
-            <a href="{{ route('settings.archive-types.index') }}" class="group bg-white rounded-3xl p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 flex items-center gap-4 hover:border-orange hover:shadow-md transition-all">
+            <a href="{{ route('settings.archive.types.index') }}" class="group bg-white rounded-3xl p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 flex items-center gap-4 hover:border-orange hover:shadow-md transition-all">
                 <div class="w-14 h-14 rounded-2xl bg-orange/10 flex items-center justify-center text-orange group-hover:bg-orange group-hover:text-white transition-colors">
                     <x-heroicon-s-document-text class="w-7 h-7" />
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-gray-800">إعدادات الأرشيف</h3>
-                    <p class="text-sm text-gray-500 font-medium">أنواع الملفات، الحقول المخصصة</p>
+                    <p class="text-sm text-gray-500 font-medium">الأنواع، الحقول، والتصنيفات</p>
                 </div>
             </a>
 

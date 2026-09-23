@@ -8,20 +8,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
-class ArchiveFileType extends Model
+class ArchiveDocumentCategory extends Model
 {
-    use SoftDeletes, LogsActivity;
+    use HasFactory, SoftDeletes, LogsActivity;
+    
+    protected $fillable = ['name', 'is_active'];
 
-    protected $fillable = ['name', 'description', 'is_active'];
-
-    public function fields()
+    public function documents()
     {
-        return $this->hasMany(ArchiveFileTypeField::class)->orderBy('order');
-    }
-
-    public function files()
-    {
-        return $this->hasMany(ArchiveFile::class);
+        return $this->hasMany(ArchiveDocument::class, 'document_category_id');
     }
 
     public function getActivitylogOptions(): LogOptions
