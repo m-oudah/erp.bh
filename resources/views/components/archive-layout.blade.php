@@ -14,10 +14,12 @@
         <!-- Sidebar (Right in RTL) -->
         <div class="w-full lg:w-1/4 space-y-4">
             
+            @can('archive.files.create')
             <a href="{{ route('archive.files.create') }}" class="w-full flex items-center justify-center gap-2 bg-navy hover:bg-navy-dark text-white font-bold py-3.5 px-4 rounded-2xl shadow-[0_4px_14px_0_rgba(1,31,75,0.39)] transition-all transform hover:-translate-y-0.5">
                 <x-heroicon-o-plus-circle class="w-5 h-5" />
                 إنشاء ملف جديد
             </a>
+            @endcan
 
             <div class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 p-3 mt-4">
                 <h4 class="text-sm font-bold text-gray-700 flex items-center gap-2 mb-3 px-3 pt-2">

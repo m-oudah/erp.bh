@@ -4,6 +4,10 @@
             <x-heroicon-s-folder-open class="w-6 h-6 text-orange" />
             تفاصيل الملف: {{ $file->file_name }}
         </h3>
+        <a href="{{ route('archive.files.index') }}" class="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-navy-dark transition-colors bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl">
+            الرجوع للقائمة
+            <x-heroicon-o-arrow-left class="w-4 h-4" />
+        </a>
     </div>
 
     @if(session('success'))
@@ -21,10 +25,12 @@
     <div class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 overflow-hidden mb-6">
         <div class="px-8 py-6 border-b border-gray-50 flex justify-between items-center">
             <h4 class="font-bold text-navy-dark text-base">البيانات الأساسية</h4>
+            @can('archive.files.edit')
             <a href="{{ route('archive.files.edit', $file->id) }}" class="text-orange hover:text-orange-dark text-sm font-bold flex items-center gap-2 bg-orange-50 hover:bg-orange-100 transition-colors px-4 py-2 rounded-xl">
                 <x-heroicon-o-pencil-square class="w-5 h-5" />
                 تعديل البيانات
             </a>
+            @endcan
         </div>
         <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
@@ -102,6 +108,7 @@
             </h4>
             <div class="flex items-center gap-4">
                 <!-- Bulk Delete -->
+                @can('archive.documents.delete')
                 <form action="{{ route('archive.documents.bulk-destroy') }}" method="POST" x-show="selectedDocs.length > 0" class="mr-2" style="display: none;" onsubmit="return confirm('هل أنت متأكد من حذف جميع الوثائق المحددة؟')">
                     @csrf
                     @method('DELETE')
@@ -113,6 +120,7 @@
                         حذف المحدد (<span x-text="selectedDocs.length"></span>)
                     </button>
                 </form>
+                @endcan
                 <!-- View Toggle -->
                 <div class="flex items-center bg-gray-100 rounded-lg p-1">
                     <button type="button" @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'bg-white shadow-sm text-navy' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded-md transition-all" title="عرض كشبكة">
@@ -123,10 +131,12 @@
                     </button>
                 </div>
                 <!-- Upload Button -->
+                @can('archive.documents.create')
                 <button type="button" @click="$dispatch('open-upload-modal')" class="text-white hover:bg-navy-light text-sm font-bold flex items-center gap-2 bg-navy transition-colors px-4 py-2 rounded-xl shadow-md">
                     <x-heroicon-s-plus class="w-5 h-5" />
                     إضافة وثائق
                 </button>
+                @endcan
             </div>
         </div>
         
@@ -138,9 +148,11 @@
                 @forelse($file->documents as $document)
                 <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-shadow group relative" :class="selectedDocs.includes('{{ $document->id }}') ? 'ring-2 ring-red-400 shadow-md' : ''">
                     <!-- Checkbox -->
+                    @can('archive.documents.delete')
                     <div class="absolute top-3 right-3 z-10">
                         <input type="checkbox" value="{{ $document->id }}" x-model="selectedDocs" class="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500 bg-white shadow-sm cursor-pointer">
                     </div>
+                    @endcan
                     
                     <div class="h-32 bg-gray-50 flex items-center justify-center relative border-b border-gray-50 cursor-pointer" @click="
                         if(selectedDocs.includes('{{ $document->id }}')) {
@@ -159,6 +171,7 @@
                             <button type="button" @click.stop="openViewer({{ $loop->index }})" class="w-10 h-10 rounded-full bg-white text-navy flex items-center justify-center hover:bg-orange hover:text-white transition-colors" title="عرض الملف">
                                 <x-heroicon-s-eye class="w-5 h-5" />
                             </button>
+                            @can('archive.documents.delete')
                             <form action="{{ route('archive.documents.destroy', $document->id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذه الوثيقة؟');">
                                 @csrf
                                 @method('DELETE')
@@ -166,6 +179,7 @@
                                     <x-heroicon-s-trash class="w-5 h-5" />
                                 </button>
                             </form>
+                            @endcan
                         </div>
                     </div>
                     <div class="p-4">
@@ -206,7 +220,9 @@
                         @forelse($file->documents as $document)
                         <tr class="hover:bg-gray-50/50 transition-colors" :class="selectedDocs.includes('{{ $document->id }}') ? 'bg-red-50/30' : ''">
                             <td class="px-6 py-4 text-center">
+                                @can('archive.documents.delete')
                                 <input type="checkbox" value="{{ $document->id }}" x-model="selectedDocs" class="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500 bg-white shadow-sm cursor-pointer">
+                                @endcan
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-4">
@@ -237,6 +253,7 @@
                                     <button type="button" @click.prevent="openViewer({{ $loop->index }})" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors" title="عرض">
                                         <x-heroicon-s-eye class="w-4 h-4" />
                                     </button>
+                                    @can('archive.documents.delete')
                                     <form action="{{ route('archive.documents.destroy', $document->id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذه الوثيقة؟');" class="inline-block">
                                         @csrf
                                         @method('DELETE')
@@ -244,6 +261,7 @@
                                             <x-heroicon-s-trash class="w-4 h-4" />
                                         </button>
                                     </form>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

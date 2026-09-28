@@ -19,12 +19,19 @@ class ArchiveDocumentController extends Controller
 
     public function store(Request $request)
     {
+        if (!auth()->user()->hasPermissionTo('archive.documents.create')) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'ليس لديك صلاحية إضافة وثائق.'], 403);
+            }
+            return back()->with('error', 'ليس لديك صلاحية إضافة وثائق.');
+        }
+
         $request->validate([
             'archive_file_id' => 'required|exists:archive_files,id',
             'document_name' => 'required|string|max:255',
             'document_no' => 'nullable|string|max:255',
             'document_category_id' => 'nullable|exists:archive_document_categories,id',
-            'document_file' => 'required|file|mimes:pdf,doc,docx,png,jpg,jpeg|max:10240', // 10MB max
+            'document_file' => 'required|file|mimes:pdf,doc,docx,png,jpg,jpeg|max:10240',
         ]);
 
         try {
@@ -58,15 +65,17 @@ class ArchiveDocumentController extends Controller
 
     public function destroy(ArchiveDocument $document)
     {
-        // Delete file from storage
+        abort_unless(auth()->user()->hasPermissionTo('archive.documents.delete'), 403, 'ليس لديك صلاحية حذف الوثائق.');
+
         Storage::disk('public')->delete($document->document_path);
-        
         $document->delete();
         return back()->with('success', 'تم حذف الوثيقة بنجاح.');
     }
 
     public function bulkDestroy(Request $request)
     {
+        abort_unless(auth()->user()->hasPermissionTo('archive.documents.delete'), 403, 'ليس لديك صلاحية حذف الوثائق.');
+
         $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:archive_documents,id'

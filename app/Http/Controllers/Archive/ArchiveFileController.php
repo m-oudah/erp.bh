@@ -15,9 +15,11 @@ class ArchiveFileController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('file_no', 'like', "%{$search}%")
-                  ->orWhere('file_name', 'like', "%{$search}%");
+            $normalizedSearch = str_replace(['أ', 'إ', 'آ'], 'ا', $search);
+
+            $query->where(function($q) use ($normalizedSearch) {
+                $q->whereRaw("REPLACE(REPLACE(REPLACE(file_no, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') LIKE ?", ["%{$normalizedSearch}%"])
+                  ->orWhereRaw("REPLACE(REPLACE(REPLACE(file_name, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') LIKE ?", ["%{$normalizedSearch}%"]);
             });
         }
 
@@ -33,12 +35,16 @@ class ArchiveFileController extends Controller
 
     public function create()
     {
+        abort_unless(auth()->user()->hasPermissionTo('archive.files.create'), 403, 'ليس لديك صلاحية إضافة ملفات.');
+
         $types = ArchiveFileType::with('fields')->where('is_active', true)->get();
         return view('archive.files.create', compact('types'));
     }
 
     public function store(Request $request)
     {
+        abort_unless(auth()->user()->hasPermissionTo('archive.files.create'), 403, 'ليس لديك صلاحية إضافة ملفات.');
+
         $request->validate([
             'archive_file_type_id' => 'required|exists:archive_file_types,id',
             'file_no' => 'required|string|max:255|unique:archive_files,file_no',
@@ -85,12 +91,16 @@ class ArchiveFileController extends Controller
 
     public function edit(ArchiveFile $file)
     {
+        abort_unless(auth()->user()->hasPermissionTo('archive.files.edit'), 403, 'ليس لديك صلاحية تعديل الملفات.');
+
         $types = ArchiveFileType::with('fields')->where('is_active', true)->get();
         return view('archive.files.edit', compact('file', 'types'));
     }
 
     public function update(Request $request, ArchiveFile $file)
     {
+        abort_unless(auth()->user()->hasPermissionTo('archive.files.edit'), 403, 'ليس لديك صلاحية تعديل الملفات.');
+
         $request->validate([
             'archive_file_type_id' => 'required|exists:archive_file_types,id',
             'file_no' => 'required|string|max:255|unique:archive_files,file_no,' . $file->id,
@@ -129,6 +139,8 @@ class ArchiveFileController extends Controller
 
     public function destroy(ArchiveFile $file)
     {
+        abort_unless(auth()->user()->hasPermissionTo('archive.files.delete'), 403, 'ليس لديك صلاحية حذف الملفات.');
+
         $file->delete();
         return redirect()->route('archive.files.index')->with('success', 'تم حذف الملف بنجاح.');
     }

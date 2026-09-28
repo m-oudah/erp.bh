@@ -41,17 +41,32 @@
                 <tbody class="divide-y divide-gray-50">
                     @forelse($files as $file)
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4 font-bold text-navy">{{ $file->file_no }}</td>
-                        <td class="px-6 py-4 font-bold text-gray-800">{{ $file->file_name }}</td>
+                        <td class="px-6 py-4 font-bold text-navy">
+                            <a href="{{ route('archive.files.show', $file->id) }}" class="hover:underline hover:text-navy-light transition-colors block">{{ $file->file_no }}</a>
+                        </td>
+                        <td class="px-6 py-4 font-bold text-gray-800">
+                            <a href="{{ route('archive.files.show', $file->id) }}" class="hover:underline transition-colors block">{{ $file->file_name }}</a>
+                        </td>
                         <td class="px-6 py-4 text-orange-dark font-medium">{{ $file->fileType->name ?? 'غير محدد' }}</td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('archive.files.show', $file->id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors" title="عرض">
                                     <x-heroicon-o-eye class="w-4 h-4" />
                                 </a>
+                                @can('archive.files.edit')
                                 <a href="{{ route('archive.files.edit', $file->id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-50 text-orange hover:bg-orange-100 transition-colors" title="تعديل">
                                     <x-heroicon-o-pencil class="w-4 h-4" />
                                 </a>
+                                @endcan
+                                @can('archive.files.delete')
+                                <form action="{{ route('archive.files.destroy', $file->id) }}" method="POST" class="inline-block" onsubmit="return confirm('هل أنت متأكد من حذف هذا الملف؟')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors" title="حذف">
+                                        <x-heroicon-o-trash class="w-4 h-4" />
+                                    </button>
+                                </form>
+                                @endcan
                             </div>
                         </td>
                     </tr>

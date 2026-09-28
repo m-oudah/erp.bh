@@ -24,6 +24,18 @@
                             تصنيفات الوثائق
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ route('settings.archive.activity-log') }}" class="flex items-center gap-3 px-3 py-3 rounded-xl font-bold transition-colors {{ request()->routeIs('settings.archive.activity-log') ? 'bg-orange/10 text-orange' : 'text-gray-600 hover:bg-gray-50 hover:text-navy' }}">
+                            <x-heroicon-o-clipboard-document-list class="w-5 h-5 {{ request()->routeIs('settings.archive.activity-log') ? 'text-orange' : 'text-gray-400' }}" />
+                            سجل الحركات
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('settings.archive.user-permissions.index') }}" class="flex items-center gap-3 px-3 py-3 rounded-xl font-bold transition-colors {{ request()->routeIs('settings.archive.user-permissions.*') ? 'bg-orange/10 text-orange' : 'text-gray-600 hover:bg-gray-50 hover:text-navy' }}">
+                            <x-heroicon-o-shield-check class="w-5 h-5 {{ request()->routeIs('settings.archive.user-permissions.*') ? 'text-orange' : 'text-gray-400' }}" />
+                            صلاحيات المستخدمين
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

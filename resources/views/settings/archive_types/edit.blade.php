@@ -93,15 +93,15 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('archiveTypeForm', (initialFields = []) => ({
                 fields: initialFields.length > 0 ? initialFields.map(f => ({
-                    field_name: f.field_name,
+                    field_name: f.field_name || 'field_' + Math.random().toString(36).substr(2, 6),
                     field_label: f.field_label,
                     field_type: f.field_type,
                     is_required: f.is_required ? true : false
                 })) : [
-                    { field_name: '', field_label: '', field_type: 'text', is_required: false }
+                    { field_name: 'field_' + Math.random().toString(36).substr(2, 6), field_label: '', field_type: 'text', is_required: false }
                 ],
                 addField() {
-                    this.fields.push({ field_name: '', field_label: '', field_type: 'text', is_required: false });
+                    this.fields.push({ field_name: 'field_' + Math.random().toString(36).substr(2, 6), field_label: '', field_type: 'text', is_required: false });
                 },
                 removeField(index) {
                     if (this.fields.length > 1) {

@@ -50,10 +50,7 @@
                                 <x-heroicon-o-x-mark class="w-5 h-5" />
                             </button>
 
-                            <div class="flex-1 w-full">
-                                <label class="block text-xs font-bold text-gray-600 mb-1">الاسم البرمجي للحقل (بالانجليزية)</label>
-                                <input type="text" x-model="field.field_name" :name="`fields[${index}][field_name]`" class="w-full text-sm rounded-xl border-gray-200 focus:ring-navy focus:border-navy" placeholder="e.g. citizen_name" required pattern="[a-zA-Z0-9_]+">
-                            </div>
+                            <input type="hidden" :name="`fields[${index}][field_name]`" x-model="field.field_name">
                             <div class="flex-1 w-full">
                                 <label class="block text-xs font-bold text-gray-600 mb-1">اسم الحقل (للعرض)</label>
                                 <input type="text" x-model="field.field_label" :name="`fields[${index}][field_label]`" class="w-full text-sm rounded-xl border-gray-200 focus:ring-navy focus:border-navy" placeholder="e.g. اسم المواطن" required>
@@ -83,7 +80,7 @@
             </div>
 
             <div class="p-6 border-t border-gray-100 flex justify-end gap-3 bg-white">
-                <a href="{{ route('settings.archive-types.index') }}" class="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-bold transition-colors">
+                <a href="{{ route('settings.archive.types.index') }}" class="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-bold transition-colors">
                     إلغاء
                 </a>
                 <button type="submit" class="px-8 py-2.5 bg-navy hover:bg-navy-light text-white rounded-xl font-bold shadow-md transition-colors">
@@ -99,11 +96,11 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('archiveTypeForm', () => ({
                 fields: [
-                    { field_name: 'id_no', field_label: 'رقم الهوية', field_type: 'text', is_required: false },
+                    { field_name: 'field_' + Math.random().toString(36).substr(2, 6), field_label: 'رقم الهوية', field_type: 'text', is_required: false },
                 ],
                 addField() {
                     this.fields.push({
-                        field_name: '',
+                        field_name: 'field_' + Math.random().toString(36).substr(2, 6),
                         field_label: '',
                         field_type: 'text',
                         is_required: false

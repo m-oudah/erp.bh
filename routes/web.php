@@ -59,6 +59,13 @@ Route::middleware('auth')->group(function () {
         Route::prefix('archive')->name('archive.')->group(function () {
             Route::resource('document-categories', \App\Http\Controllers\Settings\ArchiveDocumentCategoryController::class)->except(['show']);
             
+            Route::get('activity-log', [\App\Http\Controllers\Settings\ArchiveActivityLogController::class, 'index'])->name('activity-log');
+            
+            Route::get('user-permissions', [\App\Http\Controllers\Settings\ArchiveUserPermissionsController::class, 'index'])->name('user-permissions.index');
+            Route::post('user-permissions/{user}', [\App\Http\Controllers\Settings\ArchiveUserPermissionsController::class, 'update'])->name('user-permissions.update');
+            
+            
+            
             Route::resource('/', \App\Http\Controllers\Settings\ArchiveSettingsController::class)->parameters(['' => 'archive_type'])->except(['show'])->names([
                 'index' => 'types.index',
                 'create' => 'types.create',
