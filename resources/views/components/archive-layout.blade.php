@@ -39,6 +39,12 @@
                         </div>
                         تصفح المجلدات
                     </a>
+                    <a href="{{ route('archive.documents.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('archive.documents.*') ? 'bg-orange/10 text-orange-dark font-bold' : 'text-gray-600 hover:bg-gray-50 font-medium' }} transition-colors">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ request()->routeIs('archive.documents.*') ? 'bg-orange text-white shadow-sm' : 'text-gray-400' }}">
+                            <x-heroicon-o-document-text class="w-5 h-5" />
+                        </div>
+                        تصفح الوثائق
+                    </a>
                     <a href="{{ route('archive.reports.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('archive.reports.*') ? 'bg-orange/10 text-orange-dark font-bold' : 'text-gray-600 hover:bg-gray-50 font-medium' }} transition-colors">
                         <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ request()->routeIs('archive.reports.*') ? 'bg-orange text-white shadow-sm' : 'text-gray-400' }}">
                             <x-heroicon-o-chart-bar class="w-5 h-5" />

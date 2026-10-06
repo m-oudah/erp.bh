@@ -17,6 +17,34 @@ class ArchiveDocumentController extends Controller
         $this->archiveService = $archiveService;
     }
 
+    public function index(Request $request)
+    {
+        $query = ArchiveDocument::with(['archiveFile', 'category'])->latest();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $normalizedSearch = str_replace(['أ', 'إ', 'آ'], 'ا', $search);
+            $query->whereRaw("REPLACE(REPLACE(REPLACE(document_name, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') LIKE ?", ["%{$normalizedSearch}%"]);
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('document_category_id', $request->category_id);
+        }
+
+        if ($request->filled('archive_file_type_id')) {
+            $typeId = $request->archive_file_type_id;
+            $query->whereHas('archiveFile', function($q) use ($typeId) {
+                $q->where('archive_file_type_id', $typeId);
+            });
+        }
+
+        $documents = $query->paginate(20)->withQueryString();
+        $categories = \App\Models\ArchiveDocumentCategory::where('is_active', true)->get();
+        $fileTypes = \App\Models\ArchiveFileType::where('is_active', true)->get();
+
+        return view('archive.documents.index', compact('documents', 'categories', 'fileTypes'));
+    }
+
     public function store(Request $request)
     {
         if (!auth()->user()->hasPermissionTo('archive.documents.create')) {

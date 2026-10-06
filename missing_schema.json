@@ -1,0 +1,691 @@
+{
+    "missing_tables": [
+        "attachment_name_treatment",
+        "attachments",
+        "build_financial",
+        "building_building_material",
+        "building_building_use",
+        "building_owner_unit",
+        "building_owners",
+        "category_archive_attachments",
+        "clients",
+        "craft_attachments",
+        "craft_file_discounts",
+        "craft_file_documents",
+        "craft_file_installments",
+        "craft_file_licenses",
+        "craft_file_master",
+        "craft_file_owners",
+        "craft_file_receipts",
+        "craft_license_owners",
+        "craft_license_real_state_owners",
+        "craft_real_state_owners",
+        "crafts",
+        "currencies",
+        "customer_pen_treatment",
+        "customer_pens",
+        "deleted_receipts",
+        "development_data",
+        "failed_jobs",
+        "license_fees",
+        "license_form_replies",
+        "migrations",
+        "model_has_permissions",
+        "model_has_roles",
+        "municipalities",
+        "password_resets",
+        "permissions",
+        "personal_access_tokens",
+        "previous_owners",
+        "proof_of_cases",
+        "regulatory_disclosure_reports",
+        "role_has_permissions",
+        "roles",
+        "street_types",
+        "subscription_unit",
+        "supervisors",
+        "tmp_files",
+        "treatment_name_attachments",
+        "treatment_replies",
+        "treatment_user",
+        "unit_owners",
+        "unit_users",
+        "users"
+    ],
+    "missing_columns": {
+        "bhm_buildings": [
+            {
+                "name": "ownership_type",
+                "type": "int unsigned",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "building_type",
+                "type": "int unsigned",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "sessionDate",
+                "type": "varchar(10)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "building_finish_id",
+                "type": "bigint unsigned",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "general_condition",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "external_condition",
+                "type": "tinyint unsigned",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "escape_staircase",
+                "type": "tinyint unsigned",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "waterNetwork",
+                "type": "tinyint unsigned",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "sewageNetwork",
+                "type": "tinyint unsigned",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "area",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "status",
+                "type": "tinyint",
+                "null": "NO",
+                "default": "0"
+            },
+            {
+                "name": "image",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            }
+        ],
+        "bhm_craft_categories": [
+            {
+                "name": "update_at",
+                "type": "datetime",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "deleted_at",
+                "type": "datetime",
+                "null": "YES",
+                "default": null
+            }
+        ],
+        "bhm_customers": [
+            {
+                "name": "id_number",
+                "type": "varchar(50)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "customer_number",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "notes",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            }
+        ],
+        "bhm_departments": [
+            {
+                "name": "manger_id",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "inner_telephone",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "deleted_at",
+                "type": "datetime",
+                "null": "YES",
+                "default": null
+            }
+        ],
+        "bhm_economical": [
+            {
+                "name": "municipality_id",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "street_id",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "building_number",
+                "type": "varchar(7)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "floor_number",
+                "type": "varchar(20)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "unit_number",
+                "type": "varchar(20)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "zone_id",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "subzone_id",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "parcel_number",
+                "type": "varchar(20)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "block_number",
+                "type": "varchar(20)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "job_use_name",
+                "type": "varchar(50)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "old_job_number",
+                "type": "varchar(20)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "job_location",
+                "type": "varchar(100)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "job_street",
+                "type": "varchar(100)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "job_phone",
+                "type": "varchar(20)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "job_mobile",
+                "type": "varchar(20)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "website",
+                "type": "varchar(100)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "email",
+                "type": "varchar(50)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "whatsapp",
+                "type": "varchar(50)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "facebook",
+                "type": "varchar(200)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "instagram",
+                "type": "varchar(200)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "twitter",
+                "type": "varchar(200)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "ownership_type",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "ownership_note",
+                "type": "varchar(200)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "work_state",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "job_description",
+                "type": "varchar(1000)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "has_branch",
+                "type": "tinyint(1)",
+                "null": "YES",
+                "default": "0"
+            },
+            {
+                "name": "branch_number",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "is_main_branch",
+                "type": "tinyint(1)",
+                "null": "YES",
+                "default": "0"
+            },
+            {
+                "name": "male_employee",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "female_employee",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "info_from",
+                "type": "int",
+                "null": "YES",
+                "default": "0"
+            },
+            {
+                "name": "info_from_note",
+                "type": "varchar(200)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "info_result",
+                "type": "int",
+                "null": "YES",
+                "default": "0"
+            },
+            {
+                "name": "refuse_reason",
+                "type": "varchar(200)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "collector_id",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "supervisor_id",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "get_date",
+                "type": "date",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "creation_date",
+                "type": "date",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "craft_number",
+                "type": "varchar(50)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "bulding_id",
+                "type": "bigint unsigned",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "file_number",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "license_number",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "type_property",
+                "type": "tinyint",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "isActive",
+                "type": "tinyint",
+                "null": "YES",
+                "default": "2"
+            },
+            {
+                "name": "craft_category_id",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "craft_type_id",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "approved",
+                "type": "int",
+                "null": "YES",
+                "default": null
+            }
+        ],
+        "bhm_economical_owners": [
+            {
+                "name": "phone_number",
+                "type": "varchar(50)",
+                "null": "NO",
+                "default": null
+            },
+            {
+                "name": "gender",
+                "type": "char(1)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "mokalaf",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            }
+        ],
+        "bhm_economical_sectors": [
+            {
+                "name": "sector_name",
+                "type": "varchar(200)",
+                "null": "NO",
+                "default": null
+            },
+            {
+                "name": "section_number",
+                "type": "varchar(3)",
+                "null": "NO",
+                "default": null
+            },
+            {
+                "name": "description",
+                "type": "varchar(500)",
+                "null": "NO",
+                "default": null
+            }
+        ],
+        "bhm_license_forms": [
+            {
+                "name": "block_number",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "parcel_number",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "region",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "attachment_one",
+                "type": "bigint",
+                "null": "YES",
+                "default": null
+            }
+        ],
+        "bhm_professions_categories": [
+            {
+                "name": "category_name",
+                "type": "varchar(500)",
+                "null": "NO",
+                "default": null
+            }
+        ],
+        "bhm_streets": [
+            {
+                "name": "street_number",
+                "type": "int",
+                "null": "NO",
+                "default": null
+            },
+            {
+                "name": "street_name",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            }
+        ],
+        "bhm_subscriptions": [
+            {
+                "name": "name",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "customer_number",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "address",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "mobile",
+                "type": "varchar(50)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "owner_id",
+                "type": "bigint",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "type",
+                "type": "tinyint",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "subscription_number",
+                "type": "varchar(50)",
+                "null": "YES",
+                "default": null
+            }
+        ],
+        "bhm_subzones": [
+            {
+                "name": "zone_number",
+                "type": "varchar(2)",
+                "null": "NO",
+                "default": null
+            }
+        ],
+        "bhm_treatments": [
+            {
+                "name": "deleted_at",
+                "type": "datetime",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "user",
+                "type": "varchar(255)",
+                "null": "NO",
+                "default": "0"
+            },
+            {
+                "name": "component",
+                "type": "varchar(230)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "first_level_user",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "second_level_user",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "third_level_user",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "attachment",
+                "type": "text",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "user_id",
+                "type": "int",
+                "null": "NO",
+                "default": "13"
+            },
+            {
+                "name": "depency",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "fee_required",
+                "type": "decimal(10,2)",
+                "null": "YES",
+                "default": null
+            },
+            {
+                "name": "expected_time",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            }
+        ],
+        "bhm_zones": [
+            {
+                "name": "zone_number",
+                "type": "varchar(2)",
+                "null": "NO",
+                "default": null
+            },
+            {
+                "name": "zone_name",
+                "type": "varchar(255)",
+                "null": "YES",
+                "default": null
+            }
+        ]
+    }
+}

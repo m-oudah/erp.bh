@@ -23,6 +23,17 @@
                 </div>
             </a>
 
+            <!-- Users Settings -->
+            <a href="{{ route('settings.users.index') }}" class="group bg-white rounded-3xl p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 flex items-center gap-4 hover:border-navy hover:shadow-md transition-all">
+                <div class="w-14 h-14 rounded-2xl bg-navy/10 flex items-center justify-center text-navy group-hover:bg-navy group-hover:text-white transition-colors">
+                    <x-heroicon-s-users class="w-7 h-7" />
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">إعدادات المستخدمين</h3>
+                    <p class="text-sm text-gray-500 font-medium">الصلاحيات، البريد، وكلمات المرور</p>
+                </div>
+            </a>
+
             <!-- Other future settings can go here -->
 
         </div>

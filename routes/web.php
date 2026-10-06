@@ -55,6 +55,9 @@ Route::middleware('auth')->group(function () {
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Settings\SystemSettingsController::class, 'index'])->name('index');
 
+        // Users Management
+        Route::resource('users', \App\Http\Controllers\Settings\UserManagementController::class)->only(['index', 'edit', 'update']);
+
         // Archive Module Settings
         Route::prefix('archive')->name('archive.')->group(function () {
             Route::resource('document-categories', \App\Http\Controllers\Settings\ArchiveDocumentCategoryController::class)->except(['show']);
@@ -79,3 +82,4 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+require __DIR__.'/buildings.php';
