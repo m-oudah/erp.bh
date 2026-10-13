@@ -44,6 +44,9 @@ class ArchiveTrashController extends Controller
     public function forceDeleteDocument($id)
     {
         $document = ArchiveDocument::onlyTrashed()->findOrFail($id);
+        if ($document->document_path) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($document->document_path);
+        }
         $document->forceDelete();
 
         return back()->with('success', 'تم الحذف النهائي للوثيقة بنجاح.');

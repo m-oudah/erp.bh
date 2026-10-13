@@ -62,7 +62,7 @@
                                 </div>
                                 <div class="flex items-center pt-6">
                                     <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="checkbox" :name="`fields[${index}][is_required]`" x-model="field.is_required" class="w-5 h-5 rounded border-gray-300 text-navy focus:ring-navy">
+                                        <input type="checkbox" :name="`fields[${index}][is_required]`" value="1" x-model="field.is_required" class="w-5 h-5 rounded border-gray-300 text-navy focus:ring-navy">
                                         <span class="text-sm font-bold text-gray-600">حقل إلزامي</span>
                                     </label>
                                 </div>

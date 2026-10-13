@@ -18,11 +18,20 @@ class BhmEconomicalController extends Controller
             'id_card', 'name', 'trade_name', 'job_sector_id', 'craft_type_id', 'isLicensed', 'isDanger'
         ]);
 
-        $economicals = BhmEconomical::with(['building', 'sector', 'owners', 'crafts.craftType', 'crafts.status'])
-            ->filter($filters)
-            ->orderBy('id', 'desc')
-            ->paginate(15)
-            ->withQueryString();
+        $sort = $request->get('sort', 'sector_first');
+        $query = BhmEconomical::with(['building', 'sector', 'category', 'owners', 'crafts.craftType', 'crafts.status'])
+            ->filter($filters);
+
+        if ($sort === 'id_asc') {
+            $query->orderBy('id', 'asc');
+        } elseif ($sort === 'id_desc') {
+            $query->orderBy('id', 'desc');
+        } else {
+            $query->orderByRaw('CASE WHEN job_sector_id IS NOT NULL THEN 0 ELSE 1 END')
+                  ->orderBy('id', 'desc');
+        }
+
+        $economicals = $query->paginate(15)->withQueryString();
 
         $sectors = BhmEconomicalSector::orderBy('name')->get();
         $craftTypes = BhmCraftType::orderBy('name')->get();
@@ -41,7 +50,7 @@ class BhmEconomicalController extends Controller
     public function show($id)
     {
         $economical = BhmEconomical::with([
-            'building.zone', 'building.street', 'unit', 'sector', 'owners', 
+            'building.zone', 'building.street', 'unit', 'sector', 'category', 'owners', 
             'crafts.craftType', 'crafts.status', 'crafts.category'
         ])->findOrFail($id);
 
@@ -70,6 +79,6 @@ class BhmEconomicalController extends Controller
 
         $economical->update($validated);
 
-        return redirect()->route('buildings.economical.show', $economical->id)->with('success', 'تم تحديث بيانات النشاط بنجاح');
+        return redirect()->route('crafts.economical.show', $economical->id)->with('success', 'تم تحديث بيانات النشاط بنجاح');
     }
 }

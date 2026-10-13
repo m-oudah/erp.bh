@@ -22,9 +22,25 @@ class ArchiveDocumentController extends Controller
         $query = ArchiveDocument::with(['archiveFile', 'category'])->latest();
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim($request->search);
             $normalizedSearch = str_replace(['أ', 'إ', 'آ'], 'ا', $search);
-            $query->whereRaw("REPLACE(REPLACE(REPLACE(document_name, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') LIKE ?", ["%{$normalizedSearch}%"]);
+
+            $query->where(function($q) use ($search, $normalizedSearch) {
+                // 1. Exact or prefix match on document_no
+                $q->where('document_no', $search)
+                  ->orWhere('document_no', 'like', "{$search}%");
+
+                // 2. Full-Text search on document_name
+                $cleanedTerm = preg_replace('/[+\-><\(\)~*\"@]+/', ' ', $search);
+                $terms = array_filter(explode(' ', trim($cleanedTerm)));
+                if (!empty($terms)) {
+                    $booleanQuery = implode(' ', array_map(fn($t) => '+' . $t . '*', $terms));
+                    $q->orWhereRaw("MATCH(document_name) AGAINST(? IN BOOLEAN MODE)", [$booleanQuery]);
+                }
+
+                // 3. Fallback for normalized Arabic and substring match
+                $q->orWhereRaw("REPLACE(REPLACE(REPLACE(document_name, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') LIKE ?", ["%{$normalizedSearch}%"]);
+            });
         }
 
         if ($request->filled('category_id')) {
@@ -95,9 +111,8 @@ class ArchiveDocumentController extends Controller
     {
         abort_unless(auth()->user()->hasPermissionTo('archive.documents.delete'), 403, 'ليس لديك صلاحية حذف الوثائق.');
 
-        Storage::disk('public')->delete($document->document_path);
         $document->delete();
-        return back()->with('success', 'تم حذف الوثيقة بنجاح.');
+        return back()->with('success', 'تم نقل الوثيقة إلى سلة المحذوفات بنجاح.');
     }
 
     public function bulkDestroy(Request $request)
@@ -112,10 +127,9 @@ class ArchiveDocumentController extends Controller
         $documents = ArchiveDocument::whereIn('id', $request->ids)->get();
 
         foreach ($documents as $document) {
-            Storage::disk('public')->delete($document->document_path);
             $document->delete();
         }
 
-        return back()->with('success', 'تم حذف الوثائق المحددة بنجاح.');
+        return back()->with('success', 'تم نقل الوثائق المحددة إلى سلة المحذوفات بنجاح.');
     }
 }

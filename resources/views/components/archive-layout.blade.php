@@ -22,31 +22,31 @@
             @endcan
 
             <div class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 p-3 mt-4">
-                <h4 class="text-sm font-bold text-gray-700 flex items-center gap-2 mb-3 px-3 pt-2">
+                <h4 class="text-sm font-bold text-black flex items-center gap-2 mb-3 px-3 pt-2">
                     <x-heroicon-s-bolt class="w-4 h-4 text-orange" />
                     روابط سريعة
                 </h4>
                 <nav class="space-y-1">
-                    <a href="{{ route('archive.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('archive.index') ? 'bg-orange/10 text-orange-dark font-bold' : 'text-gray-600 hover:bg-gray-50 font-medium' }} transition-colors">
-                        <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ request()->routeIs('archive.index') ? 'bg-orange text-white shadow-sm' : 'text-gray-400' }}">
+                    <a href="{{ route('archive.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('archive.index') ? 'bg-orange/10 text-orange-dark font-bold' : 'text-black hover:bg-gray-50 font-bold' }} transition-colors">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ request()->routeIs('archive.index') ? 'bg-orange text-white shadow-sm' : 'text-black' }}">
                             <x-heroicon-s-squares-2x2 class="w-4 h-4" />
                         </div>
                         الرئيسية
                     </a>
-                    <a href="{{ route('archive.files.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('archive.files.*') && !request()->routeIs('archive.files.create') ? 'bg-orange/10 text-orange-dark font-bold' : 'text-gray-600 hover:bg-gray-50 font-medium' }} transition-colors">
-                        <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ request()->routeIs('archive.files.*') && !request()->routeIs('archive.files.create') ? 'bg-orange text-white shadow-sm' : 'text-gray-400' }}">
+                    <a href="{{ route('archive.files.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('archive.files.*') && !request()->routeIs('archive.files.create') ? 'bg-orange/10 text-orange-dark font-bold' : 'text-black hover:bg-gray-50 font-bold' }} transition-colors">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ request()->routeIs('archive.files.*') && !request()->routeIs('archive.files.create') ? 'bg-orange text-white shadow-sm' : 'text-black' }}">
                             <x-heroicon-o-folder class="w-5 h-5" />
                         </div>
                         تصفح المجلدات
                     </a>
-                    <a href="{{ route('archive.documents.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('archive.documents.*') ? 'bg-orange/10 text-orange-dark font-bold' : 'text-gray-600 hover:bg-gray-50 font-medium' }} transition-colors">
-                        <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ request()->routeIs('archive.documents.*') ? 'bg-orange text-white shadow-sm' : 'text-gray-400' }}">
+                    <a href="{{ route('archive.documents.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('archive.documents.*') ? 'bg-orange/10 text-orange-dark font-bold' : 'text-black hover:bg-gray-50 font-bold' }} transition-colors">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ request()->routeIs('archive.documents.*') ? 'bg-orange text-white shadow-sm' : 'text-black' }}">
                             <x-heroicon-o-document-text class="w-5 h-5" />
                         </div>
                         تصفح الوثائق
                     </a>
-                    <a href="{{ route('archive.reports.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('archive.reports.*') ? 'bg-orange/10 text-orange-dark font-bold' : 'text-gray-600 hover:bg-gray-50 font-medium' }} transition-colors">
-                        <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ request()->routeIs('archive.reports.*') ? 'bg-orange text-white shadow-sm' : 'text-gray-400' }}">
+                    <a href="{{ route('archive.reports.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('archive.reports.*') ? 'bg-orange/10 text-orange-dark font-bold' : 'text-black hover:bg-gray-50 font-bold' }} transition-colors">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ request()->routeIs('archive.reports.*') ? 'bg-orange text-white shadow-sm' : 'text-black' }}">
                             <x-heroicon-o-chart-bar class="w-5 h-5" />
                         </div>
                         التقارير
@@ -59,32 +59,32 @@
                 $sidebarArchiveTypes = \App\Models\ArchiveFileType::where('is_active', true)->withCount('files')->get();
             @endphp
             <div class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 p-4 mt-4">
-                <h4 class="text-sm font-bold text-gray-700 flex items-center gap-2 mb-3 px-2">
-                    <x-heroicon-o-folder-open class="w-4 h-4 text-gray-400" />
+                <h4 class="text-sm font-bold text-black flex items-center gap-2 mb-3 px-2">
+                    <x-heroicon-o-folder-open class="w-4 h-4 text-black" />
                     المجلدات
                 </h4>
                 <div class="space-y-1">
                     @forelse($sidebarArchiveTypes as $type)
-                        <a href="{{ route('archive.files.index', ['type_id' => $type->id]) }}" class="flex items-center justify-between px-3 py-2 rounded-xl {{ request('type_id') == $type->id ? 'bg-orange/10 text-orange-dark font-bold' : 'text-gray-600 hover:bg-gray-50' }} transition-colors">
+                        <a href="{{ route('archive.files.index', ['type_id' => $type->id]) }}" class="flex items-center justify-between px-3 py-2 rounded-xl {{ request('type_id') == $type->id ? 'bg-orange/10 text-orange-dark font-bold' : 'text-black hover:bg-gray-50 font-bold' }} transition-colors">
                             <div class="flex items-center gap-2">
-                                <x-heroicon-s-folder class="w-4 h-4 {{ request('type_id') == $type->id ? 'text-orange' : 'text-gray-300' }}" />
-                                <span class="text-sm {{ request('type_id') == $type->id ? 'font-bold' : 'font-medium' }}">{{ $type->name }}</span>
+                                <x-heroicon-s-folder class="w-4 h-4 {{ request('type_id') == $type->id ? 'text-orange' : 'text-black' }}" />
+                                <span class="text-sm font-bold">{{ $type->name }}</span>
                             </div>
                             @if($type->files_count > 0)
-                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ request('type_id') == $type->id ? 'bg-orange text-white' : 'bg-gray-100 text-gray-500' }}">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ request('type_id') == $type->id ? 'bg-orange text-white' : 'bg-gray-200 text-black' }}">
                                     {{ $type->files_count }}
                                 </span>
                             @endif
                         </a>
                     @empty
-                        <div class="text-xs text-gray-400 px-3 py-2">لا توجد مجلدات</div>
+                        <div class="text-xs text-gray-500 px-3 py-2 font-medium">لا توجد مجلدات</div>
                     @endforelse
                 </div>
                 <div class="mt-2 pt-2 border-t border-gray-100">
-                    <a href="{{ route('archive.trash.index') }}" class="flex items-center justify-between px-3 py-2 rounded-xl {{ request()->routeIs('archive.trash.*') ? 'bg-red-50 text-red-600 font-bold' : 'text-gray-600 hover:bg-gray-50' }} transition-colors">
+                    <a href="{{ route('archive.trash.index') }}" class="flex items-center justify-between px-3 py-2 rounded-xl {{ request()->routeIs('archive.trash.*') ? 'bg-red-50 text-red-600 font-bold' : 'text-black hover:bg-gray-50 font-bold' }} transition-colors">
                         <div class="flex items-center gap-2">
-                            <x-heroicon-s-trash class="w-4 h-4 {{ request()->routeIs('archive.trash.*') ? 'text-red-500' : 'text-gray-400' }}" />
-                            <span class="text-sm {{ request()->routeIs('archive.trash.*') ? 'font-bold' : 'font-medium' }}">سلة المحذوفات</span>
+                            <x-heroicon-s-trash class="w-4 h-4 {{ request()->routeIs('archive.trash.*') ? 'text-red-500' : 'text-black' }}" />
+                            <span class="text-sm font-bold">سلة المحذوفات</span>
                         </div>
                     </a>
                 </div>

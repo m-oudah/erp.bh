@@ -23,64 +23,88 @@
         </div>
 
         {{-- Search & Filter Card --}}
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div class="flex items-center gap-3 px-5 py-3 bg-gray-50/70 border-b border-gray-100">
-                <x-heroicon-o-funnel class="w-4 h-4 text-gray-400" />
-                <span class="text-sm font-semibold text-gray-600">خيارات البحث والتصفية</span>
-                @if(request()->anyFilled(['building_id', 'building_number', 'name', 'id_card', 'phone', 'subject', 'status']))
-                <a href="{{ route('buildings.licenses.index') }}" class="mr-auto text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors">
-                    <x-heroicon-o-x-mark class="w-3.5 h-3.5" /> مسح الفلاتر
-                </a>
-                @endif
+        <div x-data="{ showFilters: false }" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-3 bg-gray-50/70 transition-colors"
+                 :class="showFilters ? 'border-b border-gray-100' : ''">
+                <div class="flex items-center gap-3">
+                    <x-heroicon-o-funnel class="w-4 h-4 text-black" />
+                    <span class="text-sm font-bold text-black">خيارات البحث والتصفية</span>
+                    @if(request()->anyFilled(['building_id', 'building_number', 'name', 'id_card', 'phone', 'subject', 'status']))
+                    <a href="{{ route('buildings.licenses.index') }}" class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors">
+                        <x-heroicon-o-x-mark class="w-3.5 h-3.5" /> مسح الفلاتر
+                    </a>
+                    @endif
+                </div>
+
+                {{-- زر عرض/إخفاء الخيارات على اليسار تماما --}}
+                <button type="button"
+                        @click="showFilters = !showFilters"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 border shadow-sm cursor-pointer"
+                        :class="showFilters ? 'bg-orange/10 text-orange-dark border-orange/30' : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'">
+                    <x-heroicon-o-adjustments-horizontal class="w-4 h-4" />
+                    <span x-text="showFilters ? 'إخفاء الخيارات' : 'عرض الخيارات'">عرض الخيارات</span>
+                    <span class="inline-flex transition-transform duration-200" :class="showFilters ? 'rotate-180' : ''">
+                        <x-heroicon-o-chevron-down class="w-3.5 h-3.5" />
+                    </span>
+                </button>
             </div>
 
-            <form action="{{ route('buildings.licenses.index') }}" method="GET" class="p-5" id="license-filter-form">
+            <div x-show="showFilters"
+                 x-cloak
+                 style="display: none;"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 -translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 -translate-y-2">
+                <form action="{{ route('buildings.licenses.index') }}" method="GET" class="p-5" id="license-filter-form">
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
 
                     <div class="col-span-2 md:col-span-1">
-                        <label class="block text-xs font-semibold text-gray-500 mb-1.5">رقم المبنى (محوسب)</label>
+                        <label class="block text-xs font-bold text-black mb-1.5">رقم المبنى (محوسب)</label>
                         <input type="text" name="building_id" value="{{ request('building_id') }}"
                                class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
                                placeholder="مثال: 2501">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1.5">رقم مبنى الطلب</label>
+                        <label class="block text-xs font-bold text-black mb-1.5">رقم مبنى الطلب</label>
                         <input type="text" name="building_number" value="{{ request('building_number') }}"
                                class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
                                placeholder="رقم المبنى اليدوي">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1.5">اسم مقدم الطلب</label>
+                        <label class="block text-xs font-bold text-black mb-1.5">اسم مقدم الطلب</label>
                         <input type="text" name="name" value="{{ request('name') }}"
                                class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
                                placeholder="الاسم الأول أو الأخير">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1.5">رقم الهوية</label>
+                        <label class="block text-xs font-bold text-black mb-1.5">رقم الهوية</label>
                         <input type="text" name="id_card" value="{{ request('id_card') }}"
                                class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
                                placeholder="رقم الهوية">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1.5">رقم الجوال</label>
+                        <label class="block text-xs font-bold text-black mb-1.5">رقم الجوال</label>
                         <input type="text" name="phone" value="{{ request('phone') }}"
                                class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
                                placeholder="رقم الهاتف">
                     </div>
 
                     <div class="col-span-2 md:col-span-2">
-                        <label class="block text-xs font-semibold text-gray-500 mb-1.5">موضوع الطلب</label>
+                        <label class="block text-xs font-bold text-black mb-1.5">موضوع الطلب</label>
                         <input type="text" name="subject" value="{{ request('subject') }}"
                                class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
                                placeholder="ابحث في موضوع المعاملة...">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1.5">حالة المعاملة</label>
+                        <label class="block text-xs font-bold text-black mb-1.5">حالة المعاملة</label>
                         <select name="status" class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
                                 onchange="document.getElementById('license-filter-form').submit()">
                             <option value="">الكل</option>
@@ -100,12 +124,13 @@
 
                 </div>
             </form>
+            </div>
         </div>
 
         {{-- Active Filters Tags --}}
         @if(request()->anyFilled(['building_id', 'building_number', 'name', 'id_card', 'phone', 'subject', 'status']))
         <div class="flex flex-wrap items-center gap-2 text-xs">
-            <span class="text-gray-500 font-medium">فلاتر نشطة:</span>
+            <span class="text-black font-bold">فلاتر نشطة:</span>
             @if(request('building_id'))
                 <span class="bg-orange/10 text-orange-dark font-bold px-2.5 py-1 rounded-lg">رقم المبنى: {{ request('building_id') }}</span>
             @endif
@@ -136,13 +161,13 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-right text-sm">
                     <thead>
-                        <tr class="bg-gray-50/80 text-gray-500 font-semibold text-xs border-b border-gray-100">
-                            <th class="px-5 py-3.5 whitespace-nowrap"># المعاملة</th>
-                            <th class="px-5 py-3.5 whitespace-nowrap">مقدم الطلب</th>
-                            <th class="px-5 py-3.5 whitespace-nowrap">موضوع المعاملة</th>
-                            <th class="px-5 py-3.5 whitespace-nowrap">المبنى / الموقع</th>
-                            <th class="px-5 py-3.5 whitespace-nowrap">الحالة</th>
-                            <th class="px-5 py-3.5 whitespace-nowrap text-center">إجراءات</th>
+                        <tr class="bg-gray-100 text-black font-bold text-xs border-b border-gray-200">
+                            <th class="px-5 py-3.5 whitespace-nowrap text-black font-bold"># المعاملة</th>
+                            <th class="px-5 py-3.5 whitespace-nowrap text-black font-bold">مقدم الطلب</th>
+                            <th class="px-5 py-3.5 whitespace-nowrap text-black font-bold">موضوع المعاملة</th>
+                            <th class="px-5 py-3.5 whitespace-nowrap text-black font-bold">المبنى / الموقع</th>
+                            <th class="px-5 py-3.5 whitespace-nowrap text-black font-bold">الحالة</th>
+                            <th class="px-5 py-3.5 whitespace-nowrap text-center text-black font-bold">إجراءات</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">

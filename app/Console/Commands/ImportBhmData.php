@@ -432,27 +432,135 @@ class ImportBhmData extends Command
     private function importEconomical(): void
     {
         $this->info('🏪 Importing economical activity...');
+
+        // Sync sectors with concise names
+        $shortNames = [
+            1 => 'خدمات زراعية وبيطرية', 2 => 'حراجة وقطع أخشاب', 3 => 'صيد وتربية أسماك', 4 => 'تعدين واستخراج فحم',
+            5 => 'استخراج نفط وغاز', 6 => 'تعدين خامات معادن', 7 => 'محاجر وكسارات', 8 => 'خدمات دعم تعدين',
+            9 => 'صناعات غذائية ومخابز', 10 => 'صناعة مشروبات ومياه', 11 => 'صناعة تبغ ومعسل', 12 => 'صناعة منسوجات وسجاد',
+            13 => 'صناعة وخياطة ملابس', 14 => 'صناعات جلدية وأحذية', 15 => 'نجارة ومصنوعات خشبية', 16 => 'صناعة ورق وكرتون',
+            17 => 'طباعة ونشر ودعاية', 18 => 'مشتقات نفطية ووقود', 19 => 'صناعات كيميائية ومنظفات', 20 => 'صناعات دوائية وصيدلانية',
+            21 => 'صناعة بلاستيك ومطاط', 22 => 'حجر ورخام وبلوك', 23 => 'صناعات معدنية وحديد', 24 => 'حدادة وألمنيوم ومخارط',
+            25 => 'صناعات إلكترونية وبصرية', 26 => 'صناعة معدات كهربائية', 27 => 'صناعة آلات ومعدات', 28 => 'صناعة مركبات ومقطورات',
+            29 => 'معدات نقل أخرى', 30 => 'صناعة وتجارة أثاث', 31 => 'صناعات تحويلية ومجوهرات', 32 => 'صيانة وتركيب معدات',
+            33 => 'طاقة وكهرباء وتكييف', 34 => 'معالجة وتوزيع مياه', 35 => 'خدمات صرف صحي', 36 => 'تدوير ومعالجة نفايات',
+            37 => 'إدارة ومعالجة بيئية', 38 => 'مقاولات وبناء مباني', 39 => 'طرق وبنية تحتية', 40 => 'تشطيبات وديكور ومقاولات',
+            41 => 'تجارة وصيانة سيارات', 42 => 'تجارة جملة وتوزيع', 43 => 'محلات ومتاجر تجزئة', 44 => 'نقل بري وركاب',
+            45 => 'خدمات نقل مائي', 46 => 'خدمات طيران ونقل', 47 => 'مستودعات وتبريد وتخزين', 48 => 'بريد وشحن طرود',
+            49 => 'فنادق وشقق فندقية', 50 => 'مطاعم ومقاهي وبوفيهات', 51 => 'نشر وتوزيع كتب', 52 => 'إنتاج فني وإعلامي',
+            53 => 'بث إذاعي وتلفزيوني', 54 => 'اتصالات وشبكات إنترنت', 55 => 'برمجيات وتقنية معلومات', 56 => 'خدمات معلومات وصحافة',
+            57 => 'بنوك وخدمات مالية', 58 => 'شركات تأمين وتكافل', 59 => 'صرافة وأسواق مالية', 60 => 'مكاتب ووساطة عقارية',
+            61 => 'محاماة واستشارات قانونية', 62 => 'استشارات إدارية وتنظيمية', 63 => 'مكاتب هندسة ومساحة', 64 => 'أبحاث وتطوير علمي',
+            65 => 'دعاية وإعلان وتسويق', 66 => 'استوديوهات وديكور وترجمة', 67 => 'عيادات وخدمات بيطرية', 68 => 'تأجير سيارات ومناسبات',
+            69 => 'مكاتب تشغيل وتوظيف', 70 => 'سياحة وسفر وحج', 71 => 'خدمات أمن وحراسة', 72 => 'تنظيف وصيانة مباني',
+            73 => 'مكاتب خدمات عامة', 74 => 'مؤسسات وهيئات حكومية', 75 => 'تعليم ومدارس ومراكز', 76 => 'مستشفيات وعيادات ومختبرات',
+            77 => 'دور رعاية وإيواء', 78 => 'حضانات ورعاية اجتماعية', 79 => 'فنون ومسارح وترفيه', 80 => 'متاحف ومكتبات عامة',
+            81 => 'ألعاب ترفيهية وكازينو', 82 => 'نواد وصالات وقاعات', 83 => 'جمعيات ومساجد ونقابات', 84 => 'صيانة أجهزة وإلكترونيات',
+            85 => 'صالونات وعناية شخصية', 86 => 'خدمات عمالة منزلية', 87 => 'أنشطة أسرية خاصة', 88 => 'هيئات دولية وقنصليات',
+        ];
+        try {
+            $oldSectors = $this->old->table('economical_sectors')->get();
+            foreach ($oldSectors as $s) {
+                DB::table('bhm_economical_sectors')->updateOrInsert(
+                    ['id' => $s->id],
+                    [
+                        'name'           => $shortNames[$s->id] ?? ($s->description ?: $s->sector_name),
+                        'sector_name'    => $s->sector_name ?? '',
+                        'section_number' => $s->section_number ?? '',
+                        'description'    => $s->description ?? '',
+                    ]
+                );
+            }
+        } catch (\Exception $e) {}
+
         DB::table('bhm_economical')->truncate();
         DB::table('bhm_economical_owners')->truncate();
 
-        $this->old->table('economical')->orderBy('id')->chunk(500, function($rows) {
+        // Pre-load owners to map id_card and name
+        $owners = $this->old->table('economical_owners')->orderBy('id')->get();
+        $ownersMap = [];
+        foreach ($owners as $o) {
+            if (!isset($ownersMap[$o->economical_id])) {
+                $fullName = trim(implode(' ', array_filter([$o->first_name, $o->second_name, $o->third_name, $o->sur_name])));
+                $ownersMap[$o->economical_id] = [
+                    'id_card' => $o->id_card,
+                    'name'    => $fullName,
+                ];
+            }
+        }
+
+        $this->old->table('economical')->orderBy('id')->chunk(500, function($rows) use ($ownersMap) {
             DB::table('bhm_economical')->insertOrIgnore(
-                collect($rows)->map(fn($r) => [
-                    'id'           => $r->id,
-                    'building_id'  => $r->bulding_id ?? null,
-                    'unit_id'      => $r->unit_id ?? null,
-                    'building_owner_id' => $r->building_owner_id ?? null,
-                    'job_sector_id'=> $r->job_sector_id ?? null,
-                    'id_card'      => $r->id_card ?? null,
-                    'name'         => $r->name ?? null,
-                    'trade_name'   => $r->trade_name ?? null,
-                    'isLicensed'   => $r->isLicensed ?? null,
-                    'isDanger'     => $r->isDanger ?? null,
-                    'notes'        => $r->notes ?? null,
-                    'created_by'   => $r->created_by ?? null,
-                    'created_at'   => $r->created_at ?? now(),
-                    'updated_at'   => $r->updated_at ?? now(),
-                ])->toArray()
+                collect($rows)->map(function($r) use ($ownersMap) {
+                    $getDate = ($r->get_date === '0000-00-00' || empty($r->get_date)) ? null : $r->get_date;
+                    $creationDate = ($r->creation_date === '0000-00-00' || empty($r->creation_date)) ? null : $r->creation_date;
+                    $ownerInfo = $ownersMap[$r->id] ?? null;
+
+                    return [
+                        'id'                => $r->id,
+                        'municipality_id'   => $r->municipality_id ?? null,
+                        'street_id'         => $r->street_id ?? null,
+                        'building_number'   => $r->building_number ?? null,
+                        'floor_number'      => $r->floor_number ?? null,
+                        'unit_number'       => $r->unit_number ?? null,
+                        'zone_id'           => $r->zone_id ?? null,
+                        'subzone_id'        => $r->subzone_id ?? null,
+                        'parcel_number'     => $r->parcel_number ?? null,
+                        'block_number'      => $r->block_number ?? null,
+                        'job_formal_name'   => $r->job_formal_name ?? null,
+                        'job_use_name'      => $r->job_use_name ?? null,
+                        'old_job_number'    => $r->old_job_number ?? null,
+                        'job_location'      => $r->job_location ?? null,
+                        'job_street'        => $r->job_street ?? null,
+                        'job_phone'         => $r->job_phone ?? null,
+                        'job_mobile'        => $r->job_mobile ?? null,
+                        'website'           => $r->website ?? null,
+                        'email'             => $r->email ?? null,
+                        'whatsapp'          => $r->whatsapp ?? null,
+                        'facebook'          => $r->facebook ?? null,
+                        'instagram'         => $r->instagram ?? null,
+                        'twitter'           => $r->twitter ?? null,
+                        'ownership_type'    => $r->ownership_type ?? null,
+                        'ownership_note'    => $r->ownership_note ?? null,
+                        'work_state'        => $r->work_state ?? null,
+                        'job_sector_id'     => $r->job_sector_id ?? null,
+                        'job_description'   => $r->job_description ?? null,
+                        'has_branch'        => $r->has_branch ?? null,
+                        'branch_number'     => $r->branch_number ?? null,
+                        'is_main_branch'    => $r->is_main_branch ?? null,
+                        'male_employee'     => $r->male_employee ?? null,
+                        'female_employee'   => $r->female_employee ?? null,
+                        'info_from'         => $r->info_from ?? null,
+                        'info_from_note'    => $r->info_from_note ?? null,
+                        'info_result'       => $r->info_result ?? null,
+                        'refuse_reason'     => $r->refuse_reason ?? null,
+                        'collector_id'      => $r->collector_id ?? null,
+                        'supervisor_id'     => $r->supervisor_id ?? null,
+                        'get_date'          => $getDate,
+                        'created_by'        => $r->created_by ?? null,
+                        'creation_date'     => $creationDate,
+                        'craft_number'      => $r->craft_number ?? null,
+                        'bulding_id'        => $r->bulding_id ?? null,
+                        'building_id'       => $r->bulding_id ?? null,
+                        'file_number'       => $r->file_number ?? null,
+                        'license_number'    => $r->license_number ?? null,
+                        'type_property'     => $r->type_property ?? null,
+                        'notes'             => $r->notes ?? null,
+                        'created_at'        => $r->created_at ?? now(),
+                        'updated_at'        => $r->updated_at ?? now(),
+                        'building_owner_id' => $r->building_owner_id ?? null,
+                        'unit_id'           => $r->unit_id ?? null,
+                        'isDanger'          => $r->isDanger ?? null,
+                        'isLicensed'        => $r->isLicensed ?? null,
+                        'isActive'          => $r->isActive ?? 2,
+                        'craft_category_id' => $r->craft_category_id ?? null,
+                        'craft_type_id'     => $r->craft_type_id ?? null,
+                        'approved'          => $r->approved ?? null,
+                        'id_card'           => $ownerInfo['id_card'] ?? null,
+                        'name'              => $ownerInfo['name'] ?? null,
+                        'trade_name'        => $r->job_formal_name ?: ($r->job_use_name ?: null),
+                    ];
+                })->toArray()
             );
         });
 

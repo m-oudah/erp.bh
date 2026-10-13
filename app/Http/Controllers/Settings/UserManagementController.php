@@ -20,18 +20,32 @@ class UserManagementController extends Controller
     {
         $allPermissions = Permission::orderBy('name')->get();
         
-        $permissionsByModule = $allPermissions->groupBy(function($perm) {
-            $name = strtolower($perm->name);
-            if (str_contains($name, 'archive')) return 'الأرشيف (Archive)';
-            if (str_contains($name, 'building')) return 'المباني (Buildings)';
-            if (str_contains($name, 'owner') || str_contains($name, 'client')) return 'المالكين والعملاء (Owners/Clients)';
-            if (str_contains($name, 'craft')) return 'الحرف (Crafts)';
-            if (str_contains($name, 'opinion')) return 'الآراء (Opinions)';
-            if (str_contains($name, 'role') || str_contains($name, 'user')) return 'المستخدمين والصلاحيات (Users/Roles)';
-            return 'صلاحيات أخرى (Other)';
-        });
+        $modulesStructure = [
+            'الأرشيف الإلكتروني' => [],
+            'التنظيم والأبنية' => []
+        ];
 
-        return view('settings.users.edit', compact('user', 'permissionsByModule'));
+        foreach ($allPermissions as $perm) {
+            $name = strtolower($perm->name);
+            
+            if (str_contains($name, 'archive')) {
+                // Archive Module
+                $subgroup = 'إدارة الأرشيف';
+                $modulesStructure['الأرشيف الإلكتروني'][$subgroup][] = $perm;
+            } else {
+                // Organization and Buildings Module
+                if (str_contains($name, 'building')) $subgroup = 'المباني (Buildings)';
+                elseif (str_contains($name, 'owner') || str_contains($name, 'client')) $subgroup = 'المالكين والعملاء (Owners/Clients)';
+                elseif (str_contains($name, 'craft')) $subgroup = 'الحرف (Crafts)';
+                elseif (str_contains($name, 'opinion')) $subgroup = 'الآراء (Opinions)';
+                elseif (str_contains($name, 'role') || str_contains($name, 'user')) $subgroup = 'المستخدمين والصلاحيات (Users/Roles)';
+                else $subgroup = 'صلاحيات أخرى (Other)';
+
+                $modulesStructure['التنظيم والأبنية'][$subgroup][] = $perm;
+            }
+        }
+
+        return view('settings.users.edit', compact('user', 'modulesStructure'));
     }
 
     public function update(Request $request, User $user)

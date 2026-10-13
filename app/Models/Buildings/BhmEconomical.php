@@ -8,6 +8,7 @@ class BhmEconomical extends Model {
     public function building() { return $this->belongsTo(BhmBuilding::class, 'building_id'); }
     public function unit() { return $this->belongsTo(BhmUnit::class, 'unit_id'); }
     public function sector() { return $this->belongsTo(BhmEconomicalSector::class, 'job_sector_id'); }
+    public function category() { return $this->belongsTo(BhmCraftCategory::class, 'craft_category_id'); }
     public function owners() { return $this->hasMany(BhmEconomicalOwner::class, 'economical_id'); }
     public function attachments() { return $this->hasMany(BhmCraftAttachment::class, 'economical_id'); }
     public function crafts() { return $this->hasMany(BhmCraftTypeEconomical::class, 'economical_id'); }
@@ -17,7 +18,20 @@ class BhmEconomical extends Model {
     {
         $query->when($filters['id_card'] ?? null, fn($q, $v) => $q->where('id_card', $v)->orWhereHas('owners', fn($q) => $q->where('id_card', $v)));
         $query->when($filters['name'] ?? null, fn($q, $v) => $q->whereHas('owners', fn($q) => $q->where('first_name', 'like', "%{$v}%")->orWhere('sur_name', 'like', "%{$v}%")->orWhere('second_name', 'like', "%{$v}%")));
-        $query->when($filters['trade_name'] ?? null, fn($q, $v) => $q->where('job_formal_name', 'like', "%{$v}%"));
+        $query->when($filters['trade_name'] ?? null, function($q, $v) {
+            $cleaned = preg_replace('/[+\-><\(\)~*\"@]+/', ' ', trim($v));
+            $terms = array_filter(explode(' ', $cleaned));
+            if (!empty($terms)) {
+                $boolQuery = implode(' ', array_map(fn($t) => '+' . $t . '*', $terms));
+                $q->where(function($sub) use ($boolQuery, $v) {
+                    $sub->whereRaw("MATCH(job_formal_name, trade_name, name) AGAINST(? IN BOOLEAN MODE)", [$boolQuery])
+                        ->orWhere('job_formal_name', 'like', "%{$v}%")
+                        ->orWhere('trade_name', 'like', "%{$v}%");
+                });
+            } else {
+                $q->where('job_formal_name', 'like', "%{$v}%");
+            }
+        });
         $query->when($filters['job_sector_id'] ?? null, fn($q, $v) => $q->where('job_sector_id', $v));
         // isLicensed: 1 = مرخص, 2 = غير مرخص (قيم النظام القديم)
         $query->when(($filters['isLicensed'] ?? '') !== '', fn($q) => $q->where('isLicensed', $filters['isLicensed'] == '1' ? 1 : 2));

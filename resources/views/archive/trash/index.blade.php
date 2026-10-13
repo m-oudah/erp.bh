@@ -1,6 +1,6 @@
 <x-archive-layout>
     <div class="flex justify-between items-center mb-4 px-1">
-        <h3 class="font-bold text-lg text-gray-800 flex items-center gap-2">
+        <h3 class="font-bold text-lg text-black flex items-center gap-2">
             <x-heroicon-s-trash class="w-6 h-6 text-red-500" />
             سلة المحذوفات
         </h3>
@@ -16,10 +16,10 @@
         
         <!-- Tabs Header -->
         <div class="flex border-b border-gray-100 bg-gray-50/50">
-            <button @click="tab = 'files'" :class="{ 'text-navy border-b-2 border-navy bg-white': tab === 'files', 'text-gray-500 hover:text-gray-700': tab !== 'files' }" class="px-8 py-4 font-bold text-sm transition-all focus:outline-none">
+            <button @click="tab = 'files'" :class="{ 'text-navy border-b-2 border-navy bg-white': tab === 'files', 'text-black hover:text-navy-dark': tab !== 'files' }" class="px-8 py-4 font-bold text-sm transition-all focus:outline-none">
                 الملفات المحذوفة ({{ $deletedFiles->count() }})
             </button>
-            <button @click="tab = 'documents'" :class="{ 'text-navy border-b-2 border-navy bg-white': tab === 'documents', 'text-gray-500 hover:text-gray-700': tab !== 'documents' }" class="px-8 py-4 font-bold text-sm transition-all focus:outline-none">
+            <button @click="tab = 'documents'" :class="{ 'text-navy border-b-2 border-navy bg-white': tab === 'documents', 'text-black hover:text-navy-dark': tab !== 'documents' }" class="px-8 py-4 font-bold text-sm transition-all focus:outline-none">
                 الوثائق المحذوفة ({{ $deletedDocuments->count() }})
             </button>
         </div>
@@ -28,22 +28,22 @@
         <div x-show="tab === 'files'" class="p-0">
             <div class="overflow-x-auto">
                 <table class="w-full text-right text-sm text-gray-600">
-                    <thead class="bg-white text-gray-400 text-xs uppercase border-b border-gray-100 font-bold">
+                    <thead class="bg-gray-100 text-black text-xs uppercase border-b border-gray-200 font-bold">
                         <tr>
-                            <th class="px-6 py-4 font-bold">رقم الملف</th>
-                            <th class="px-6 py-4 font-bold">الاسم</th>
-                            <th class="px-6 py-4 font-bold">نوع الملف</th>
-                            <th class="px-6 py-4 font-bold">تاريخ الحذف</th>
-                            <th class="px-6 py-4 text-center font-bold">إجراءات</th>
+                            <th class="px-6 py-4 font-bold text-black">رقم الملف</th>
+                            <th class="px-6 py-4 font-bold text-black">الاسم</th>
+                            <th class="px-6 py-4 font-bold text-black">نوع الملف</th>
+                            <th class="px-6 py-4 font-bold text-black">تاريخ الحذف</th>
+                            <th class="px-6 py-4 text-center font-bold text-black">إجراءات</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
                         @forelse($deletedFiles as $file)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 font-bold text-navy">{{ $file->file_no }}</td>
-                            <td class="px-6 py-4 font-bold text-gray-800">{{ $file->file_name }}</td>
-                            <td class="px-6 py-4 text-orange-dark font-medium">{{ $file->fileType->name ?? 'غير محدد' }}</td>
-                            <td class="px-6 py-4 text-gray-500" dir="ltr">{{ $file->deleted_at->format('Y-m-d H:i') }}</td>
+                            <td class="px-6 py-4 font-bold text-black">{{ $file->file_name }}</td>
+                            <td class="px-6 py-4 text-orange-dark font-semibold">{{ $file->fileType->name ?? 'غير محدد' }}</td>
+                            <td class="px-6 py-4 text-black font-semibold" dir="ltr">{{ $file->deleted_at->format('Y-m-d H:i') }}</td>
                             <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     <form action="{{ route('archive.trash.files.restore', $file->id) }}" method="POST">
@@ -78,25 +78,28 @@
         <div x-show="tab === 'documents'" style="display: none;" class="p-0">
             <div class="overflow-x-auto">
                 <table class="w-full text-right text-sm text-gray-600">
-                    <thead class="bg-white text-gray-400 text-xs uppercase border-b border-gray-100 font-bold">
+                    <thead class="bg-gray-100 text-black text-xs uppercase border-b border-gray-200 font-bold">
                         <tr>
-                            <th class="px-6 py-4 font-bold">رقم / اسم الوثيقة</th>
-                            <th class="px-6 py-4 font-bold">الملف التابع له</th>
-                            <th class="px-6 py-4 font-bold">تاريخ الحذف</th>
-                            <th class="px-6 py-4 text-center font-bold">إجراءات</th>
+                            <th class="px-6 py-4 font-bold text-black">رقم / اسم الوثيقة</th>
+                            <th class="px-6 py-4 font-bold text-black">الملف التابع له</th>
+                            <th class="px-6 py-4 font-bold text-black">تاريخ الحذف</th>
+                            <th class="px-6 py-4 text-center font-bold text-black">إجراءات</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
                         @forelse($deletedDocuments as $doc)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4">
-                                <div class="font-bold text-gray-800">{{ $doc->document_name }}</div>
-                                <div class="text-xs text-gray-400">{{ $doc->document_no }}</div>
+                                <div class="font-bold text-black">{{ $doc->document_name }}</div>
+                                <div class="text-xs text-black font-semibold">{{ $doc->document_no }}</div>
                             </td>
                             <td class="px-6 py-4 text-navy font-bold">{{ $doc->archiveFile->file_name ?? 'ملف غير معروف' }}</td>
-                            <td class="px-6 py-4 text-gray-500" dir="ltr">{{ $doc->deleted_at->format('Y-m-d H:i') }}</td>
+                            <td class="px-6 py-4 text-black font-semibold" dir="ltr">{{ $doc->deleted_at->format('Y-m-d H:i') }}</td>
                             <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
+                                    <a href="{{ asset('storage/' . $doc->document_path) }}" target="_blank" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors" title="عرض الوثيقة">
+                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                    </a>
                                     <form action="{{ route('archive.trash.documents.restore', $doc->id) }}" method="POST">
                                         @csrf
                                         <button type="submit" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 transition-colors" title="استعادة الوثيقة">

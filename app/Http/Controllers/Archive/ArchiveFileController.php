@@ -14,11 +14,24 @@ class ArchiveFileController extends Controller
         $query = ArchiveFile::with('fileType')->latest();
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim($request->search);
             $normalizedSearch = str_replace(['أ', 'إ', 'آ'], 'ا', $search);
 
-            $query->where(function($q) use ($normalizedSearch) {
-                $q->whereRaw("REPLACE(REPLACE(REPLACE(file_no, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') LIKE ?", ["%{$normalizedSearch}%"])
+            $query->where(function($q) use ($normalizedSearch, $search) {
+                // 1. Direct index lookup on file_no (instant B-Tree index lookup)
+                $q->where('file_no', $search)
+                  ->orWhere('file_no', 'like', "{$search}%");
+
+                // 2. Full-Text search on file_name
+                $cleanedTerm = preg_replace('/[+\-><\(\)~*\"@]+/', ' ', $search);
+                $terms = array_filter(explode(' ', trim($cleanedTerm)));
+                if (!empty($terms)) {
+                    $booleanQuery = implode(' ', array_map(fn($t) => '+' . $t . '*', $terms));
+                    $q->orWhereRaw("MATCH(file_name) AGAINST(? IN BOOLEAN MODE)", [$booleanQuery]);
+                }
+
+                // 3. Fallback for normalized Arabic and substring match
+                $q->orWhereRaw("REPLACE(REPLACE(REPLACE(file_no, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') LIKE ?", ["%{$normalizedSearch}%"])
                   ->orWhereRaw("REPLACE(REPLACE(REPLACE(file_name, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') LIKE ?", ["%{$normalizedSearch}%"]);
             });
         }
@@ -48,7 +61,7 @@ class ArchiveFileController extends Controller
         $request->validate([
             'archive_file_type_id' => 'required|exists:archive_file_types,id',
             'file_no' => 'required|string|max:255|unique:archive_files,file_no',
-            'file_name' => 'required|string|max:255',
+            'file_name' => 'nullable|string|max:255',
         ]);
 
         $type = ArchiveFileType::with('fields')->findOrFail($request->archive_file_type_id);
@@ -74,7 +87,7 @@ class ArchiveFileController extends Controller
         ArchiveFile::create([
             'archive_file_type_id' => $request->archive_file_type_id,
             'file_no' => $request->file_no,
-            'file_name' => $request->file_name,
+            'file_name' => $request->file_name ?: $request->file_no,
             'dynamic_data' => $request->dynamic_data ?? [],
             'department_id' => auth()->id(),
         ]);
@@ -104,7 +117,7 @@ class ArchiveFileController extends Controller
         $request->validate([
             'archive_file_type_id' => 'required|exists:archive_file_types,id',
             'file_no' => 'required|string|max:255|unique:archive_files,file_no,' . $file->id,
-            'file_name' => 'required|string|max:255',
+            'file_name' => 'nullable|string|max:255',
         ]);
 
         $type = ArchiveFileType::with('fields')->findOrFail($request->archive_file_type_id);
@@ -130,7 +143,7 @@ class ArchiveFileController extends Controller
         $file->update([
             'archive_file_type_id' => $request->archive_file_type_id,
             'file_no' => $request->file_no,
-            'file_name' => $request->file_name,
+            'file_name' => $request->file_name ?: ($file->file_name ?: $request->file_no),
             'dynamic_data' => $request->dynamic_data ?? [],
         ]);
 

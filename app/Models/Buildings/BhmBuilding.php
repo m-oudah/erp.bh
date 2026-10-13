@@ -135,15 +135,40 @@ class BhmBuilding extends Model
     }
 
     // Scopes
+    public function transactions()
+    {
+        return $this->hasMany(\App\Models\Transactions\BhmTransaction::class, 'building_id');
+    }
+
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['file_number'] ?? null, fn($q, $v) => $q->where('file_number', $v));
         $query->when($filters['building_number'] ?? null, fn($q, $v) => $q->where('building_number', $v));
         $query->when($filters['block_number'] ?? null, fn($q, $v) => $q->where('block_number', $v));
         $query->when($filters['parcel_number'] ?? null, fn($q, $v) => $q->where('parcel_number', $v));
-        $query->when($filters['building_name'] ?? null, fn($q, $v) => $q->where('building_name', 'like', "%{$v}%"));
+        $query->when($filters['building_name'] ?? null, function($q, $v) {
+            $cleaned = preg_replace('/[+\-><\(\)~*\"@]+/', ' ', trim($v));
+            $terms = array_filter(explode(' ', $cleaned));
+            if (!empty($terms)) {
+                $boolQuery = implode(' ', array_map(fn($t) => '+' . $t . '*', $terms));
+                $q->where(function($sub) use ($boolQuery, $v) {
+                    $sub->whereRaw("MATCH(building_name) AGAINST(? IN BOOLEAN MODE)", [$boolQuery])
+                        ->orWhere('building_name', 'like', "%{$v}%");
+                });
+            } else {
+                $q->where('building_name', 'like', "%{$v}%");
+            }
+        });
         $query->when($filters['zone_id'] ?? null, fn($q, $v) => $q->where('zone_id', $v));
-        $query->when($filters['street_id'] ?? null, fn($q, $v) => $q->where('street_id', $v));
+        $query->when($filters['street_number'] ?? null, function($q, $v) {
+            $q->whereHas('street', fn($sq) => $sq->where('street_number', $v));
+        });
+        $query->when($filters['street_id'] ?? null, function($q, $v) {
+            $q->where(function($sub) use ($v) {
+                $sub->where('street_id', $v)
+                    ->orWhereHas('street', fn($sq) => $sq->where('street_number', $v));
+            });
+        });
         $query->when($filters['building_type_id'] ?? null, fn($q, $v) => $q->where('building_type_id', $v));
         $query->when($filters['id_card'] ?? null, fn($q, $v) => $q->whereHas('owners', fn($q) => $q->where('id_card', $v)));
         $query->when($filters['owner_name'] ?? null, fn($q, $v) => $q->whereHas('owners', fn($q) => $q->where('first_name', 'like', "%{$v}%")->orWhere('sur_name', 'like', "%{$v}%")));

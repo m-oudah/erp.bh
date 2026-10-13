@@ -16,7 +16,7 @@ class BhmBuildingController extends Controller
     {
         $filters = $request->only([
             'file_number', 'building_number', 'block_number', 'parcel_number',
-            'building_name', 'zone_id', 'street_id', 'building_type_id',
+            'building_name', 'zone_id', 'street_id', 'street_number', 'building_type_id',
             'id_card', 'owner_name'
         ]);
 
@@ -26,16 +26,11 @@ class BhmBuildingController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        $zones = BhmZone::orderBy('name')->get();
+        $zones = BhmZone::orderBy('id')->get();
         $buildingTypes = BhmBuildingType::orderBy('name')->get();
 
-        // If zone is selected, get its streets for the filter dropdown
-        $streets = collect();
-        if ($request->filled('zone_id')) {
-            $streets = BhmStreet::where('zone_id', $request->zone_id)->orderBy('name')->get();
-        } else {
-            $streets = BhmStreet::orderBy('name')->get();
-        }
+        // Load all streets sorted with named streets first then by number
+        $streets = BhmStreet::orderByRaw("CASE WHEN street_name IS NOT NULL AND street_name != '' THEN 0 ELSE 1 END, street_name ASC, street_number ASC")->get();
 
         return view('buildings.buildings.index', compact('buildings', 'filters', 'zones', 'buildingTypes', 'streets'));
     }

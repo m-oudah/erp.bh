@@ -1,10 +1,10 @@
-<x-buildings-layout>
+<x-customers-layout>
     <div class="space-y-6">
         
         <!-- Header -->
         <div class="flex items-start justify-between mb-6">
             <div class="flex items-center gap-4">
-                <a href="{{ route('buildings.customers.index', ['tab' => 'subscriptions']) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 p-2 rounded-xl transition-colors">
+                <a href="{{ route('customers.index', ['tab' => 'subscriptions']) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 p-2 rounded-xl transition-colors">
                     <x-heroicon-o-arrow-right class="w-5 h-5" />
                 </a>
                 <div>
@@ -50,7 +50,7 @@
                     </div>
                     <div class="flex justify-between items-center py-2 border-b border-gray-50">
                         <span class="text-sm text-gray-500">المالك الأصلي للوحدة:</span>
-                        <span class="text-sm font-semibold text-gray-800">{{ $subscription->owner->full_name ?? '-' }}</span>
+                        <span class="text-sm font-semibold text-gray-800">{{ $subscription->buildingOwner->full_name ?? '-' }}</span>
                     </div>
                     <div class="flex justify-between items-center py-2 border-b border-gray-50">
                         <span class="text-sm text-gray-500">ملاحظات:</span>
@@ -128,4 +128,4 @@
         </div>
 
     </div>
-</x-buildings-layout>
+</x-customers-layout>

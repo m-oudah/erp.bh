@@ -1,7 +1,7 @@
 <x-archive-layout>
     <div class="flex justify-between items-center mb-4 px-1">
-        <h3 class="font-bold text-lg text-gray-800 flex items-center gap-2">
-            <x-heroicon-o-folder class="w-5 h-5 text-gray-500" />
+        <h3 class="font-bold text-lg text-black flex items-center gap-2">
+            <x-heroicon-o-folder class="w-5 h-5 text-black" />
             تصفح المجلدات
         </h3>
     </div>
@@ -11,7 +11,7 @@
             <form action="{{ route('archive.files.index') }}" method="GET" class="flex gap-4">
                 <div class="flex-1 flex gap-3">
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث برقم الهوية، رقم الملف، أو اسم المواطن..." class="flex-1 rounded-xl border-gray-200 focus:border-orange focus:ring-orange shadow-sm text-sm">
-                    <select name="type_id" class="w-64 rounded-xl border-gray-200 focus:border-orange focus:ring-orange shadow-sm text-sm">
+                    <select name="type_id" class="w-64 rounded-xl border-gray-200 focus:border-orange focus:ring-orange shadow-sm text-sm font-semibold text-black">
                         <option value="">جميع أنواع الملفات</option>
                         @foreach($types as $type)
                             <option value="{{ $type->id }}" {{ request('type_id') == $type->id ? 'selected' : '' }}>
@@ -23,19 +23,19 @@
                 <button type="submit" class="bg-navy hover:bg-navy-light text-white px-8 py-2 rounded-xl font-bold shadow-sm transition-colors">
                     تصفية
                 </button>
-                <a href="{{ route('archive.files.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-xl font-bold shadow-sm transition-colors flex items-center justify-center">
+                <a href="{{ route('archive.files.index') }}" class="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-xl font-bold shadow-sm transition-colors flex items-center justify-center">
                     إعادة ضبط
                 </a>
             </form>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-right text-sm text-gray-600">
-                <thead class="bg-white text-gray-400 text-xs uppercase border-b border-gray-100 font-bold">
+                <thead class="bg-gray-100 text-black text-xs uppercase border-b border-gray-200 font-bold">
                     <tr>
-                        <th class="px-6 py-4 font-bold">رقم الملف</th>
-                        <th class="px-6 py-4 font-bold">الاسم</th>
-                        <th class="px-6 py-4 font-bold">نوع الملف</th>
-                        <th class="px-6 py-4 text-center font-bold">إجراءات</th>
+                        <th class="px-6 py-4 font-bold text-black">رقم الملف</th>
+                        <th class="px-6 py-4 font-bold text-black">الاسم</th>
+                        <th class="px-6 py-4 font-bold text-black">نوع الملف</th>
+                        <th class="px-6 py-4 text-center font-bold text-black">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -44,7 +44,7 @@
                         <td class="px-6 py-4 font-bold text-navy">
                             <a href="{{ route('archive.files.show', $file->id) }}" class="hover:underline hover:text-navy-light transition-colors block">{{ $file->file_no }}</a>
                         </td>
-                        <td class="px-6 py-4 font-bold text-gray-800">
+                        <td class="px-6 py-4 font-bold text-black">
                             <a href="{{ route('archive.files.show', $file->id) }}" class="hover:underline transition-colors block">{{ $file->file_name }}</a>
                         </td>
                         <td class="px-6 py-4 text-orange-dark font-medium">{{ $file->fileType->name ?? 'غير محدد' }}</td>

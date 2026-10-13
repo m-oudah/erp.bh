@@ -1,10 +1,10 @@
-<x-buildings-layout>
+<x-crafts-layout>
     <div class="space-y-6">
         
         <!-- Header -->
         <div class="flex items-start justify-between mb-6">
             <div class="flex items-center gap-4">
-                <a href="{{ route('buildings.economical.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 p-2 rounded-xl transition-colors">
+                <a href="{{ route('crafts.economical.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 p-2 rounded-xl transition-colors">
                     <x-heroicon-o-arrow-right class="w-5 h-5" />
                 </a>
                 <div>
@@ -12,7 +12,7 @@
                         نشاط: {{ $economical->job_formal_name ?? $economical->name ?? 'بدون اسم' }}
                     </h2>
                     <div class="flex items-center gap-4 text-sm text-gray-500 mt-2">
-                        <span class="flex items-center gap-1.5"><x-heroicon-o-briefcase class="w-4 h-4 text-gray-400"/> القطاع: {{ $economical->sector->name ?? 'غير محدد' }}</span>
+                        <span class="flex items-center gap-1.5 text-black font-semibold"><x-heroicon-o-briefcase class="w-4 h-4 text-gray-500"/> القطاع: {{ $economical->sector->sector_name ?: ($economical->sector->name ?? ($economical->category->name ?? 'غير محدد')) }}</span>
                         @if($economical->building)
                         <span class="text-gray-300">|</span>
                         <a href="{{ route('buildings.buildings.show', $economical->building_id) }}" class="flex items-center gap-1.5 text-blue-600 hover:underline">
@@ -24,8 +24,8 @@
             </div>
             
             <div class="flex items-center gap-2">
-                @can('bhm.economical.edit')
-                <a href="{{ route('buildings.economical.edit', $economical->id) }}" class="inline-flex items-center gap-2 bg-orange hover:bg-orange-dark text-white font-medium py-2 px-4 rounded-xl shadow-sm transition-colors text-sm">
+                @can('Update-Craft')
+                <a href="{{ route('crafts.economical.edit', $economical->id) }}" class="inline-flex items-center gap-2 bg-orange hover:bg-orange-dark text-white font-medium py-2 px-4 rounded-xl shadow-sm transition-colors text-sm">
                     <x-heroicon-o-pencil-square class="w-4 h-4" />
                     تعديل البيانات
                 </a>
@@ -84,34 +84,51 @@
                             @php
                                 $mainOwnerName = $economical->name;
                                 $mainOwnerCard = $economical->id_card;
+                                $mainOwnerPhone = null;
+                                $mainOwnerMokalaf = null;
                                 $otherOwners = $economical->owners;
 
-                                if (empty(trim($mainOwnerName)) && $economical->owners->count() > 0) {
+                                if ($economical->owners->count() > 0) {
                                     $firstOwner = $economical->owners->first();
-                                    $mainOwnerName = $firstOwner->full_name;
-                                    $mainOwnerCard = $firstOwner->id_card;
+                                    if (empty(trim($mainOwnerName))) {
+                                        $mainOwnerName = $firstOwner->full_name;
+                                        $mainOwnerCard = $firstOwner->id_card;
+                                    }
+                                    $mainOwnerPhone = $firstOwner->phone_number ?? $firstOwner->phone;
+                                    $mainOwnerMokalaf = $firstOwner->mokalaf;
                                     $otherOwners = $economical->owners->skip(1);
+                                }
+                                if (empty($mainOwnerPhone)) {
+                                    $mainOwnerPhone = $economical->job_phone ?: $economical->job_mobile;
                                 }
                             @endphp
                             <div class="space-y-3">
                                 <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span class="text-sm text-gray-500">الاسم:</span>
-                                    <span class="text-sm font-semibold text-gray-800">{{ $mainOwnerName ?: '-' }}</span>
+                                    <span class="text-sm text-black font-semibold">الاسم:</span>
+                                    <span class="text-sm font-semibold text-black">{{ $mainOwnerName ?: '-' }}</span>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span class="text-sm text-gray-500">رقم الهوية:</span>
-                                    <span class="text-sm font-semibold text-gray-800">{{ $mainOwnerCard ?: '-' }}</span>
+                                    <span class="text-sm text-black font-semibold">رقم الهوية:</span>
+                                    <span class="text-sm font-semibold text-black">{{ $mainOwnerCard ?: '-' }}</span>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span class="text-sm text-gray-500">الاسم التجاري:</span>
-                                    <span class="text-sm font-semibold text-gray-800">{{ $economical->job_formal_name ?: '-' }}</span>
+                                    <span class="text-sm text-black font-semibold">رقم الاتصال:</span>
+                                    <span class="text-sm font-semibold text-black">{{ $mainOwnerPhone ?: '-' }}</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                                    <span class="text-sm text-black font-semibold">رقم المكلف:</span>
+                                    <span class="text-sm font-semibold text-black">{{ $mainOwnerMokalaf ?: '-' }}</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                                    <span class="text-sm text-black font-semibold">الاسم التجاري:</span>
+                                    <span class="text-sm font-semibold text-black">{{ $economical->job_formal_name ?: '-' }}</span>
                                 </div>
                                 @if($otherOwners->count() > 0)
                                 <div class="py-2">
-                                    <span class="text-sm text-gray-500 block mb-2">شركاء آخرون مسجلون:</span>
+                                    <span class="text-sm text-black font-semibold block mb-2">شركاء آخرون مسجلون:</span>
                                     <div class="space-y-1">
                                     @foreach($otherOwners as $partner)
-                                        <div class="text-xs text-gray-700 bg-gray-50 px-2 py-1.5 rounded">{{ $partner->full_name }} ({{ $partner->id_card }})</div>
+                                        <div class="text-xs text-black bg-gray-50 px-2 py-1.5 rounded">{{ $partner->full_name }} ({{ $partner->id_card }})</div>
                                     @endforeach
                                     </div>
                                 </div>
@@ -121,30 +138,48 @@
 
                         <!-- Group 2 -->
                         <div>
-                            <h3 class="text-sm font-bold text-gray-800 border-b border-gray-100 pb-2 mb-4 flex items-center gap-2">
+                            <h3 class="text-sm font-bold text-black border-b border-gray-100 pb-2 mb-4 flex items-center gap-2">
                                 <x-heroicon-s-map-pin class="w-4 h-4 text-gray-400" />
                                 موقع النشاط
                             </h3>
                             <div class="space-y-3">
                                 @if($economical->building)
                                 <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span class="text-sm text-gray-500">مبنى رقم:</span>
+                                    <span class="text-sm text-black font-semibold">مبنى رقم:</span>
                                     <a href="{{ route('buildings.buildings.show', $economical->building_id) }}" class="text-sm font-bold text-blue-600 hover:underline">{{ $economical->building->building_number ?? $economical->building_id }}</a>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span class="text-sm text-gray-500">الحي:</span>
-                                    <span class="text-sm font-semibold text-gray-800">{{ $economical->building->zone->name ?? '-' }}</span>
+                                    <span class="text-sm text-black font-semibold">الحي:</span>
+                                    <span class="text-sm font-semibold text-black">{{ $economical->building->zone->name ?? '-' }}</span>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span class="text-sm text-gray-500">الشارع:</span>
-                                    <span class="text-sm font-semibold text-gray-800">{{ $economical->building->street->name ?? '-' }}</span>
+                                    <span class="text-sm text-black font-semibold">الشارع:</span>
+                                    <span class="text-sm font-semibold text-black">{{ $economical->building->street->name ?? '-' }}</span>
+                                </div>
+                                @elseif($economical->building_number || $economical->job_street || $economical->job_location)
+                                <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                                    <span class="text-sm text-black font-semibold">رقم المبنى:</span>
+                                    <span class="text-sm font-semibold text-black">{{ $economical->building_number ?: '-' }}</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                                    <span class="text-sm text-black font-semibold">الشارع:</span>
+                                    <span class="text-sm font-semibold text-black">{{ $economical->job_street ?: '-' }}</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                                    <span class="text-sm text-black font-semibold">الموقع:</span>
+                                    <span class="text-sm font-semibold text-black">{{ $economical->job_location ?: '-' }}</span>
                                 </div>
                                 @endif
 
                                 @if($economical->unit)
                                 <div class="flex justify-between items-center py-2">
-                                    <span class="text-sm text-gray-500">رقم الوحدة/المحل:</span>
-                                    <span class="text-sm font-semibold text-gray-800">{{ $economical->unit->unit_number ?? '-' }} ({{ $economical->unit->unit_name ?? '-' }})</span>
+                                    <span class="text-sm text-black font-semibold">رقم الوحدة/المحل:</span>
+                                    <span class="text-sm font-semibold text-black">{{ $economical->unit->unit_number ?? '-' }} ({{ $economical->unit->unit_name ?? '-' }})</span>
+                                </div>
+                                @elseif($economical->unit_number)
+                                <div class="flex justify-between items-center py-2">
+                                    <span class="text-sm text-black font-semibold">رقم الوحدة/المحل:</span>
+                                    <span class="text-sm font-semibold text-black">{{ $economical->unit_number }}</span>
                                 </div>
                                 @endif
                             </div>
@@ -203,4 +238,4 @@
         </div>
 
     </div>
-</x-buildings-layout>
+</x-crafts-layout>

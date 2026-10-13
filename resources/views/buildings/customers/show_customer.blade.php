@@ -1,10 +1,10 @@
-<x-buildings-layout>
+<x-customers-layout>
     <div class="space-y-6">
         
         <!-- Header -->
         <div class="flex items-start justify-between mb-6">
             <div class="flex items-center gap-4">
-                <a href="{{ route('buildings.customers.index', ['tab' => 'customers']) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 p-2 rounded-xl transition-colors">
+                <a href="{{ route('customers.index', ['tab' => 'customers']) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 p-2 rounded-xl transition-colors">
                     <x-heroicon-o-arrow-right class="w-5 h-5" />
                 </a>
                 <div>
@@ -87,5 +87,59 @@
             
         </div>
 
+        @if($customer->crafts && $customer->crafts->count() > 0)
+        <!-- Crafts Linked to this Customer -->
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mt-6">
+            <div class="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <x-heroicon-s-briefcase class="w-5 h-5 text-orange" />
+                    بطاقة معلومات الحرف المرتبطة
+                </h3>
+                <span class="bg-blue-100 text-blue-700 py-1 px-3 rounded-full text-xs font-bold">{{ $customer->crafts->count() }} حرفة</span>
+            </div>
+            
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach($customer->crafts as $craft)
+                    <div class="border border-gray-100 rounded-2xl p-4 hover:shadow-md hover:border-orange/30 transition-all bg-white relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 w-1 h-full bg-orange opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="font-bold text-gray-800 text-base leading-tight">{{ $craft->business_name ?? 'بدون اسم' }}</h4>
+                            @if($craft->statusRecord)
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-700">{{ $craft->statusRecord->description }}</span>
+                            @endif
+                        </div>
+                        
+                        <div class="space-y-2 text-sm text-gray-600 mb-4">
+                            @if($craft->craftType)
+                            <div class="flex items-center gap-2 text-xs">
+                                <x-heroicon-o-tag class="w-3.5 h-3.5 text-gray-400" />
+                                <span class="font-medium text-gray-700">{{ $craft->craftType->name }}</span>
+                            </div>
+                            @endif
+                            <div class="flex items-center gap-2 text-xs">
+                                <x-heroicon-o-map-pin class="w-3.5 h-3.5 text-gray-400" />
+                                <span class="truncate" title="{{ $craft->address }}">{{ $craft->address ?? 'لا يوجد عنوان' }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <x-heroicon-o-phone class="w-3.5 h-3.5 text-gray-400" />
+                                <span dir="ltr">{{ $craft->mobile ?? 'لا يوجد هاتف' }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 pt-3 border-t border-gray-50 flex justify-end">
+                            <a href="{{ route('crafts.economical.show', $craft->id) }}" class="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 group-hover:gap-2 transition-all">
+                                عرض التفاصيل
+                                <x-heroicon-m-arrow-left class="w-3 h-3" />
+                            </a>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+
     </div>
-</x-buildings-layout>
+</x-customers-layout>

@@ -34,16 +34,19 @@
                         @endif
                     </div>
                     <div class="flex items-center gap-4 text-sm text-gray-500 mt-2 flex-wrap font-medium">
-                        @if($building->file_number)
                         <span class="flex items-center gap-1.5 bg-white px-3 py-1 rounded-lg border border-gray-100 shadow-sm">
                             <x-heroicon-o-folder class="w-4 h-4 text-orange"/>
-                            ملف حاسوب: <span class="font-bold text-gray-700">{{ $building->file_number }}</span>
+                            ملف حاسوب: 
+                            @if(filled($building->file_number) && trim($building->file_number) !== '0')
+                                <span class="font-bold text-gray-700">{{ $building->file_number }}</span>
+                            @else
+                                <span class="font-semibold text-gray-400">(غير موجود)</span>
+                            @endif
                         </span>
-                        @endif
                         <span class="flex items-center gap-1.5 bg-white px-3 py-1 rounded-lg border border-gray-100 shadow-sm">
                             <x-heroicon-o-map-pin class="w-4 h-4 text-blue-500"/>
-                            {{ $building->zone->name ?? '' }}
-                            @if($building->street) <span class="text-gray-300 mx-1">•</span> {{ $building->street->name }} @endif
+                            {{ $building->zone ? ($building->zone->name ?: 'مجمع ' . $building->zone->id) : '' }}
+                            @if($building->street) <span class="text-gray-300 mx-1">•</span> {{ $building->street->street_name ? $building->street->street_name . ' (' . $building->street->street_number . ')' : 'شارع ' . $building->street->street_number }} @endif
                         </span>
                     </div>
                 </div>
@@ -181,7 +184,8 @@
         <div x-data="{ tab: 'basic' }" class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mt-8">
 
             {{-- Tabs Header --}}
-            <div class="flex overflow-x-auto border-b border-gray-100 bg-gray-50/80 px-2 pt-2 scrollbar-hide">
+            <div id="building-tabs-header" class="flex overflow-x-auto border-b border-gray-100 bg-gray-50/80 px-2 pt-2">
+            <style>#building-tabs-header::-webkit-scrollbar{display:none}#building-tabs-header{-ms-overflow-style:none;scrollbar-width:none;}</style>
                 <button @click="tab = 'basic'"
                         :class="{'text-orange-dark border-orange bg-white shadow-sm': tab === 'basic', 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 border-transparent': tab !== 'basic'}"
                         class="px-6 py-3.5 text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2.5 border-b-2 rounded-t-xl mb-[-2px]">
@@ -244,15 +248,15 @@
                             <div class="space-y-4">
                                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-gray-100 border-dashed">
                                     <span class="text-sm text-gray-500 font-medium">المنطقة / الحي</span>
-                                    <span class="text-sm font-bold text-gray-800">{{ $building->zone->name ?? '—' }}</span>
+                                    <span class="text-sm font-bold text-gray-800">{{ $building->zone ? ($building->zone->name ?: 'مجمع ' . $building->zone->id) : '—' }}</span>
                                 </div>
                                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-gray-100 border-dashed">
                                     <span class="text-sm text-gray-500 font-medium">المنطقة الفرعية</span>
-                                    <span class="text-sm font-bold text-gray-800">{{ $building->subzone->name ?? '—' }}</span>
+                                    <span class="text-sm font-bold text-gray-800">{{ $building->subzone ? ($building->subzone->name ?: $building->subzone->id) : '—' }}</span>
                                 </div>
                                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-gray-100 border-dashed">
                                     <span class="text-sm text-gray-500 font-medium">الشارع</span>
-                                    <span class="text-sm font-bold text-gray-800">{{ $building->street->name ?? '—' }}</span>
+                                    <span class="text-sm font-bold text-gray-800">{{ $building->street ? ($building->street->name ?: 'طريق ' . $building->street->id) : '—' }}</span>
                                 </div>
                                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-gray-100 border-dashed">
                                     <span class="text-sm text-gray-500 font-medium">رقم القطعة</span>
@@ -345,13 +349,13 @@
                     @if($building->owners->count() > 0)
                     <div class="overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
                         <table class="w-full text-right text-sm">
-                            <thead class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider font-bold">
+                            <thead class="bg-gray-100 text-black text-xs uppercase tracking-wider font-bold border-b border-gray-200">
                                 <tr>
-                                    <th class="px-6 py-4">المالك</th>
-                                    <th class="px-6 py-4">رقم الهوية</th>
-                                    <th class="px-6 py-4">رقم الهاتف</th>
-                                    <th class="px-6 py-4 text-center">الوحدات المملوكة</th>
-                                    <th class="px-6 py-4 text-center">إجراءات</th>
+                                    <th class="px-6 py-4 text-black font-bold">المالك</th>
+                                    <th class="px-6 py-4 text-black font-bold">رقم الهوية</th>
+                                    <th class="px-6 py-4 text-black font-bold">رقم الهاتف</th>
+                                    <th class="px-6 py-4 text-center text-black font-bold">الوحدات المملوكة</th>
+                                    <th class="px-6 py-4 text-center text-black font-bold">إجراءات</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white">
@@ -462,13 +466,13 @@
                         @if($building->units->count() > 0)
                         <div class="overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
                             <table class="w-full text-right text-sm">
-                                <thead class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider font-bold">
+                                <thead class="bg-gray-100 text-black text-xs uppercase tracking-wider font-bold border-b border-gray-200">
                                     <tr>
-                                        <th class="px-5 py-4 w-24">الوحدة</th>
-                                        <th class="px-5 py-4">الطابق</th>
-                                        <th class="px-5 py-4">النوع</th>
-                                        <th class="px-5 py-4">وصف النشاط</th>
-                                        <th class="px-5 py-4">المالك</th>
+                                        <th class="px-5 py-4 w-24 text-black font-bold">الوحدة</th>
+                                        <th class="px-5 py-4 text-black font-bold">الطابق</th>
+                                        <th class="px-5 py-4 text-black font-bold">النوع</th>
+                                        <th class="px-5 py-4 text-black font-bold">وصف النشاط</th>
+                                        <th class="px-5 py-4 text-black font-bold">المالك</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100 bg-white">
