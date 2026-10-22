@@ -86,3 +86,4 @@ require __DIR__.'/buildings.php';
 require __DIR__.'/crafts.php';
 require __DIR__.'/customers.php';
 require __DIR__.'/transactions.php';
+require __DIR__.'/correspondence.php';

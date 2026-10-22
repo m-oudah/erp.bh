@@ -59,7 +59,7 @@ class BhmEconomicalController extends Controller
 
     public function edit($id)
     {
-        $economical = BhmEconomical::findOrFail($id);
+        $economical = BhmEconomical::with(['building.zone', 'building.street', 'sector', 'owners', 'crafts.craftType'])->findOrFail($id);
         $sectors = BhmEconomicalSector::orderBy('name')->get();
 
         return view('buildings.economical.edit', compact('economical', 'sectors'));
@@ -71,10 +71,17 @@ class BhmEconomicalController extends Controller
         
         $validated = $request->validate([
             'job_formal_name' => 'nullable|string|max:255',
-            'job_sector_id' => 'nullable|integer|exists:bhm_economical_sectors,id',
-            'isLicensed' => 'nullable|in:1,2',
-            'isDanger' => 'nullable|in:1,0',
-            'notes' => 'nullable|string'
+            'trade_name'      => 'nullable|string|max:255',
+            'job_sector_id'   => 'nullable|integer|exists:bhm_economical_sectors,id',
+            'isLicensed'      => 'nullable|in:1,2',
+            'isDanger'        => 'nullable|in:1,0',
+            'job_phone'       => 'nullable|string|max:50',
+            'job_mobile'      => 'nullable|string|max:50',
+            'whatsapp'        => 'nullable|string|max:50',
+            'email'           => 'nullable|string|max:100',
+            'job_location'    => 'nullable|string|max:255',
+            'job_description' => 'nullable|string',
+            'notes'           => 'nullable|string'
         ]);
 
         $economical->update($validated);

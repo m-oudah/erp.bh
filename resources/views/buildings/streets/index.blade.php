@@ -63,68 +63,144 @@
             </div>
         </div>
 
-        {{-- Search & Filters --}}
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 md:p-5">
-            <form action="{{ route('buildings.streets.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4" id="street-filter-form">
+        {{-- Search & Filter Card --}}
+        <div x-data="{ showFilters: false }" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-3 bg-gray-50/70 transition-colors"
+                 :class="showFilters ? 'border-b border-gray-100' : ''">
+                <div class="flex items-center gap-3">
+                    <div @click="showFilters = !showFilters"
+                         class="flex items-center gap-2 cursor-pointer select-none group py-1"
+                         role="button"
+                         tabindex="0"
+                         @keydown.enter.prevent="showFilters = !showFilters"
+                         @keydown.space.prevent="showFilters = !showFilters">
+                        <x-heroicon-o-funnel class="w-4 h-4 text-black group-hover:text-orange transition-colors" />
+                        <span class="text-sm font-bold text-black group-hover:text-orange transition-colors">خيارات البحث والتصفية</span>
+                    </div>
+                    @if(request()->anyFilled(['search', 'filter_type']) || (request('sort') && request('sort') !== 'number_asc'))
+                    <a href="{{ route('buildings.streets.index') }}" class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors">
+                        <x-heroicon-o-x-mark class="w-3.5 h-3.5" /> مسح الفلاتر
+                    </a>
+                    @endif
+                </div>
 
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-black mb-1.5">البحث باسم الشارع أو رقمه</label>
-                    <div class="relative">
-                        <input type="text" name="search" value="{{ request('search') }}"
-                               placeholder="مثال: يوسف الكفارنة أو 9206..."
-                               class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50 pr-10">
-                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
-                            <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                {{-- زر عرض/إخفاء الخيارات على اليسار تماما --}}
+                <button type="button"
+                        @click="showFilters = !showFilters"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 border shadow-sm cursor-pointer"
+                        :class="showFilters ? 'bg-orange/10 text-orange-dark border-orange/30' : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'">
+                    <x-heroicon-o-adjustments-horizontal class="w-4 h-4" />
+                    <span x-text="showFilters ? 'إخفاء الخيارات' : 'عرض الخيارات'">عرض الخيارات</span>
+                    <span class="inline-flex transition-transform duration-200" :class="showFilters ? 'rotate-180' : ''">
+                        <x-heroicon-o-chevron-down class="w-3.5 h-3.5" />
+                    </span>
+                </button>
+            </div>
+
+            <div x-show="showFilters"
+                 x-cloak
+                 style="display: none;"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 -translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 -translate-y-2">
+                <form action="{{ route('buildings.streets.index') }}" method="GET" class="p-5" id="street-filter-form">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-black mb-1.5">البحث باسم الشارع أو رقمه</label>
+                            <div class="relative">
+                                <input type="text" name="search" value="{{ request('search') }}"
+                                       placeholder="مثال: يوسف الكفارنة أو 9206..."
+                                       class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50 pr-10">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+                                    <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                                </div>
+                            </div>
                         </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-black mb-1.5">حالة التسمية والمباني</label>
+                            <select name="filter_type" class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
+                                    onchange="document.getElementById('street-filter-form').submit()">
+                                <option value="">جميع الشوارع</option>
+                                <option value="named" @selected(request('filter_type') === 'named')>شوارع مسماة فقط</option>
+                                <option value="unnamed" @selected(request('filter_type') === 'unnamed')>شوارع بدون اسم فقط</option>
+                                <option value="with_buildings" @selected(request('filter_type') === 'with_buildings')>تحتوي مباني مسجلة</option>
+                                <option value="no_buildings" @selected(request('filter_type') === 'no_buildings')>لا تحتوي مباني</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-black mb-1.5">الترتيب</label>
+                            <select name="sort" class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
+                                    onchange="document.getElementById('street-filter-form').submit()">
+                                <option value="number_asc" @selected(request('sort', 'number_asc') === 'number_asc')>رقم الشارع (تصاعدي)</option>
+                                <option value="number_desc" @selected(request('sort') === 'number_desc')>رقم الشارع (تنازلي)</option>
+                                <option value="name_asc" @selected(request('sort') === 'name_asc')>اسم الشارع (أبجدياً)</option>
+                                <option value="buildings_desc" @selected(request('sort') === 'buildings_desc')>الأكثر مباني أولاً</option>
+                            </select>
+                        </div>
+
+                        <div class="md:col-span-4 flex items-center justify-between pt-3 border-t border-gray-100">
+                            <div class="text-xs text-gray-400">
+                                @if(request()->anyFilled(['search', 'filter_type']) || (request('sort') && request('sort') !== 'number_asc'))
+                                    <span class="text-black font-bold">فلاتر نشطة</span>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-2">
+                                @if(request()->anyFilled(['search', 'filter_type']) || (request('sort') && request('sort') !== 'number_asc'))
+                                    <a href="{{ route('buildings.streets.index') }}"
+                                       class="text-xs text-gray-500 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-xl transition-colors flex items-center gap-1 font-semibold">
+                                        <x-heroicon-o-x-mark class="w-3.5 h-3.5" /> مسح الفلاتر
+                                    </a>
+                                @endif
+                                <button type="submit"
+                                        class="bg-navy hover:bg-navy-dark text-white font-semibold py-2 px-5 rounded-xl text-xs transition-colors flex items-center gap-1.5">
+                                    <x-heroicon-o-magnifying-glass class="w-3.5 h-3.5" />
+                                    تطبيق البحث
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-black mb-1.5">حالة التسمية والمباني</label>
-                    <select name="filter_type" class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
-                            onchange="document.getElementById('street-filter-form').submit()">
-                        <option value="">جميع الشوارع</option>
-                        <option value="named" @selected(request('filter_type') === 'named')>شوارع مسماة فقط</option>
-                        <option value="unnamed" @selected(request('filter_type') === 'unnamed')>شوارع بدون اسم فقط</option>
-                        <option value="with_buildings" @selected(request('filter_type') === 'with_buildings')>تحتوي مباني مسجلة</option>
-                        <option value="no_buildings" @selected(request('filter_type') === 'no_buildings')>لا تحتوي مباني</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-black mb-1.5">الترتيب</label>
-                    <select name="sort" class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
-                            onchange="document.getElementById('street-filter-form').submit()">
-                        <option value="number_asc" @selected(request('sort', 'number_asc') === 'number_asc')>رقم الشارع (تصاعدي)</option>
-                        <option value="number_desc" @selected(request('sort') === 'number_desc')>رقم الشارع (تنازلي)</option>
-                        <option value="name_asc" @selected(request('sort') === 'name_asc')>اسم الشارع (أبجدياً)</option>
-                        <option value="buildings_desc" @selected(request('sort') === 'buildings_desc')>الأكثر مباني أولاً</option>
-                    </select>
-                </div>
-
-                <div class="md:col-span-4 flex items-center justify-between pt-1 border-t border-gray-100">
-                    <div class="text-xs text-gray-400">
-                        @if(request()->anyFilled(['search', 'filter_type', 'sort']))
-                            <span class="text-black font-bold">فلاتر نشطة</span>
-                        @endif
-                    </div>
-                    <div class="flex items-center gap-2">
-                        @if(request()->anyFilled(['search', 'filter_type']) || (request('sort') && request('sort') !== 'number_asc'))
-                            <a href="{{ route('buildings.streets.index') }}"
-                               class="text-xs text-gray-500 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-xl transition-colors flex items-center gap-1 font-semibold">
-                                <x-heroicon-o-x-mark class="w-3.5 h-3.5" /> مسح الفلاتر
-                            </a>
-                        @endif
-                        <button type="submit"
-                                class="bg-navy hover:bg-navy-dark text-white font-semibold py-2 px-5 rounded-xl text-xs transition-colors flex items-center gap-1.5">
-                            <x-heroicon-o-magnifying-glass class="w-3.5 h-3.5" />
-                            تطبيق البحث
-                        </button>
-                    </div>
-                </div>
-
-            </form>
+                </form>
+            </div>
         </div>
+
+        {{-- Active Filters Tags --}}
+        @if(request()->anyFilled(['search', 'filter_type']) || (request('sort') && request('sort') !== 'number_asc'))
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+            <span class="text-black font-bold">فلاتر نشطة:</span>
+            @if(request('search'))
+                <span class="bg-orange/10 text-orange-dark font-bold px-2.5 py-1 rounded-lg">بحث: {{ request('search') }}</span>
+            @endif
+            @if(request('filter_type'))
+                <span class="bg-orange/10 text-orange-dark font-bold px-2.5 py-1 rounded-lg">
+                    النوع: 
+                    @if(request('filter_type') === 'named') شوارع مسماة
+                    @elseif(request('filter_type') === 'unnamed') بدون اسم
+                    @elseif(request('filter_type') === 'with_buildings') تحتوي مباني
+                    @elseif(request('filter_type') === 'no_buildings') لا تحتوي مباني
+                    @endif
+                </span>
+            @endif
+            @if(request('sort') && request('sort') !== 'number_asc')
+                <span class="bg-orange/10 text-orange-dark font-bold px-2.5 py-1 rounded-lg">
+                    الترتيب:
+                    @if(request('sort') === 'number_desc') رقم الشارع (تنازلي)
+                    @elseif(request('sort') === 'name_asc') أبجدياً
+                    @elseif(request('sort') === 'buildings_desc') الأكثر مباني
+                    @endif
+                </span>
+            @endif
+            <a href="{{ route('buildings.streets.index') }}" class="text-red-500 hover:text-red-700 font-bold px-2 py-0.5 rounded transition-colors">
+                مسح الكل
+            </a>
+        </div>
+        @endif
 
         {{-- Global Notification Banner --}}
         <div x-show="globalMessage"

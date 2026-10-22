@@ -47,6 +47,30 @@ class BhmBuilding extends Model
         return $this->hasMany(BhmBuildingOwner::class, 'building_id');
     }
 
+    public function getMainOwnerAttribute()
+    {
+        return $this->owners->first();
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        $mainOwner = $this->main_owner;
+
+        // إذا كانت بيانات المالك موجودة: أظهر اسم المالك الرئيسي
+        if ($mainOwner && filled($mainOwner->full_name)) {
+            return $mainOwner->full_name;
+        }
+
+        // إذا كانت بيانات المالك غير موجودة: أظهر رقم المبنى مثل ما كان سابقا و بين قوسين الاسم الاعتباري للمبنى building_name
+        $numberText = filled($this->building_number) ? ('مبنى رقم ' . $this->building_number) : 'مبنى غير محدد';
+
+        if (filled($this->building_name)) {
+            return $numberText . ' (' . $this->building_name . ')';
+        }
+
+        return $numberText;
+    }
+
     public function previousOwners()
     {
         return $this->hasMany(BhmPreviousOwner::class, 'building_id');

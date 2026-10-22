@@ -25,6 +25,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'department_id',
+        'job_title',
+        'phone_number',
     ];
 
     /**
@@ -46,6 +49,31 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function department()
+    {
+        return $this->belongsTo(\App\Models\Correspondence\Department::class, 'department_id');
+    }
+
+    public function createdMemos()
+    {
+        return $this->hasMany(\App\Models\Correspondence\InternalMemo::class, 'created_by');
+    }
+
+    public function assignedMemos()
+    {
+        return $this->hasMany(\App\Models\Correspondence\InternalMemo::class, 'current_assignee_id');
+    }
+
+    public function createdTasks()
+    {
+        return $this->hasMany(\App\Models\Correspondence\InternalTask::class, 'created_by');
+    }
+
+    public function assignedTasks()
+    {
+        return $this->hasMany(\App\Models\Correspondence\InternalTask::class, 'assigned_to');
+    }
 
     public function getActivitylogOptions(): LogOptions
     {

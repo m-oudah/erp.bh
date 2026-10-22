@@ -27,8 +27,15 @@
             <div class="flex items-center justify-between px-5 py-3 bg-gray-50/70 transition-colors"
                  :class="showFilters ? 'border-b border-gray-100' : ''">
                 <div class="flex items-center gap-3">
-                    <x-heroicon-o-funnel class="w-4 h-4 text-black" />
-                    <span class="text-sm font-bold text-black">خيارات البحث والتصفية</span>
+                    <div @click="showFilters = !showFilters"
+                         class="flex items-center gap-2 cursor-pointer select-none group py-1"
+                         role="button"
+                         tabindex="0"
+                         @keydown.enter.prevent="showFilters = !showFilters"
+                         @keydown.space.prevent="showFilters = !showFilters">
+                        <x-heroicon-o-funnel class="w-4 h-4 text-black group-hover:text-orange transition-colors" />
+                        <span class="text-sm font-bold text-black group-hover:text-orange transition-colors">خيارات البحث والتصفية</span>
+                    </div>
                     @if(request()->anyFilled(['building_number', 'file_number', 'id_card', 'owner_name', 'zone_id', 'street_id', 'street_number', 'building_type_id', 'block_number', 'parcel_number']))
                     <a href="{{ route('buildings.buildings.index') }}" class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors">
                         <x-heroicon-o-x-mark class="w-3.5 h-3.5" /> مسح الفلاتر
@@ -69,19 +76,13 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-black mb-1.5">رقم الملف (حاسوب)</label>
+                        <label class="block text-xs font-bold text-black mb-1.5">رقم الملف التنظيمي</label>
                         <input type="text" name="file_number" value="{{ request('file_number') }}"
                                class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
-                               placeholder="رقم الملف المحوسب">
+                               placeholder="رقم الملف التنظيمي">
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-black mb-1.5">رقم القطعة (قسيمة)</label>
-                        <input type="text" name="parcel_number" value="{{ request('parcel_number') }}"
-                               class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
-                               placeholder="رقم القسيمة">
-                    </div>
-
+                   
                     <div>
                         <label class="block text-xs font-bold text-black mb-1.5">رقم القطعة</label>
                         <input type="text" name="block_number" value="{{ request('block_number') }}"
@@ -89,9 +90,18 @@
                                placeholder="رقم القطعة">
                     </div>
 
+                     <div>
+                        <label class="block text-xs font-bold text-black mb-1.5">رقم القسيمة</label>
+                        <input type="text" name="parcel_number" value="{{ request('parcel_number') }}"
+                               class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
+                               placeholder="رقم القسيمة">
+                    </div>
+
+
+
                     <div>
                         <label class="block text-xs font-bold text-black mb-1.5">رقم هوية المالك</label>
-                        <input type="text" name="id_card" value="{{ request('id_card') }}"
+                        <input type="number" name="id_card" value="{{ request('id_card') }}"
                                class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
                                placeholder="رقم الهوية">
                     </div>
@@ -196,6 +206,7 @@
                         <tr class="bg-gray-100 text-black font-bold text-xs border-b border-gray-200">
                             <th class="px-5 py-3.5 whitespace-nowrap text-black font-bold">رقم الملف التنظيمي</th>
                             <th class="px-5 py-3.5 whitespace-nowrap text-black font-bold">المالك الرئيسي</th>
+                            <th class="px-5 py-3.5 whitespace-nowrap text-black font-bold">الشارع</th>
                             <th class="px-5 py-3.5 whitespace-nowrap text-black font-bold">رقم القطعة</th>
                             <th class="px-5 py-3.5 whitespace-nowrap text-black font-bold">رقم القسيمة</th>
                             <th class="px-5 py-3.5 whitespace-nowrap text-black font-bold">النوع</th>
@@ -230,6 +241,37 @@
                                     @endif
                                 @else
                                     <span class="text-gray-400 text-xs">غير محدد</span>
+                                @endif
+                            </td>
+
+                            {{-- Street --}}
+                            <td class="px-5 py-4">
+                                @if($building->street)
+                                    @php
+                                        $stName = trim($building->street->street_name ?? '');
+                                        $stNum = trim($building->street->street_number ?? '');
+                                        $hasDistinctName = filled($stName) && $stName !== $stNum;
+                                    @endphp
+                                    @if($hasDistinctName)
+                                        <div class="font-semibold text-gray-800 text-xs leading-snug">
+                                            {{ $stName }}
+                                            @if(filled($stNum))
+                                                <span class="font-mono text-gray-500 font-bold text-[11px]" dir="ltr">({{ $stNum }})</span>
+                                            @endif
+                                        </div>
+                                    @elseif(filled($stNum))
+                                        <span class="font-mono text-gray-700 text-xs bg-gray-100 px-2 py-0.5 rounded font-medium" dir="ltr">
+                                            شارع {{ $stNum }}
+                                        </span>
+                                    @elseif(filled($stName))
+                                        <span class="font-semibold text-gray-800 text-xs">
+                                            {{ $stName }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400 text-xs">—</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400 text-xs">—</span>
                                 @endif
                             </td>
 
@@ -273,19 +315,19 @@
                                        title="عرض التفاصيل">
                                         <x-heroicon-o-eye class="w-4 h-4" />
                                     </a>
-                                    @can('bhm.buildings.edit')
-                                    <a href="#"
+                                    @if(auth()->user()->can('Update-Building') || auth()->user()->can('bhm.buildings.edit'))
+                                    <a href="{{ route('buildings.buildings.edit', $building->id) }}"
                                        class="text-orange hover:text-orange-dark bg-orange/10 hover:bg-orange/20 p-2 rounded-lg transition-colors"
-                                       title="تعديل">
+                                       title="تعديل بيانات المبنى">
                                         <x-heroicon-o-pencil-square class="w-4 h-4" />
                                     </a>
-                                    @endcan
+                                    @endif
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="px-5 py-16 text-center">
+                            <td colspan="7" class="px-5 py-16 text-center">
                                 <div class="flex flex-col items-center justify-center max-w-sm mx-auto">
                                     <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100">
                                         <x-heroicon-o-building-office-2 class="w-8 h-8 text-gray-300" />

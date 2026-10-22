@@ -30,6 +30,16 @@ class ArchiveFile extends Model
         return $this->hasMany(ArchiveDocument::class);
     }
 
+    public function department()
+    {
+        return $this->belongsTo(\App\Models\Correspondence\Department::class, 'department_id');
+    }
+
+    public function memos()
+    {
+        return $this->hasMany(\App\Models\Correspondence\InternalMemo::class, 'linked_archive_file_id');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

@@ -7,63 +7,115 @@
                 <h2 class="text-2xl font-bold text-gray-800">الحرف</h2>
                 <p class="text-gray-500 mt-1 text-sm">إدارة الحرف وسجلات الحرفيين</p>
             </div>
+            <div class="flex items-center gap-2">
+                <div class="hidden md:flex items-center gap-2">
+                    <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-lg">
+                        إجمالي: {{ $crafts->total() }} حرفة
+                    </span>
+                </div>
+            </div>
         </div>
 
-        {{-- Filters --}}
-        <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <form action="{{ route('crafts.crafts.index') }}" method="GET" id="craft-filter-form">
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                    
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1.5">اسم المحل/العمل</label>
-                        <input type="text" name="business_name" value="{{ request('business_name') }}" placeholder="ابحث بالاسم..."
-                               class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50">
+        {{-- Search & Filter Card --}}
+        <div x-data="{ showFilters: false }" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-3 bg-gray-50/70 transition-colors"
+                 :class="showFilters ? 'border-b border-gray-100' : ''">
+                <div class="flex items-center gap-3">
+                    <div @click="showFilters = !showFilters"
+                         class="flex items-center gap-2 cursor-pointer select-none group py-1"
+                         role="button"
+                         tabindex="0"
+                         @keydown.enter.prevent="showFilters = !showFilters"
+                         @keydown.space.prevent="showFilters = !showFilters">
+                        <x-heroicon-o-funnel class="w-4 h-4 text-black group-hover:text-orange transition-colors" />
+                        <span class="text-sm font-bold text-black group-hover:text-orange transition-colors">خيارات البحث والتصفية</span>
                     </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1.5">رقم الهوية</label>
-                        <input type="text" name="id_number" value="{{ request('id_number') }}" placeholder="رقم الهوية..."
-                               class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1.5">رقم الجوال</label>
-                        <input type="text" name="mobile" value="{{ request('mobile') }}" placeholder="رقم الجوال..."
-                               class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1.5">الحالة</label>
-                        <select name="status" class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
-                                onchange="document.getElementById('craft-filter-form').submit()">
-                            <option value="">الكل</option>
-                            @foreach($statuses as $st)
-                                <option value="{{ $st->id }}" @selected(request('status') == $st->id)>{{ $st->description }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="flex items-end">
-                        <button type="submit"
-                                class="w-full bg-navy hover:bg-navy-dark text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
-                            <x-heroicon-o-magnifying-glass class="w-4 h-4" />
-                            بحث واستعلام
-                        </button>
-                    </div>
-
+                    @if(request()->anyFilled(['business_name', 'id_number', 'mobile', 'status']))
+                    <a href="{{ route('crafts.crafts.index') }}" class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors">
+                        <x-heroicon-o-x-mark class="w-3.5 h-3.5" /> مسح الفلاتر
+                    </a>
+                    @endif
                 </div>
-            </form>
+
+                {{-- زر عرض/إخفاء الخيارات على اليسار تماما --}}
+                <button type="button"
+                        @click="showFilters = !showFilters"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 border shadow-sm cursor-pointer"
+                        :class="showFilters ? 'bg-orange/10 text-orange-dark border-orange/30' : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'">
+                    <x-heroicon-o-adjustments-horizontal class="w-4 h-4" />
+                    <span x-text="showFilters ? 'إخفاء الخيارات' : 'عرض الخيارات'">عرض الخيارات</span>
+                    <span class="inline-flex transition-transform duration-200" :class="showFilters ? 'rotate-180' : ''">
+                        <x-heroicon-o-chevron-down class="w-3.5 h-3.5" />
+                    </span>
+                </button>
+            </div>
+
+            <div x-show="showFilters"
+                 x-cloak
+                 style="display: none;"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 -translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 -translate-y-2">
+                <form action="{{ route('crafts.crafts.index') }}" method="GET" class="p-5" id="craft-filter-form">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-black mb-1.5">اسم المحل/العمل</label>
+                            <input type="text" name="business_name" value="{{ request('business_name') }}" placeholder="ابحث بالاسم..."
+                                   class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-black mb-1.5">رقم الهوية</label>
+                            <input type="text" name="id_number" value="{{ request('id_number') }}" placeholder="رقم الهوية..."
+                                   class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-black mb-1.5">رقم الجوال</label>
+                            <input type="text" name="mobile" value="{{ request('mobile') }}" placeholder="رقم الجوال..."
+                                   class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-black mb-1.5">الحالة</label>
+                            <select name="status" class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
+                                    onchange="document.getElementById('craft-filter-form').submit()">
+                                <option value="">الكل</option>
+                                @foreach($statuses as $st)
+                                    <option value="{{ $st->id }}" @selected(request('status') == $st->id)>{{ $st->description }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="flex items-end">
+                            <button type="submit"
+                                    class="w-full bg-navy hover:bg-navy-dark text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                                <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                                بحث واستعلام
+                            </button>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
         </div>
 
         {{-- Active Filters Tags --}}
         @if(request()->anyFilled(['business_name', 'id_number', 'mobile', 'status']))
         <div class="flex flex-wrap items-center gap-2 text-xs">
-            <span class="text-gray-500 font-medium">فلاتر نشطة:</span>
+            <span class="text-black font-bold">فلاتر نشطة:</span>
             @if(request('business_name'))
                 <span class="bg-orange/10 text-orange-dark font-bold px-2.5 py-1 rounded-lg">الاسم: {{ request('business_name') }}</span>
             @endif
             @if(request('id_number'))
                 <span class="bg-orange/10 text-orange-dark font-bold px-2.5 py-1 rounded-lg">الهوية: {{ request('id_number') }}</span>
+            @endif
+            @if(request('mobile'))
+                <span class="bg-orange/10 text-orange-dark font-bold px-2.5 py-1 rounded-lg">الجوال: {{ request('mobile') }}</span>
             @endif
             @if(request('status'))
                 <span class="bg-orange/10 text-orange-dark font-bold px-2.5 py-1 rounded-lg">الحالة: {{ $statuses->firstWhere('id', request('status'))->description ?? request('status') }}</span>

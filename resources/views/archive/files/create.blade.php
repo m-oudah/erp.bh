@@ -7,7 +7,7 @@
     </div>
 
     <div class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 overflow-hidden" 
-         x-data="archiveForm({{ $types->toJson() }}, {{ json_encode(old('dynamic_data', [])) }}, '{{ old('archive_file_type_id') }}')">
+         x-data="archiveForm({{ $types->toJson() }}, {{ json_encode(old('dynamic_data', [])) }}, '{{ old('archive_file_type_id', request('type_id', '')) }}')">
         
         <form action="{{ route('archive.files.store') }}" method="POST" class="p-8 space-y-6">
             @csrf
@@ -31,7 +31,7 @@
                     <!-- رقم الملف -->
                     <div>
                         <x-input-label for="file_no" value="رقم الملف (مرجع)*" class="font-bold text-black" />
-                        <x-text-input id="file_no" name="file_no" type="text" class="mt-1 block w-full rounded-xl border-gray-200 focus:border-orange focus:ring-orange font-semibold text-black" :value="old('file_no')" required autofocus />
+                        <x-text-input id="file_no" name="file_no" type="text" class="mt-1 block w-full rounded-xl border-gray-200 focus:border-orange focus:ring-orange font-semibold text-black" :value="old('file_no', request('file_no'))" required autofocus />
                         <x-input-error class="mt-2" :messages="$errors->get('file_no')" />
                     </div>
                 </div>

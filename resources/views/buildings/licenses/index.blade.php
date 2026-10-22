@@ -27,8 +27,15 @@
             <div class="flex items-center justify-between px-5 py-3 bg-gray-50/70 transition-colors"
                  :class="showFilters ? 'border-b border-gray-100' : ''">
                 <div class="flex items-center gap-3">
-                    <x-heroicon-o-funnel class="w-4 h-4 text-black" />
-                    <span class="text-sm font-bold text-black">خيارات البحث والتصفية</span>
+                    <div @click="showFilters = !showFilters"
+                         class="flex items-center gap-2 cursor-pointer select-none group py-1"
+                         role="button"
+                         tabindex="0"
+                         @keydown.enter.prevent="showFilters = !showFilters"
+                         @keydown.space.prevent="showFilters = !showFilters">
+                        <x-heroicon-o-funnel class="w-4 h-4 text-black group-hover:text-orange transition-colors" />
+                        <span class="text-sm font-bold text-black group-hover:text-orange transition-colors">خيارات البحث والتصفية</span>
+                    </div>
                     @if(request()->anyFilled(['building_id', 'building_number', 'name', 'id_card', 'phone', 'subject', 'status']))
                     <a href="{{ route('buildings.licenses.index') }}" class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors">
                         <x-heroicon-o-x-mark class="w-3.5 h-3.5" /> مسح الفلاتر
