@@ -26,7 +26,8 @@ class BhmBuildingController extends Controller
         $filters = $request->only([
             'file_number', 'building_number', 'block_number', 'parcel_number',
             'building_name', 'zone_id', 'street_id', 'street_number', 'building_type_id',
-            'id_card', 'owner_name'
+            'id_card', 'owner_name',
+            'construction_status', 'historical', 'abandoned', 'adding_new_floor'
         ]);
 
         $buildings = BhmBuilding::with(['zone', 'street', 'buildingType', 'owners'])

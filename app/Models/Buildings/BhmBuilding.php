@@ -196,5 +196,19 @@ class BhmBuilding extends Model
         $query->when($filters['building_type_id'] ?? null, fn($q, $v) => $q->where('building_type_id', $v));
         $query->when($filters['id_card'] ?? null, fn($q, $v) => $q->whereHas('owners', fn($q) => $q->where('id_card', $v)));
         $query->when($filters['owner_name'] ?? null, fn($q, $v) => $q->whereHas('owners', fn($q) => $q->where('first_name', 'like', "%{$v}%")->orWhere('sur_name', 'like', "%{$v}%")));
+        
+        // Construction license status & flags
+        if (isset($filters['construction_status']) && $filters['construction_status'] !== '') {
+            $query->where('construction_status', $filters['construction_status']);
+        }
+        if (!empty($filters['historical'])) {
+            $query->where('historical', 1);
+        }
+        if (!empty($filters['abandoned'])) {
+            $query->where('abandond', 1);
+        }
+        if (!empty($filters['adding_new_floor'])) {
+            $query->where('adding_new_floor', 1);
+        }
     }
 }

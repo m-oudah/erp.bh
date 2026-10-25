@@ -24,81 +24,136 @@
         <!-- Left side (User Menu & Actions) -->
         <div class="flex items-center gap-4">
             
-            @if(!request()->routeIs('correspondence.*'))
-                <a href="{{ route('correspondence.memos.index') }}" class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all border border-white/15 shadow-sm text-white">
-                    <svg class="w-4 h-4" style="color: rgb(217 119 6);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                    </svg>
-                    <span>المراسلات والمهام</span>
-                </a>
-            @endif
-
-            @if(!request()->routeIs('dashboard'))
-                <a href="{{ route('dashboard') }}" class="hidden sm:flex items-center gap-2 px-3.5 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all border border-white/15 shadow-sm text-white">
-                    <x-heroicon-o-squares-2x2 class="w-4 h-4" style="color: rgb(217 119 6);" />
-                    <span>بوابة الأنظمة</span>
-                </a>
-            @endif
-
-            {{-- Interactive Notifications Bell --}}
+            {{-- زر المراسلات والمهام التفاعلي مع أيقونة الجرس وبادج الإشعارات وقائمة إشعارات موحدة --}}
             <div x-data="{
-                notificationsOpen: false,
+                dropdownOpen: false,
                 unreadCount: 0,
                 notifications: [],
                 loading: false,
-                fetchNotifications() {
+                fetchData() {
                     fetch('{{ route('notifications.unread') }}')
                         .then(res => res.json())
                         .then(data => {
-                            this.unreadCount = data.count;
-                            this.notifications = data.notifications;
+                            this.unreadCount = data.count || 0;
+                            this.notifications = data.notifications || [];
                         }).catch(() => {});
                 }
-            }" x-init="fetchNotifications(); setInterval(() => fetchNotifications(), 30000)" class="relative">
-                <button @click="notificationsOpen = !notificationsOpen" class="relative p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all border border-white/15 text-white focus:outline-none cursor-pointer" title="التنبيهات والإشعارات">
-                    <svg class="w-5 h-5" style="color: rgb(217 119 6);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                    </svg>
-                    <template x-if="unreadCount > 0">
-                        <span class="absolute -top-1 -right-1 bg-rose-500 text-white font-bold rounded-full text-[10px] w-5 h-5 flex items-center justify-center border-2 border-teal-700 shadow-xs" x-text="unreadCount"></span>
-                    </template>
-                </button>
+            }" x-init="fetchData(); setInterval(() => fetchData(), 30000)" class="relative">
 
-                {{-- Dropdown --}}
-                <div x-show="notificationsOpen"
-                     @click.outside="notificationsOpen = false"
-                     x-transition
-                     class="absolute left-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50 text-right text-slate-800"
-                     style="display: none;">
-                    <div class="flex items-center justify-between border-b border-gray-100 pb-2.5 mb-2.5">
-                        <div class="font-bold text-xs text-slate-800 flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                            </svg>
-                            <span>مركز الإشعارات والتنبيهات</span>
-                            <span class="bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full" x-text="unreadCount"></span>
-                        </div>
+                <button @click="dropdownOpen = !dropdownOpen" 
+                        class="relative flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all border border-white/15 shadow-sm text-white focus:outline-none cursor-pointer"
+                        title="المراسلات والمهام">
+                    
+                    {{-- أيقونة الجرس --}}
+                    <div class="relative flex items-center justify-center">
+                        <svg class="w-4 h-4 shrink-0" style="color: rgb(217 119 6);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
                         <template x-if="unreadCount > 0">
-                            <form method="POST" action="{{ route('notifications.markAllRead') }}">
-                                @csrf
-                                <button type="submit" class="text-[11px] font-bold text-teal-600 hover:text-teal-800">تعيين الكل كمقروء</button>
-                            </form>
+                            <span class="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full animate-ping"></span>
                         </template>
                     </div>
 
-                    <div class="max-h-72 overflow-y-auto space-y-2">
+                    <span>المراسلات والمهام</span>
+
+                    {{-- إظهار الإشعارات والعدد على زر المراسلات والمهام --}}
+                    <template x-if="unreadCount > 0">
+                        <span class="bg-rose-500 text-white font-bold rounded-full text-[10px] px-1.5 py-0.5 min-w-[18px] text-center shadow-xs leading-none" x-text="unreadCount"></span>
+                    </template>
+
+                    <svg class="w-3.5 h-3.5 opacity-70 transition-transform duration-200" :class="{ 'rotate-180': dropdownOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+
+                {{-- القائمة المنسدلة: قائمة إشعارات موحدة بدون تبويبات --}}
+                <div x-show="dropdownOpen"
+                     @click.outside="dropdownOpen = false"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                     class="absolute left-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 text-right text-slate-800 overflow-hidden"
+                     style="display: none;">
+                    
+                    {{-- ترويسة القائمة المنسدلة --}}
+                    <div class="px-4 py-3 bg-slate-50/80 border-b border-gray-100 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
+                                <svg class="w-4 h-4" style="color: rgb(217 119 6);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <h3 class="text-xs font-bold text-slate-800 leading-tight">الإشعارات والتنبيهات</h3>
+                                    <template x-if="unreadCount > 0">
+                                        <span class="bg-rose-50 text-rose-600 text-[10px] font-bold px-1.5 py-0.2 rounded-full border border-rose-200" x-text="unreadCount + ' جديدة'"></span>
+                                    </template>
+                                </div>
+                                <p class="text-[10px] text-slate-500">المراسلات والمهام الواردة</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <template x-if="unreadCount > 0">
+                                <form method="POST" action="{{ route('notifications.markAllRead') }}">
+                                    @csrf
+                                    <button type="submit" class="text-[11px] font-bold text-teal-600 hover:text-teal-800 hover:underline">تعيين الكل كمقروء</button>
+                                </form>
+                            </template>
+                            <a href="{{ route('correspondence.memos.create') }}" class="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-[11px] font-bold shadow-xs transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                <span>مذكرة</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    {{-- قائمة الإشعارات الموحدة بدون تبويبات --}}
+                    <div class="max-h-80 overflow-y-auto p-3 space-y-2">
                         <template x-if="notifications.length === 0">
-                            <p class="text-xs text-tertiary text-center py-6">لا توجد إشعارات جديدة غير مقروءة حالياً.</p>
+                            <div class="text-center py-8 text-slate-400">
+                                <svg class="w-9 h-9 mx-auto mb-2 opacity-30 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                                <p class="text-xs font-medium">لا توجد إشعارات حالياً</p>
+                            </div>
                         </template>
+
                         <template x-for="item in notifications" :key="item.id">
-                            <a :href="item.url" class="block p-2.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-gray-100 transition-colors">
-                                <div class="flex items-start gap-2">
-                                    <div class="w-2 h-2 rounded-full bg-secondary shrink-0 mt-1.5"></div>
+                            <a :href="item.url" 
+                               class="block p-2.5 rounded-xl border transition-all"
+                               :class="item.is_unread ? 'bg-amber-50/40 border-amber-200/70 hover:bg-amber-50' : 'bg-white border-gray-100 hover:bg-slate-50'">
+                                <div class="flex items-start gap-2.5">
+                                    {{-- مؤشر حالة الإشعار (مقروء / غير مقروء) --}}
+                                    <div class="shrink-0 mt-1">
+                                        <template x-if="item.is_unread">
+                                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 block ring-2 ring-amber-200 animate-pulse"></span>
+                                        </template>
+                                        <template x-if="!item.is_unread">
+                                            <span class="w-2 h-2 rounded-full bg-slate-300 block"></span>
+                                        </template>
+                                    </div>
+
                                     <div class="min-w-0 flex-1">
-                                        <div class="text-xs font-bold text-slate-800 truncate" x-text="item.title"></div>
-                                        <div class="text-[11px] text-teal-700 font-semibold truncate" x-text="item.subject"></div>
-                                        <div class="flex items-center justify-between text-[10px] text-tertiary mt-1">
-                                            <span x-text="'من: ' + item.from"></span>
+                                        <div class="flex items-center justify-between gap-1 mb-1">
+                                            <span class="text-xs font-bold text-slate-800 truncate" x-text="item.title"></span>
+                                            <template x-if="item.type === 'memo' || item.title.includes('مذكرة')">
+                                                <span class="text-[10px] bg-teal-50 text-teal-700 px-1.5 py-0.2 rounded font-semibold border border-teal-100 shrink-0">مذكرة</span>
+                                            </template>
+                                            <template x-if="item.type === 'task' || item.title.includes('مهمة')">
+                                                <span class="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.2 rounded font-semibold border border-amber-100 shrink-0">مهمة</span>
+                                            </template>
+                                        </div>
+
+                                        <p class="text-[11px] text-teal-800 font-medium truncate" x-text="item.subject"></p>
+
+                                        <div class="flex items-center justify-between text-[10px] text-slate-400 mt-1.5">
+                                            <span x-text="item.from ? ('من: ' + item.from) : ''"></span>
                                             <span x-text="item.time"></span>
                                         </div>
                                     </div>
@@ -107,13 +162,27 @@
                         </template>
                     </div>
 
-                    <div class="border-t border-gray-100 pt-2.5 mt-2.5 text-center">
-                        <a href="{{ route('correspondence.memos.index') }}" class="text-xs font-bold text-primary hover:underline">
-                            عرض كافة المذكرات والمهام
+                    {{-- أسفل القائمة: روابط سريعة لكافة المذكرات والمهام --}}
+                    <div class="border-t border-gray-100 p-2.5 bg-slate-50 flex items-center justify-between text-xs font-bold">
+                        <a href="{{ route('correspondence.memos.index') }}" class="text-teal-700 hover:text-teal-900 flex items-center gap-1 hover:underline">
+                            <span>سجل المذكرات</span>
+                            <span>←</span>
+                        </a>
+                        <span class="text-gray-300">|</span>
+                        <a href="{{ route('correspondence.tasks.index') }}" class="text-teal-700 hover:text-teal-900 flex items-center gap-1 hover:underline">
+                            <span>جدول المهام</span>
+                            <span>←</span>
                         </a>
                     </div>
                 </div>
             </div>
+
+            @if(!request()->routeIs('dashboard'))
+                <a href="{{ route('dashboard') }}" class="hidden sm:flex items-center gap-2 px-3.5 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all border border-white/15 shadow-sm text-white">
+                    <x-heroicon-o-squares-2x2 class="w-4 h-4" style="color: rgb(217 119 6);" />
+                    <span>بوابة الأنظمة</span>
+                </a>
+            @endif
 
             <x-dropdown align="left" width="48">
                 <x-slot name="trigger">

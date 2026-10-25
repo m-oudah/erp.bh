@@ -41,7 +41,9 @@ class BhmLicenseForm extends Model {
                 ->orWhere('third_name', 'like', "%{$v}%")
                 ->orWhere('sur_name', 'like', "%{$v}%");
         })));
-        $query->when($filters['status'] ?? null, fn($q, $v) => $q->where('status', $v));
+        if (isset($filters['status']) && $filters['status'] !== '') {
+            $query->where('status', $filters['status']);
+        }
         $query->when($filters['building_id'] ?? null, fn($q, $v) => $q->where('building_id', $v));
         $query->when($filters['building_number'] ?? null, fn($q, $v) => $q->where('building_number', 'like', "%{$v}%"));
         $query->when($filters['phone'] ?? null, fn($q, $v) => $q->whereHas('owner', fn($sq) => $sq->where('phone_number', 'like', "%{$v}%")));

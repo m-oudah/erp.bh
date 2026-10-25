@@ -11,15 +11,19 @@ class NotificationController extends Controller
     {
         $user = auth()->user();
         if (!$user) {
-            return response()->json(['count' => 0, 'notifications' => []]);
+            return response()->json([
+                'count' => 0,
+                'notifications' => [],
+            ]);
         }
 
-        $unreadNotifications = $user->unreadNotifications()->latest()->take(10)->get();
+        $notifications = $user->notifications()->latest()->take(15)->get();
         $unreadCount = $user->unreadNotifications()->count();
 
         return response()->json([
             'count' => $unreadCount,
-            'notifications' => $unreadNotifications->map(function ($n) {
+            'notifications' => $notifications->map(function ($n) {
+                $type = $n->data['type'] ?? (str_contains($n->type, 'Task') ? 'task' : (str_contains($n->type, 'Memo') ? 'memo' : 'general'));
                 return [
                     'id' => $n->id,
                     'title' => $n->data['title'] ?? 'إشعار جديد',
@@ -27,7 +31,8 @@ class NotificationController extends Controller
                     'from' => $n->data['from_user_name'] ?? '',
                     'url' => route('notifications.read', $n->id),
                     'time' => $n->created_at->diffForHumans(),
-                    'type' => $n->data['type'] ?? 'general',
+                    'type' => $type,
+                    'is_unread' => is_null($n->read_at),
                 ];
             }),
         ]);

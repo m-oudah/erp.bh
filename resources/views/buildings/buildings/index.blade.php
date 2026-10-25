@@ -23,7 +23,14 @@
         </div>
 
         {{-- Search & Filter Card --}}
-        <div x-data="{ showFilters: false }" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        @php
+            $hasActiveFilters = request()->anyFilled([
+                'building_number', 'file_number', 'id_card', 'owner_name', 'zone_id', 
+                'street_id', 'street_number', 'building_type_id', 'block_number', 
+                'parcel_number', 'construction_status', 'historical', 'abandoned', 'adding_new_floor'
+            ]);
+        @endphp
+        <div x-data="{ showFilters: {{ $hasActiveFilters ? 'true' : 'false' }} }" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div class="flex items-center justify-between px-5 py-3 bg-gray-50/70 transition-colors"
                  :class="showFilters ? 'border-b border-gray-100' : ''">
                 <div class="flex items-center gap-3">
@@ -36,7 +43,7 @@
                         <x-heroicon-o-funnel class="w-4 h-4 text-black group-hover:text-orange transition-colors" />
                         <span class="text-sm font-bold text-black group-hover:text-orange transition-colors">خيارات البحث والتصفية</span>
                     </div>
-                    @if(request()->anyFilled(['building_number', 'file_number', 'id_card', 'owner_name', 'zone_id', 'street_id', 'street_number', 'building_type_id', 'block_number', 'parcel_number']))
+                    @if($hasActiveFilters)
                     <a href="{{ route('buildings.buildings.index') }}" class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors">
                         <x-heroicon-o-x-mark class="w-3.5 h-3.5" /> مسح الفلاتر
                     </a>
@@ -147,6 +154,28 @@
                         </select>
                     </div>
 
+                    <div>
+                        <label class="block text-xs font-bold text-black mb-1.5">حالة الترخيص والرسوم</label>
+                        <select name="construction_status" class="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange/30 focus:border-orange bg-gray-50/50"
+                                onchange="document.getElementById('building-filter-form').submit()">
+                            <option value="">كل الحالات</option>
+                            <option value="0" @selected(request()->filled('construction_status') && request('construction_status') == '0')>مباني غير مرخصة</option>
+                            <option value="1" @selected(request('construction_status') == '1')>مرخصة ومستوفية الرسوم</option>
+                            <option value="2" @selected(request('construction_status') == '2')>مرخصة وغير مستوفية الرسوم</option>
+                            <option value="3" @selected(request('construction_status') == '3')>مرخصة ومتبقي طوابق</option>
+                        </select>
+                    </div>
+
+                    @if(request('historical'))
+                        <input type="hidden" name="historical" value="{{ request('historical') }}">
+                    @endif
+                    @if(request('abandoned'))
+                        <input type="hidden" name="abandoned" value="{{ request('abandoned') }}">
+                    @endif
+                    @if(request('adding_new_floor'))
+                        <input type="hidden" name="adding_new_floor" value="{{ request('adding_new_floor') }}">
+                    @endif
+
                     <div class="col-span-2 md:col-span-1 flex items-end">
                         <button type="submit"
                                 class="w-full bg-navy hover:bg-navy-dark text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
@@ -161,9 +190,41 @@
         </div>
 
         {{-- Active Filters Tags --}}
-        @if(request()->anyFilled(['building_number', 'file_number', 'id_card', 'owner_name', 'zone_id', 'street_id', 'street_number', 'building_type_id', 'block_number', 'parcel_number']))
+        @if($hasActiveFilters)
         <div class="flex flex-wrap items-center gap-2 text-xs">
             <span class="text-black font-bold">فلاتر نشطة:</span>
+            @if(request()->filled('construction_status'))
+                @php
+                    $statusNames = [
+                        '0' => 'مباني غير مرخصة',
+                        '1' => 'مرخصة ومستوفية الرسوم',
+                        '2' => 'مرخصة وغير مستوفية الرسوم',
+                        '3' => 'مرخصة ومتبقي طوابق',
+                    ];
+                @endphp
+                <span class="bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-2xs">
+                    <span>حالة الترخيص: {{ $statusNames[request('construction_status')] ?? request('construction_status') }}</span>
+                    <a href="{{ route('buildings.buildings.index', request()->except('construction_status')) }}" class="text-amber-800 hover:text-red-600 font-black">×</a>
+                </span>
+            @endif
+            @if(request('historical'))
+                <span class="bg-purple-100 text-purple-900 border border-purple-300 font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-2xs">
+                    <span>مباني تاريخية</span>
+                    <a href="{{ route('buildings.buildings.index', request()->except('historical')) }}" class="text-purple-800 hover:text-red-600 font-black">×</a>
+                </span>
+            @endif
+            @if(request('abandoned'))
+                <span class="bg-gray-200 text-gray-900 border border-gray-300 font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-2xs">
+                    <span>مباني مهجورة</span>
+                    <a href="{{ route('buildings.buildings.index', request()->except('abandoned')) }}" class="text-gray-800 hover:text-red-600 font-black">×</a>
+                </span>
+            @endif
+            @if(request('adding_new_floor'))
+                <span class="bg-sky-100 text-sky-900 border border-sky-300 font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-2xs">
+                    <span>إضافة طوابق جديدة</span>
+                    <a href="{{ route('buildings.buildings.index', request()->except('adding_new_floor')) }}" class="text-sky-800 hover:text-red-600 font-black">×</a>
+                </span>
+            @endif
             @if(request('building_number'))
                 <span class="bg-orange/10 text-orange-dark font-bold px-2.5 py-1 rounded-lg">رقم المبنى: {{ request('building_number') }}</span>
             @endif
