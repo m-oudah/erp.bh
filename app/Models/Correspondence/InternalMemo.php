@@ -18,6 +18,7 @@ class InternalMemo extends Model
 
     protected $fillable = [
         'memo_number',
+        'memo_type',
         'subject',
         'content',
         'priority',
@@ -64,6 +65,22 @@ class InternalMemo extends Model
     public function assignee()
     {
         return $this->belongsTo(User::class, 'current_assignee_id');
+    }
+
+    public function recipients()
+    {
+        return $this->belongsToMany(User::class, 'memo_recipients', 'memo_id', 'user_id')
+            ->withPivot(['department_id', 'status', 'read_at'])
+            ->withTimestamps();
+    }
+
+    public function getRecipientsNamesAttribute(): string
+    {
+        $recipients = $this->relationLoaded('recipients') ? $this->recipients : $this->recipients()->get();
+        if ($recipients->isNotEmpty()) {
+            return $recipients->pluck('name')->implode('، ');
+        }
+        return $this->assignee->name ?? 'غير محدد';
     }
 
     public function targetDepartment()
@@ -121,6 +138,11 @@ class InternalMemo extends Model
             'ملغاة' => 'bg-rose-50 text-rose-700 border border-rose-300',
             default => 'bg-slate-100 text-slate-700',
         };
+    }
+
+    public function getMemoTypeAttribute($value): string
+    {
+        return $value ?? 'مذكرة داخلية';
     }
 
     public function getActivitylogOptions(): LogOptions

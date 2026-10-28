@@ -35,6 +35,7 @@ class CorrespondenceService
 
             $memo = InternalMemo::create([
                 'memo_number' => $memoNumber,
+                'memo_type' => $data['memo_type'] ?? 'مذكرة داخلية',
                 'subject' => $data['subject'],
                 'content' => $data['content'],
                 'priority' => $data['priority'] ?? 'عادية',
@@ -46,14 +47,35 @@ class CorrespondenceService
                 'due_date' => $data['due_date'] ?? null,
             ]);
 
+            // Multi-recipient association
+            $recipientIds = $data['recipient_ids'] ?? ($memo->current_assignee_id ? [$memo->current_assignee_id] : []);
+            $recipients = User::whereIn('id', $recipientIds)->get();
+
+            foreach ($recipients as $recUser) {
+                DB::table('memo_recipients')->updateOrInsert(
+                    ['memo_id' => $memo->id, 'user_id' => $recUser->id],
+                    [
+                        'department_id' => $recUser->department_id,
+                        'status' => 'قيد المعالجة',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+            }
+
             // Initial Movement
+            $recipientsNames = $recipients->pluck('name')->implode('، ');
+            $defaultDirective = $recipients->count() > 1
+                ? 'تم إنشاء وتوجيه المراسلة إلى: ' . $recipientsNames . ' للمتابعة.'
+                : 'تم إنشاء وتوجيه المراسلة للمتابعة.';
+
             $movement = MemoMovement::create([
                 'memo_id' => $memo->id,
                 'from_user_id' => $creator->id,
                 'to_user_id' => $memo->current_assignee_id,
                 'to_department_id' => $memo->target_department_id,
-                'action_type' => 'إنشاء المذكرة',
-                'directive_text' => $data['directive_text'] ?? 'تم إنشاء وتوجيه المذكرة للمتابعة.',
+                'action_type' => 'إنشاء المراسلة',
+                'directive_text' => $data['directive_text'] ?? $defaultDirective,
             ]);
 
             // Upload Attachments & Auto-Archive
@@ -69,9 +91,11 @@ class CorrespondenceService
             $fullText = $memo->content . ' ' . ($data['directive_text'] ?? '');
             $this->extractAndAssignTasksFromText($memo, $fullText, $creator);
 
-            // Notify recipient if assigned
-            if ($memo->assignee && $memo->assignee->id !== $creator->id) {
-                $memo->assignee->notify(new MemoAssignedNotification($memo, $creator, $data['directive_text'] ?? null));
+            // Notify all recipients
+            foreach ($recipients as $recUser) {
+                if ($recUser->id !== $creator->id) {
+                    $recUser->notify(new MemoAssignedNotification($memo, $creator, $data['directive_text'] ?? null));
+                }
             }
 
             return $memo;
@@ -83,50 +107,79 @@ class CorrespondenceService
      */
     public function forwardMemo(
         InternalMemo $memo,
-        int $toUserId,
+        int|array $toUserIds,
         ?string $directiveText,
         array $attachments = [],
         ?User $fromUser = null
     ): MemoMovement {
         $fromUser = $fromUser ?? auth()->user();
-        $toUser = User::findOrFail($toUserId);
+        $recipientIds = is_array($toUserIds) ? $toUserIds : [$toUserIds];
+        $toUsers = User::whereIn('id', $recipientIds)->get();
 
-        return DB::transaction(function () use ($memo, $toUser, $directiveText, $attachments, $fromUser) {
-            $movement = MemoMovement::create([
-                'memo_id' => $memo->id,
-                'from_user_id' => $fromUser->id,
-                'to_user_id' => $toUser->id,
-                'to_department_id' => $toUser->department_id,
-                'action_type' => 'تحويل مع توجيه',
-                'directive_text' => $directiveText,
-            ]);
+        if ($toUsers->isEmpty()) {
+            throw new \InvalidArgumentException('No valid recipient users provided for forward.');
+        }
 
-            // Update current assignee
+        return DB::transaction(function () use ($memo, $toUsers, $directiveText, $attachments, $fromUser) {
+            $firstUser = $toUsers->first();
+
+            // 1. Add all forwarded recipients to memo_recipients
+            foreach ($toUsers as $user) {
+                DB::table('memo_recipients')->updateOrInsert(
+                    ['memo_id' => $memo->id, 'user_id' => $user->id],
+                    [
+                        'department_id' => $user->department_id,
+                        'status' => 'قيد المعالجة',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+            }
+
+            // 2. Create Movement for each recipient
+            $movements = [];
+            foreach ($toUsers as $user) {
+                $m = MemoMovement::create([
+                    'memo_id' => $memo->id,
+                    'from_user_id' => $fromUser->id,
+                    'to_user_id' => $user->id,
+                    'to_department_id' => $user->department_id,
+                    'action_type' => 'تحويل مع توجيه إداري',
+                    'directive_text' => $directiveText,
+                ]);
+                $movements[] = $m;
+            }
+
+            $primaryMovement = $movements[0];
+
+            // 3. Update current assignee
             $memo->update([
-                'current_assignee_id' => $toUser->id,
+                'current_assignee_id' => $firstUser->id,
                 'status' => 'قيد المعالجة',
             ]);
 
-            // Upload any attachments associated with this movement
+            // 4. Upload any attachments associated with this movement
             if (!empty($attachments)) {
                 foreach ($attachments as $file) {
                     if ($file instanceof UploadedFile) {
-                        $this->storeAttachment($memo, $file, $movement->id, $fromUser);
+                        $this->storeAttachment($memo, $file, $primaryMovement->id, $fromUser);
                     }
                 }
             }
 
-            // Check for @mentions in directive
+            // 5. Check for @mentions in directive
             if (!empty($directiveText)) {
                 $this->extractAndAssignTasksFromText($memo, $directiveText, $fromUser);
             }
 
-            // Notify assignee
-            if ($toUser->id !== $fromUser->id) {
-                $toUser->notify(new MemoAssignedNotification($memo, $fromUser, $directiveText));
+            // 6. Notify each forwarded recipient
+            foreach ($toUsers as $user) {
+                if ($user->id !== $fromUser->id) {
+                    $user->notify(new MemoAssignedNotification($memo, $fromUser, $directiveText));
+                }
             }
 
-            return $movement;
+            return $primaryMovement;
         });
     }
 
@@ -148,13 +201,13 @@ class CorrespondenceService
                 'memo_id' => $memo->id,
                 'from_user_id' => $user->id,
                 'to_user_id' => $memo->created_by,
-                'action_type' => 'إنجاز وإغلاق المذكرة',
-                'directive_text' => $finalNote ?? 'تم إنجاز كافة متطلبات المذكرة وإغلاقها رسمياً.',
+                'action_type' => 'إنجاز وإغلاق المراسلة',
+                'directive_text' => $finalNote ?? 'تم إنجاز كافة متطلبات المراسلة وإغلاقها رسمياً.',
             ]);
 
             // Notify creator if closed by someone else
             if ($memo->creator && $memo->creator->id !== $user->id) {
-                $memo->creator->notify(new MemoAssignedNotification($memo, $user, 'تم إنجاز المذكرة وإغلاقها: ' . ($finalNote ?? '')));
+                $memo->creator->notify(new MemoAssignedNotification($memo, $user, 'تم إنجاز المراسلة وإغلاقها: ' . ($finalNote ?? '')));
             }
 
             return $memo;
@@ -179,16 +232,23 @@ class CorrespondenceService
                 ['description' => 'ملفات ووثائق المراسلات والمذكرات الداخلية والمهام التابعة للنظام الموحد', 'is_active' => true]
             );
 
+            // In archive_files, department_id is foreign keyed to users(id)
+            $departmentUserId = $uploader?->id ?? $memo->created_by ?? auth()->id();
+            if ($departmentUserId && !User::where('id', $departmentUserId)->exists()) {
+                $departmentUserId = null;
+            }
+
             $archiveFile = ArchiveFile::create([
                 'archive_file_type_id' => $type->id,
                 'file_no' => $memo->memo_number,
-                'file_name' => 'ملف مذكرة: ' . $memo->subject,
-                'department_id' => $memo->target_department_id ?? $memo->creator?->department_id,
+                'file_name' => 'ملف مراسلة: ' . $memo->subject,
+                'department_id' => $departmentUserId,
                 'dynamic_data' => [
                     'memo_id' => $memo->id,
                     'memo_number' => $memo->memo_number,
                     'subject' => $memo->subject,
                     'creator' => $memo->creator?->name,
+                    'target_department_id' => $memo->target_department_id ?? $memo->creator?->department_id,
                 ],
             ]);
 
@@ -204,7 +264,7 @@ class CorrespondenceService
                 $file->getClientOriginalName(),
                 $memo->memo_number,
                 null,
-                $uploader->id
+                $uploader?->id ?? auth()->id()
             );
         } catch (\Exception $e) {
             // Fallback storage if archiveService throws
@@ -247,8 +307,8 @@ class CorrespondenceService
                     ->first();
 
                 if ($user && $user->id !== $creator->id) {
-                    $taskTitle = "مهمة مستخرجة من المذكرة {$memo->memo_number}";
-                    $taskDescription = "تم تكليفك بالمهمة عبر الإشارة إليك (@{$tag}) في المذكرة: {$memo->subject}.\nنص التوجيه: {$text}";
+                    $taskTitle = "مهمة مستخرجة من المراسلة {$memo->memo_number}";
+                    $taskDescription = "تم تكليفك بالمهمة عبر الإشارة إليك (@{$tag}) في المراسلة: {$memo->subject}.\nنص التوجيه: {$text}";
 
                     $task = InternalTask::create([
                         'memo_id' => $memo->id,

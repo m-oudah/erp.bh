@@ -154,7 +154,7 @@
                             <th class="py-3.5 px-4">عنوان المهمة والتفاصيل</th>
                             <th class="py-3.5 px-4">المكلِّف (المرسل)</th>
                             <th class="py-3.5 px-4">المكلَّف بالتنفيذ</th>
-                            <th class="py-3.5 px-4">المذكرة المصدر</th>
+                            <th class="py-3.5 px-4">المراسلة المصدر</th>
                             <th class="py-3.5 px-4 text-center">الأولوية</th>
                             <th class="py-3.5 px-4 text-center">الحالة</th>
                             <th class="py-3.5 px-4 text-center">الإجراء</th>
@@ -313,7 +313,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1.5">ربط بمذكرة داخلية (اختياري)</label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">ربط بمراسلة داخلية (اختياري)</label>
                         <select name="memo_id" class="w-full text-sm rounded-xl border-gray-200 focus:border-primary focus:ring-primary">
                             <option value="">مهمة مستقلة</option>
                             @foreach ($memos as $m)

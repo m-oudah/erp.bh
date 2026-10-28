@@ -9,52 +9,79 @@
         </div>
     </x-slot>
 
-    <div class="max-w-7xl mx-auto pb-10 space-y-5">
+    <div class="w-full pb-10 space-y-5">
 
         {{-- Horizontal Tab Navigation --}}
         <div class="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-2 flex items-center justify-between gap-2 overflow-x-auto">
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-1 sm:gap-2">
+                {{-- Home Button --}}
+                <a href="{{ route('dashboard') }}"
+                   class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100/90 hover:bg-slate-200 transition-colors shrink-0"
+                   title="الرجوع للصفحة الرئيسية للنظام">
+                    <svg class="w-4 h-4" style="color: rgb(217 119 6);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span>الرئيسية</span>
+                </a>
+
+                <div class="h-5 w-px bg-gray-200 mx-1 shrink-0"></div>
+
                 {{-- Memos Tab --}}
                 <a href="{{ route('correspondence.memos.index') }}"
-                   class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200
+                   class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200
                           {{ request()->routeIs('correspondence.memos.index') || request()->routeIs('correspondence.memos.show')
                                 ? 'bg-secondary/10 text-secondary-dark shadow-xs border border-secondary/20'
                                 : 'text-tertiary hover:bg-gray-50 hover:text-gray-800' }}">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0
+                    <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0
                                 {{ request()->routeIs('correspondence.memos.index') || request()->routeIs('correspondence.memos.show') ? 'bg-secondary text-white shadow-xs' : 'bg-amber-50 text-secondary' }}">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                         </svg>
                     </div>
-                    سجل المذكرات والمراسلات
+                    <span>سجل المراسلات</span>
                 </a>
 
                 {{-- Tasks Tab --}}
                 <a href="{{ route('correspondence.tasks.index') }}"
-                   class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200
+                   class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200
                           {{ request()->routeIs('correspondence.tasks.*')
                                 ? 'bg-secondary/10 text-secondary-dark shadow-xs border border-secondary/20'
                                 : 'text-tertiary hover:bg-gray-50 hover:text-gray-800' }}">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0
+                    <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0
                                 {{ request()->routeIs('correspondence.tasks.*') ? 'bg-secondary text-white shadow-xs' : 'bg-amber-50 text-secondary' }}">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                         </svg>
                     </div>
-                    المهام والتكليفات
+                    <span>المهام والتكليفات</span>
                 </a>
+
+                {{-- Create Tab (when on create page) --}}
+                @if(request()->routeIs('correspondence.memos.create'))
+                    <a href="{{ route('correspondence.memos.create') }}"
+                       class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 bg-secondary/10 text-secondary-dark shadow-xs border border-secondary/20">
+                        <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 bg-secondary text-white shadow-xs">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </div>
+                        <span>إنشاء مراسلة جديدة</span>
+                    </a>
+                @endif
             </div>
 
-            {{-- New Memo Action Button --}}
-            <div class="flex items-center gap-2">
-                <a href="{{ route('correspondence.memos.create') }}"
-                   class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-primary hover:bg-teal-700 shadow-sm transition-all duration-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    إنشاء مذكرة داخلية جديدة
-                </a>
-            </div>
+            {{-- New Correspondence Action Button (when not on create page) --}}
+            @if(!request()->routeIs('correspondence.memos.create'))
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('correspondence.memos.create') }}"
+                       class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-primary hover:bg-teal-700 shadow-sm transition-all duration-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        <span>إنشاء مراسلة داخلية جديدة</span>
+                    </a>
+                </div>
+            @endif
         </div>
 
         {{-- Alerts --}}

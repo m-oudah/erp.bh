@@ -104,12 +104,12 @@
                                     <button type="submit" class="text-[11px] font-bold text-teal-600 hover:text-teal-800 hover:underline">تعيين الكل كمقروء</button>
                                 </form>
                             </template>
-                            <a href="{{ route('correspondence.memos.create') }}" class="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-[11px] font-bold shadow-xs transition-colors">
+                            <!-- <a href="{{ route('correspondence.memos.create') }}" class="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-[11px] font-bold shadow-xs transition-colors">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                 </svg>
                                 <span>مذكرة</span>
-                            </a>
+                            </a> -->
                         </div>
                     </div>
 
@@ -165,7 +165,7 @@
                     {{-- أسفل القائمة: روابط سريعة لكافة المذكرات والمهام --}}
                     <div class="border-t border-gray-100 p-2.5 bg-slate-50 flex items-center justify-between text-xs font-bold">
                         <a href="{{ route('correspondence.memos.index') }}" class="text-teal-700 hover:text-teal-900 flex items-center gap-1 hover:underline">
-                            <span>سجل المذكرات</span>
+                            <span>سجل المراسلات</span>
                             <span>←</span>
                         </a>
                         <span class="text-gray-300">|</span>

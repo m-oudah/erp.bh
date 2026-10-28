@@ -65,6 +65,13 @@ class User extends Authenticatable
         return $this->hasMany(\App\Models\Correspondence\InternalMemo::class, 'current_assignee_id');
     }
 
+    public function receivedMemos()
+    {
+        return $this->belongsToMany(\App\Models\Correspondence\InternalMemo::class, 'memo_recipients', 'user_id', 'memo_id')
+            ->withPivot(['department_id', 'status', 'read_at'])
+            ->withTimestamps();
+    }
+
     public function createdTasks()
     {
         return $this->hasMany(\App\Models\Correspondence\InternalTask::class, 'created_by');

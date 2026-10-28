@@ -26,7 +26,7 @@ class MemoAssignedNotification extends Notification
     {
         return [
             'type' => 'memo_assigned',
-            'title' => 'مذكرة داخلية جديدة موجهة إليك',
+            'title' => 'مراسلة داخلية جديدة موجهة إليك',
             'memo_id' => $this->memo->id,
             'memo_number' => $this->memo->memo_number,
             'subject' => $this->memo->subject,
