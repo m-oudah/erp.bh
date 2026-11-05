@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\ArchiveFile;
 use App\Models\Correspondence\Department;
 use App\Models\Correspondence\InternalMemo;
-use App\Models\Correspondence\InternalTask;
 use App\Models\Correspondence\MemoAttachment;
 use App\Models\User;
 use App\Services\CorrespondenceService;
@@ -87,7 +86,6 @@ class MemoController extends Controller
                   ->orWhereHas('recipients', fn($r) => $r->where('users.id', $user->id));
             })->where('status', 'تم الإنجاز')->count(),
             'all' => InternalMemo::count(),
-            'my_tasks' => InternalTask::where('assigned_to', $user->id)->where('status', '!=', 'تم الإنجاز')->count(),
         ];
 
         $departments = Department::where('is_active', true)->orderBy('order')->get();
@@ -185,8 +183,6 @@ class MemoController extends Controller
             'movements.attachments',
             'attachments.uploader',
             'attachments.archiveDocument',
-            'tasks.assignee',
-            'tasks.creator',
         ]);
 
         $users = User::where('id', '!=', auth()->id())->orderBy('name')->get();

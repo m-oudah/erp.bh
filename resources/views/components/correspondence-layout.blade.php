@@ -1,11 +1,11 @@
 <x-app-layout>
     <x-slot name="module_title">
         <div>
-            <div class="text-amber-300 text-[10px] font-bold mb-0.5 tracking-wider">المراسلات والتكليفات الإدارية</div>
+            <div class="text-amber-300 text-[10px] font-bold mb-0.5 tracking-wider">المراسلات الإدارية الرسمية</div>
             <h1 class="font-bold text-xl text-white tracking-wide flex items-center gap-2 leading-none">
-                نظام المراسلات والمهام الداخلية
+                المراسلات الداخلية
             </h1>
-            <p class="text-teal-100 text-xs mt-1.5 font-medium">بلدية بيت حانون - سير المعاملات والتوجيه الإلكتروني</p>
+            <p class="text-teal-100 text-xs mt-1.5 font-medium">بلدية بيت حانون - سير المراسلات والتوجيه الإداري الموحد</p>
         </div>
     </x-slot>
 
@@ -38,22 +38,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                         </svg>
                     </div>
-                    <span>سجل المراسلات</span>
-                </a>
-
-                {{-- Tasks Tab --}}
-                <a href="{{ route('correspondence.tasks.index') }}"
-                   class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200
-                          {{ request()->routeIs('correspondence.tasks.*')
-                                ? 'bg-secondary/10 text-secondary-dark shadow-xs border border-secondary/20'
-                                : 'text-tertiary hover:bg-gray-50 hover:text-gray-800' }}">
-                    <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0
-                                {{ request()->routeIs('correspondence.tasks.*') ? 'bg-secondary text-white shadow-xs' : 'bg-amber-50 text-secondary' }}">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                        </svg>
-                    </div>
-                    <span>المهام والتكليفات</span>
+                    <span>سجل المراسلات الداخلية</span>
                 </a>
 
                 {{-- Create Tab (when on create page) --}}

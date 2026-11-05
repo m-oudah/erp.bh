@@ -33,8 +33,8 @@
                         الاشتراكات
                     </a>
                     
-                    <a href="{{ route('customers.citizens.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('customers.citizens.index') || request()->routeIs('customers.show') ? 'bg-orange/10 text-orange-dark font-bold' : 'text-gray-600 hover:bg-gray-50 font-medium' }} transition-colors">
-                        <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ request()->routeIs('customers.citizens.index') || request()->routeIs('customers.show') ? 'bg-orange text-white shadow-sm' : 'text-gray-400' }}">
+                    <a href="{{ route('customers.citizens.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('customers.citizens.*') || request()->routeIs('customers.show') ? 'bg-orange/10 text-orange-dark font-bold' : 'text-gray-600 hover:bg-gray-50 font-medium' }} transition-colors">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ request()->routeIs('customers.citizens.*') || request()->routeIs('customers.show') ? 'bg-orange text-white shadow-sm' : 'text-gray-400' }}">
                             <x-heroicon-o-user-group class="w-5 h-5" />
                         </div>
                         سجل المواطنين

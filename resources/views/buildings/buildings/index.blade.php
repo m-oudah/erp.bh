@@ -13,12 +13,12 @@
                         إجمالي: {{ $buildings->total() }} مبنى
                     </span>
                 </div>
-                @can('bhm.buildings.create')
-                <a href="#" class="inline-flex items-center gap-2 bg-orange hover:bg-orange-dark text-white font-bold py-2.5 px-5 rounded-xl shadow-md transition-all text-sm">
+                @if(auth()->user()->can('Create-Building') || auth()->user()->can('bhm.buildings.create') || auth()->user()->can('Read-Buildings'))
+                <a href="{{ route('buildings.buildings.create') }}" class="inline-flex items-center gap-2 bg-orange hover:bg-orange-dark text-white font-bold py-2.5 px-5 rounded-xl shadow-md transition-all text-sm">
                     <x-heroicon-o-plus class="w-4 h-4" />
                     إضافة مبنى
                 </a>
-                @endcan
+                @endif
             </div>
         </div>
 

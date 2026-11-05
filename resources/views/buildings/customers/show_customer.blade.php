@@ -4,12 +4,12 @@
         <!-- Header -->
         <div class="flex items-start justify-between mb-6">
             <div class="flex items-center gap-4">
-                <a href="{{ route('customers.index', ['tab' => 'customers']) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 p-2 rounded-xl transition-colors">
+                <a href="{{ route('customers.citizens.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 p-2 rounded-xl transition-colors" title="الرجوع لسجل المواطنين">
                     <x-heroicon-o-arrow-right class="w-5 h-5" />
                 </a>
                 <div>
                     <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                        ملف العميل: {{ $customer->name ?? '-' }}
+                        ملف المواطن: {{ $customer->name ?? '-' }}
                     </h2>
                     <div class="flex items-center gap-4 text-sm text-gray-500 mt-2">
                         <span class="flex items-center gap-1.5"><x-heroicon-o-identification class="w-4 h-4 text-gray-400"/> رقم الهوية: <span class="font-mono">{{ $customer->id_no ?? '-' }}</span></span>
@@ -18,14 +18,25 @@
             </div>
             
             <div class="flex items-center gap-2">
-                @can('bhm.subscriptions.edit')
-                <a href="#" class="inline-flex items-center gap-2 bg-orange hover:bg-orange-dark text-white font-medium py-2 px-4 rounded-xl shadow-sm transition-colors text-sm">
+                @if(auth()->user()->can('Update-Client') || auth()->user()->can('bhm.subscriptions.edit') || auth()->user()->can('Read-Subscriptions'))
+                <a href="{{ route('customers.citizens.edit', $customer->id) }}" class="inline-flex items-center gap-2 bg-orange hover:bg-orange-dark text-white font-medium py-2 px-4 rounded-xl shadow-sm transition-colors text-sm">
                     <x-heroicon-o-pencil-square class="w-4 h-4" />
-                    تعديل بيانات العميل
+                    تعديل بيانات المواطن
                 </a>
-                @endcan
+                @endif
             </div>
         </div>
+
+        {{-- Flash Alerts --}}
+        @if (session('success'))
+        <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-bold flex items-center justify-between gap-2 shadow-xs animate-fade-in">
+            <div class="flex items-center gap-2">
+                <x-heroicon-s-check-circle class="w-5 h-5 text-emerald-600 shrink-0" />
+                <span>{{ session('success') }}</span>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-700 hover:text-emerald-950 text-xs font-bold">✕</button>
+        </div>
+        @endif
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
@@ -76,10 +87,16 @@
                 <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-gray-100">
                     <x-heroicon-s-information-circle class="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 class="text-lg font-bold text-gray-700 mb-2">سجل العميل العام</h3>
+                <h3 class="text-lg font-bold text-gray-700 mb-2">سجل المواطن العام</h3>
                 <p class="text-sm text-gray-500">
-                    هذا السجل يمثل قاعدة البيانات المركزية للعملاء، يمكن ربطه لاحقاً في باقي أنظمة البلدية كالإيرادات والضرائب لتكوين ملف مالي موحد للعميل.
+                    هذا السجل يمثل قاعدة البيانات المركزية للمواطنين والعملاء، ويرتبط ببوابة الخدمات الإلكترونية واستعلامات الحرف والمباني.
                 </p>
+                @if($customer->notes)
+                <div class="mt-4 p-3 bg-white rounded-xl border border-gray-100 text-xs text-gray-700 w-full text-right">
+                    <span class="font-bold text-gray-800 block mb-1">ملاحظات:</span>
+                    {{ $customer->notes }}
+                </div>
+                @endif
                 <div class="mt-4 text-xs text-gray-400">
                     تاريخ إنشاء السجل: {{ $customer->created_at ? $customer->created_at->format('Y-m-d') : 'غير محدد' }}
                 </div>

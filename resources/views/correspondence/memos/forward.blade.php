@@ -275,7 +275,7 @@ function memoForwarder() {
                     </div>
                 </div>
 
-                {{-- Row 3: شريط أدوات البريد الإلكتروني للمرفقات الإضافية والتكليف الذكي --}}
+                {{-- Row 3: شريط أدوات البريد الإلكتروني للمرفقات الإضافية --}}
                 <div class="flex flex-wrap items-center justify-between gap-3 pt-2 pb-1 border-y border-gray-100">
                     <div class="flex items-center gap-2">
                         {{-- Attach Files Button --}}
@@ -290,14 +290,6 @@ function memoForwarder() {
                                 <span class="bg-amber-400 text-slate-900 text-[10px] px-1.5 py-0.2 rounded-full font-black" x-text="attachments.length"></span>
                             </template>
                         </button>
-                    </div>
-
-                    {{-- Smart Mention Tip --}}
-                    <div class="text-[11px] text-amber-700 font-semibold flex items-center gap-1.5 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200/60">
-                        <svg class="w-3.5 h-3.5 text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                        <span>بإمكانك كتابة <span class="underline font-bold text-secondary">@اسم_الموظف</span> لإنشاء مهمة مباشرة له</span>
                     </div>
                 </div>
 

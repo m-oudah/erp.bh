@@ -31,4 +31,12 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'hotsms' => [
+        'base_url' => env('HOTSMS_BASE_URL', 'https://hotsms.ps/api/rest/v2'),
+        'username' => env('HOTSMS_USERNAME'),
+        'password' => env('HOTSMS_PASSWORD'),
+        'sender' => env('HOTSMS_SENDER', 'BeitHanon'),
+        'token' => env('HOTSMS_API_TOKEN'),
+    ],
+
 ];

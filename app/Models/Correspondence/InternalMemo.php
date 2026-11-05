@@ -113,11 +113,6 @@ class InternalMemo extends Model
         return $this->hasMany(MemoAttachment::class, 'memo_id')->latest();
     }
 
-    public function tasks()
-    {
-        return $this->hasMany(InternalTask::class, 'memo_id')->latest();
-    }
-
     public function getPriorityBadgeClassAttribute(): string
     {
         return match ($this->priority) {

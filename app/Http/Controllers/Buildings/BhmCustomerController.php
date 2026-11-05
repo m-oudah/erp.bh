@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Buildings;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Models\Buildings\BhmSubscription;
 use App\Models\Buildings\BhmCustomer;
 
@@ -58,6 +59,116 @@ class BhmCustomerController extends Controller
             ->withQueryString();
 
         return view('buildings.customers.citizens', compact('data', 'filters'));
+    }
+
+    public function createCitizen()
+    {
+        if (!auth()->user()->can('Create-Client') && !auth()->user()->can('bhm.subscriptions.edit') && !auth()->user()->can('Read-Subscriptions')) {
+            abort(403, 'غير مصرح لك بإضافة مواطن جديد.');
+        }
+
+        return view('buildings.customers.create_citizen');
+    }
+
+    public function storeCitizen(Request $request)
+    {
+        if (!auth()->user()->can('Create-Client') && !auth()->user()->can('bhm.subscriptions.edit') && !auth()->user()->can('Read-Subscriptions')) {
+            abort(403, 'غير مصرح لك بإضافة مواطن جديد.');
+        }
+
+        $request->validate([
+            'id_no' => [
+                'required',
+                'string',
+                'min:7',
+                'max:20',
+                Rule::unique('bhm_customers', 'id_no')->whereNull('deleted_at'),
+            ],
+            'name' => 'required|string|max:300',
+            'mobile' => 'nullable|string|max:30',
+            'telephone' => 'nullable|string|max:30',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string|max:500',
+            'notes' => 'nullable|string|max:255',
+        ], [
+            'id_no.required' => 'يرجى إدخال رقم الهوية الوطنية.',
+            'id_no.min' => 'رقم الهوية يجب ألا يقل عن 7 أرقام.',
+            'id_no.max' => 'رقم الهوية لا يجب أن يتجاوز 20 حرفاً/رقماً.',
+            'id_no.unique' => 'رقم الهوية هذا مسجل مسبقاً لمواطن آخر في النظام.',
+            'name.required' => 'يرجى إدخال الاسم الرباعي أو اسم المواطن/الجهة.',
+            'name.max' => 'الاسم طويل جداً (الحد الأقصى 300 حرف).',
+            'email.email' => 'يرجى إدخال بريد إلكتروني بصيغة صحيحة.',
+        ]);
+
+        $customer = BhmCustomer::create([
+            'id_no' => trim($request->input('id_no')),
+            'name' => trim($request->input('name')),
+            'mobile' => trim($request->input('mobile', '')),
+            'telephone' => trim($request->input('telephone', '')),
+            'email' => trim($request->input('email', '')),
+            'address' => trim($request->input('address', '')),
+            'notes' => trim($request->input('notes', '')),
+        ]);
+
+        return redirect()->route('customers.show', $customer->id)
+            ->with('success', 'تمت إضافة المواطن بنجاح إلى سجلات البلدية.');
+    }
+
+    public function editCitizen($id)
+    {
+        if (!auth()->user()->can('Update-Client') && !auth()->user()->can('bhm.subscriptions.edit') && !auth()->user()->can('Read-Subscriptions')) {
+            abort(403, 'غير مصرح لك بتعديل بيانات المواطن.');
+        }
+
+        $customer = BhmCustomer::findOrFail($id);
+
+        return view('buildings.customers.edit_citizen', compact('customer'));
+    }
+
+    public function updateCitizen(Request $request, $id)
+    {
+        if (!auth()->user()->can('Update-Client') && !auth()->user()->can('bhm.subscriptions.edit') && !auth()->user()->can('Read-Subscriptions')) {
+            abort(403, 'غير مصرح لك بتعديل بيانات المواطن.');
+        }
+
+        $customer = BhmCustomer::findOrFail($id);
+
+        $request->validate([
+            'id_no' => [
+                'required',
+                'string',
+                'min:7',
+                'max:20',
+                Rule::unique('bhm_customers', 'id_no')->ignore($customer->id)->whereNull('deleted_at'),
+            ],
+            'name' => 'required|string|max:300',
+            'mobile' => 'nullable|string|max:30',
+            'telephone' => 'nullable|string|max:30',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string|max:500',
+            'notes' => 'nullable|string|max:255',
+        ], [
+            'id_no.required' => 'يرجى إدخال رقم الهوية الوطنية.',
+            'id_no.min' => 'رقم الهوية يجب ألا يقل عن 7 أرقام.',
+            'id_no.max' => 'رقم الهوية لا يجب أن يتجاوز 20 حرفاً/رقماً.',
+            'id_no.unique' => 'رقم الهوية هذا مسجل مسبقاً لمواطن آخر في النظام.',
+            'name.required' => 'يرجى إدخال الاسم الرباعي أو اسم المواطن/الجهة.',
+            'name.max' => 'الاسم طويل جداً (الحد الأقصى 300 حرف).',
+            'email.email' => 'يرجى إدخال بريد إلكتروني بصيغة صحيحة.',
+        ]);
+
+        $customer->update([
+            'id_no' => trim($request->input('id_no')),
+            'name' => trim($request->input('name')),
+            'mobile' => trim($request->input('mobile', '')),
+            'telephone' => trim($request->input('telephone', '')),
+            'email' => trim($request->input('email', '')),
+            'address' => trim($request->input('address', '')),
+            'notes' => trim($request->input('notes', '')),
+        ]);
+
+        return redirect()->route('customers.show', $customer->id)
+            ->with('success', 'تم تحديث وحفظ بيانات المواطن بنجاح.');
     }
 
     public function showSubscription($id)

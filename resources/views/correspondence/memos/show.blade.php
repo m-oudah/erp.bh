@@ -226,7 +226,7 @@
             </div>
         </div>
 
-        {{-- Left / Sidebar Column (4 cols): Information, Tasks & Attachments --}}
+        {{-- Left / Sidebar Column (4 cols): Information & Attachments --}}
         <div class="lg:col-span-4 space-y-5">
             {{-- Quick Meta Card --}}
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3.5">
@@ -315,47 +315,6 @@
                 </div>
             </div>
 
-            {{-- Linked Tasks Section (المهام والتكليفات المرتبطة بالمراسلة) --}}
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3.5">
-                <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
-                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                        <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
-                        المهام والتكليفات المرتبطة ({{ $memo->tasks->count() }})
-                    </h3>
-                    <a href="{{ route('correspondence.tasks.index') }}" class="text-[11px] font-bold text-primary hover:underline">
-                        لوحة المهام
-                    </a>
-                </div>
-
-                @if ($memo->tasks->count() > 0)
-                    <div class="space-y-2">
-                        @foreach ($memo->tasks as $task)
-                            <a href="{{ route('correspondence.tasks.show', $task->id) }}"
-                               class="p-3 rounded-xl border border-gray-100 bg-slate-50/50 hover:bg-teal-50/30 hover:border-primary/30 transition-all block group">
-                                <div class="flex items-start justify-between gap-2">
-                                    <h4 class="text-xs font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-1">
-                                        {{ $task->title }}
-                                    </h4>
-                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0 {{ $task->status_badge_class }}">
-                                        {{ $task->status }}
-                                    </span>
-                                </div>
-                                <div class="flex items-center gap-1.5 text-[10px] text-tertiary mt-1.5 flex-wrap">
-                                    <span>المكلف: <b class="text-slate-700">{{ $task->assignee->name ?? 'غير محدد' }}</b></span>
-                                    @if ($task->due_date)
-                                        <span>•</span>
-                                        <span class="{{ $task->is_overdue ? 'text-rose-600 font-bold' : '' }}">موعد: {{ $task->due_date->format('m/d') }}</span>
-                                    @endif
-                                </div>
-                            </a>
-                        @endforeach
-                    </div>
-                @else
-                    <p class="text-xs text-tertiary text-center py-3 bg-gray-50/50 rounded-xl">لا توجد مهام منشأة أو مستخرجة عبر @mentions لهذه المراسلة.</p>
-                @endif
-            </div>
 
             {{-- Attachments Section (المرفقات والمستندات المؤرشفة) --}}
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3.5">

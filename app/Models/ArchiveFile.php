@@ -40,6 +40,13 @@ class ArchiveFile extends Model
         return $this->hasMany(\App\Models\Correspondence\InternalMemo::class, 'linked_archive_file_id');
     }
 
+    public function buildings()
+    {
+        return $this->belongsToMany(\App\Models\Buildings\BhmBuilding::class, 'bhm_building_archive_files', 'archive_file_id', 'building_id')
+            ->withPivot('is_primary')
+            ->withTimestamps();
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

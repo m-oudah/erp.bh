@@ -72,16 +72,6 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
-    public function createdTasks()
-    {
-        return $this->hasMany(\App\Models\Correspondence\InternalTask::class, 'created_by');
-    }
-
-    public function assignedTasks()
-    {
-        return $this->hasMany(\App\Models\Correspondence\InternalTask::class, 'assigned_to');
-    }
-
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

@@ -23,11 +23,11 @@ class NotificationController extends Controller
         return response()->json([
             'count' => $unreadCount,
             'notifications' => $notifications->map(function ($n) {
-                $type = $n->data['type'] ?? (str_contains($n->type, 'Task') ? 'task' : (str_contains($n->type, 'Memo') ? 'memo' : 'general'));
+                $type = $n->data['type'] ?? (str_contains($n->type, 'Memo') ? 'memo' : 'general');
                 return [
                     'id' => $n->id,
                     'title' => $n->data['title'] ?? 'إشعار جديد',
-                    'subject' => $n->data['subject'] ?? ($n->data['task_title'] ?? ''),
+                    'subject' => $n->data['subject'] ?? '',
                     'from' => $n->data['from_user_name'] ?? '',
                     'url' => route('notifications.read', $n->id),
                     'time' => $n->created_at->diffForHumans(),
@@ -44,6 +44,9 @@ class NotificationController extends Controller
         $notification->markAsRead();
 
         $actionUrl = $notification->data['action_url'] ?? route('correspondence.memos.index');
+        if (str_contains($actionUrl, '/tasks')) {
+            $actionUrl = route('correspondence.memos.index');
+        }
 
         return redirect($actionUrl);
     }

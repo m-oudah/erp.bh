@@ -105,7 +105,7 @@ function memoComposer() {
                 </div>
                 <div>
                     <h2 class="text-base font-black text-slate-800 leading-tight">إنشاء مراسلة داخلية جديدة</h2>
-                    <p class="text-xs text-slate-500 mt-0.5">إرسال وتوجيه المراسلات والتكليفات الإدارية للموظفين والأقسام كبريد داخلي موحد</p>
+                    <p class="text-xs text-slate-500 mt-0.5">إرسال وتوجيه المراسلات والتوجيهات الإدارية للموظفين كبريد داخلي موحد</p>
                 </div>
             </div>
 
@@ -317,14 +317,6 @@ function memoComposer() {
                             </svg>
                         </button>
                     </div>
-
-                    {{-- Smart Mention Tip --}}
-                    <div class="text-[11px] text-amber-700 font-semibold flex items-center gap-1.5 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200/60">
-                        <svg class="w-3.5 h-3.5 text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                        <span>اكتب <span class="underline font-bold text-secondary">@اسم_الموظف</span> في النص لإنشاء مهمة مباشرة له</span>
-                    </div>
                 </div>
 
                 {{-- Attached Files List (Email-style attachments chips) --}}
@@ -409,7 +401,7 @@ function memoComposer() {
                     <textarea name="content"
                               rows="10"
                               required
-                              placeholder="اكتب نص المراسلة أو التوجيه هنا... بإمكانك إضافة تكليف لموظف مباشرة بالصيغة: @أحمد_علي يرجى تدقيق الملف وإبداء الرأي خلال 48 ساعة."
+                              placeholder="اكتب نص المراسلة أو التوجيه هنا..."
                               class="w-full text-base rounded-xl border-gray-200 focus:border-primary focus:ring-primary p-4 leading-relaxed font-medium">{{ old('content') }}</textarea>
                     @error('content')
                         <p class="text-rose-500 text-xs mt-1">{{ $message }}</p>

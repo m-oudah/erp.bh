@@ -121,6 +121,48 @@ class BhmBuilding extends Model
         return $this->hasMany(BhmAttachment::class, 'building_id');
     }
 
+    public function archiveFiles()
+    {
+        return $this->belongsToMany(\App\Models\ArchiveFile::class, 'bhm_building_archive_files', 'building_id', 'archive_file_id')
+            ->withPivot('is_primary')
+            ->withTimestamps();
+    }
+
+    public function getPrimaryArchiveFileAttribute()
+    {
+        if ($this->relationLoaded('archiveFiles')) {
+            $primary = $this->archiveFiles->firstWhere('pivot.is_primary', true);
+            if ($primary) return $primary;
+
+            $type1 = $this->archiveFiles->firstWhere('archive_file_type_id', 1);
+            if ($type1) return $type1;
+
+            return $this->archiveFiles->first();
+        }
+
+        $primary = $this->archiveFiles()->wherePivot('is_primary', true)->first();
+        if ($primary) return $primary;
+
+        $type1 = $this->archiveFiles()->where('archive_file_type_id', 1)->first();
+        if ($type1) return $type1;
+
+        if ($this->file_number && !in_array(trim($this->file_number), ['0', '', 'لا يوجد ملف'])) {
+            $raw = trim($this->file_number);
+            $normalized = str_replace(['أ', 'إ', 'آ'], 'ا', $raw);
+            $legacy = \App\Models\ArchiveFile::with('fileType')
+                ->where(function($q) use ($raw, $normalized) {
+                    $q->where('file_no', $raw)
+                      ->orWhere('file_no', $normalized)
+                      ->orWhere('file_no', ' ' . $raw);
+                })
+                ->where('archive_file_type_id', 1)
+                ->first();
+            if ($legacy) return $legacy;
+        }
+
+        return $this->archiveFiles()->first();
+    }
+
     public function uses()
     {
         return $this->belongsToMany(BhmBuildingUse::class, 'bhm_building_building_use', 'building_id', 'building_use_id');

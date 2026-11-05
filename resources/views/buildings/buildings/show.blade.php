@@ -140,52 +140,64 @@
                                         </div>
                                     </div>
 
-                                    {{-- بطاقة ملف الأرشيف --}}
+                                    {{-- بطاقة ملف أرشيف التنظيم الرئيسي --}}
                                     @php
-                                        $targetArchiveFile = (isset($archiveFiles) && $archiveFiles->isNotEmpty()) ? $archiveFiles->first() : null;
+                                        $targetArchiveFile = $primaryArchiveFile ?? null;
                                         $hasArchive = !is_null($targetArchiveFile);
                                     @endphp
 
                                     @if($hasArchive)
-                                        {{-- عند وجود ملف: تحويل مباشر لصفحة ملف الأرشيف --}}
-                                        <a href="{{ route('archive.files.show', $targetArchiveFile->id) }}" target="_blank"
-                                           class="group flex items-center justify-between p-3 rounded-2xl bg-orange/5 hover:bg-orange/10 border border-orange/20 hover:border-orange/40 hover:shadow-sm transition-all cursor-pointer shadow-2xs"
-                                           title="عرض ملف الأرشيف في موديول الأرشيف الإلكتروني">
-                                            <div class="flex items-center gap-2.5 min-w-0">
+                                        {{-- عند وجود ملف تنظيم رئيسي: تحويل مباشر مع زر التغيير والربط --}}
+                                        <div class="group flex items-center justify-between p-3 rounded-2xl bg-orange/5 hover:bg-orange/10 border border-orange/20 hover:border-orange/40 hover:shadow-sm transition-all shadow-2xs">
+                                            <a href="{{ route('archive.files.show', $targetArchiveFile->id) }}" target="_blank"
+                                               class="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer"
+                                               title="عرض ملف أرشيف التنظيم الرئيسي في موديول الأرشيف">
                                                 <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange/20 to-orange/5 flex items-center justify-center shrink-0 shadow-inner border border-orange/10 group-hover:scale-105 transition-transform">
                                                     <x-heroicon-s-folder class="w-4 h-4 text-orange" />
                                                 </div>
                                                 <div class="min-w-0">
                                                     <div class="text-[10px] text-orange-dark font-bold mb-0.5 tracking-wider truncate flex items-center gap-1">
-                                                        <span>ملف الأرشيف</span>
+                                                        <span>أرشيف التنظيم الرئيسي</span>
                                                         <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="الملف مسجل بالأرشيف"></span>
                                                     </div>
                                                     <div class="font-extrabold text-gray-800 text-xs truncate font-mono" dir="ltr" title="{{ $targetArchiveFile->file_no }}">
                                                         {{ $targetArchiveFile->file_no }}
                                                     </div>
                                                 </div>
+                                            </a>
+                                            <div class="flex items-center gap-1 shrink-0 mr-1">
+                                                <a href="{{ route('archive.files.show', $targetArchiveFile->id) }}" target="_blank"
+                                                   class="p-1.5 text-orange/70 hover:text-orange hover:bg-orange/10 rounded-lg transition-colors"
+                                                   title="فتح الملف في نافذة جديدة">
+                                                    <x-heroicon-s-arrow-top-right-on-square class="w-3.5 h-3.5" />
+                                                </a>
+                                                @if(auth()->user()->can('Update-Building') || auth()->user()->can('bhm.buildings.edit') || auth()->user()->can('Read-Buildings'))
+                                                <button type="button"
+                                                        @click="openModal('primary')"
+                                                        class="p-1.5 text-gray-400 hover:text-orange hover:bg-orange/10 rounded-lg transition-colors"
+                                                        title="تغيير ملف أرشيف التنظيم الرئيسي">
+                                                    <x-heroicon-s-arrows-right-left class="w-3.5 h-3.5" />
+                                                </button>
+                                                @endif
                                             </div>
-                                            <div class="text-orange/60 group-hover:text-orange group-hover:translate-x-[-2px] transition-all shrink-0 mr-1">
-                                                <x-heroicon-s-arrow-top-right-on-square class="w-3.5 h-3.5" />
-                                            </div>
-                                        </a>
+                                        </div>
                                     @else
-                                        {{-- عند عدم وجود ملف: زر لإظهار خيارات ملف الأرشيف (إنشاء / ربط) --}}
+                                        {{-- عند عدم وجود ملف أرشيف تنظيم رئيسي: زر لإظهار خيارات الربط أو الإنشاء --}}
                                         <button type="button"
-                                                @click="openModal()"
+                                                @click="openModal('primary')"
                                                 class="group flex items-center justify-between p-3 rounded-2xl bg-orange/5 hover:bg-orange/10 border border-dashed border-orange/30 hover:border-orange/60 hover:shadow-sm transition-all cursor-pointer text-right w-full shadow-2xs"
-                                                title="لا يوجد ملف أرشيف مسجل - انقر لإدارة ربط أو إنشاء ملف الأرشيف">
+                                                title="لا يوجد ملف أرشيف تنظيم رئيسي مسجل - انقر للربط أو الإنشاء">
                                             <div class="flex items-center gap-2.5 min-w-0">
                                                 <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange/20 to-orange/5 flex items-center justify-center shrink-0 shadow-inner border border-orange/10 group-hover:scale-105 transition-transform">
                                                     <x-heroicon-s-folder-plus class="w-4 h-4 text-orange" />
                                                 </div>
                                                 <div class="min-w-0">
-                                                    <div class="text-[10px] text-gray-400 font-bold mb-0.5 tracking-wider truncate">ملف الأرشيف</div>
+                                                    <div class="text-[10px] text-gray-400 font-bold mb-0.5 tracking-wider truncate">أرشيف التنظيم الرئيسي</div>
                                                     <div class="font-extrabold text-gray-800 text-xs truncate font-mono" dir="ltr" title="{{ $building->file_number }}">
-                                                        @if(filled($building->file_number) && trim($building->file_number) !== '0')
+                                                        @if(filled($building->file_number) && trim($building->file_number) !== '0' && trim($building->file_number) !== 'لا يوجد ملف')
                                                             {{ $building->file_number }}
                                                         @else
-                                                            <span class="font-semibold text-gray-400 text-[10px] font-sans">(غير مسجل)</span>
+                                                            <span class="font-semibold text-gray-400 text-[10px] font-sans">(غير مسجل - انقر للربط)</span>
                                                         @endif
                                                     </div>
                                                 </div>
@@ -796,33 +808,175 @@
                      x-transition:enter-end="opacity-100 translate-y-0"
                      class="space-y-6" style="display: none;">
                     
-                    @if(isset($archiveFiles) && $archiveFiles->count())
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            @foreach($archiveFiles as $archiveFile)
-                            <a href="{{ route('archive.files.show', $archiveFile->id) }}" class="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm hover:shadow-md hover:border-blue-300 transition-all group block">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <x-heroicon-o-folder-open class="w-6 h-6" />
-                                    </div>
-                                    <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-lg">{{ $archiveFile->fileType->name ?? 'ملف' }}</span>
+                    {{-- شريط التحكم ورأس تبويب الأرشيف --}}
+                    <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-2xl bg-orange/10 text-orange flex items-center justify-center shrink-0 shadow-inner">
+                                <x-heroicon-s-folder-open class="w-6 h-6" />
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-base font-extrabold text-gray-800">ملفات الأرشيف المرتبطة بالمبنى</h3>
+                                    <span class="bg-orange/10 text-orange-dark text-xs font-black px-2.5 py-0.5 rounded-full">
+                                        {{ isset($archiveFiles) ? $archiveFiles->count() : 0 }} ملفات
+                                    </span>
                                 </div>
-                                <h4 class="text-lg font-bold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors">{{ $archiveFile->file_name }}</h4>
-                                <div class="text-sm text-gray-500 font-mono">{{ $archiveFile->file_no }}</div>
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    يمكنك ربط هذا المبنى بملفات أرشيفية متعددة (أرشيف التنظيم، أرشيف الجباية، أرشيف الحرف والصناعات، الدائرة القانونية، وغيرها).
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 shrink-0">
+                            @if(auth()->user()->can('Update-Building') || auth()->user()->can('bhm.buildings.edit') || auth()->user()->can('Read-Buildings'))
+                            <button type="button"
+                                    @click="openModal('additional')"
+                                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange to-orange-dark hover:from-orange-dark hover:to-orange text-white rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-orange/20 hover:shadow-lg transition-all cursor-pointer">
+                                <x-heroicon-s-link class="w-4 h-4" />
+                                <span>ربط ملف أرشيف جديد</span>
+                            </button>
+                            @endif
+
+                            <a href="{{ route('archive.files.create', ['type_id' => 1]) }}" target="_blank"
+                               class="inline-flex items-center gap-2 px-3.5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl font-bold text-xs sm:text-sm transition-all"
+                               title="فتح شاشة إنشاء ملف جديد في نظام الأرشيف">
+                                <x-heroicon-s-plus class="w-4 h-4 text-gray-500" />
+                                <span>إنشاء ملف جديد بالأرشيف</span>
                             </a>
+                        </div>
+                    </div>
+
+                    {{-- شبكة بطاقات ملفات الأرشيف المرتبطة --}}
+                    @if(isset($archiveFiles) && $archiveFiles->count())
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            @foreach($archiveFiles as $archiveFile)
+                            @php
+                                $typeId = $archiveFile->archive_file_type_id;
+                                $isPrimary = (bool)($archiveFile->pivot?->is_primary);
+                                $typeTheme = match($typeId) {
+                                    1 => [
+                                        'border' => 'border-blue-200 hover:border-blue-400',
+                                        'icon_bg' => 'bg-blue-100 text-blue-700',
+                                        'badge' => 'bg-blue-50 text-blue-700 border-blue-200',
+                                    ],
+                                    3 => [
+                                        'border' => 'border-amber-200 hover:border-amber-400',
+                                        'icon_bg' => 'bg-amber-100 text-amber-700',
+                                        'badge' => 'bg-amber-50 text-amber-800 border-amber-200',
+                                    ],
+                                    4 => [
+                                        'border' => 'border-purple-200 hover:border-purple-400',
+                                        'icon_bg' => 'bg-purple-100 text-purple-700',
+                                        'badge' => 'bg-purple-50 text-purple-700 border-purple-200',
+                                    ],
+                                    5 => [
+                                        'border' => 'border-emerald-200 hover:border-emerald-400',
+                                        'icon_bg' => 'bg-emerald-100 text-emerald-700',
+                                        'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                    ],
+                                    2 => [
+                                        'border' => 'border-sky-200 hover:border-sky-400',
+                                        'icon_bg' => 'bg-sky-100 text-sky-700',
+                                        'badge' => 'bg-sky-50 text-sky-700 border-sky-200',
+                                    ],
+                                    6 => [
+                                        'border' => 'border-slate-200 hover:border-slate-400',
+                                        'icon_bg' => 'bg-slate-200 text-slate-700',
+                                        'badge' => 'bg-slate-100 text-slate-700 border-slate-200',
+                                    ],
+                                    default => [
+                                        'border' => 'border-gray-200 hover:border-gray-400',
+                                        'icon_bg' => 'bg-gray-100 text-gray-700',
+                                        'badge' => 'bg-gray-100 text-gray-700 border-gray-200',
+                                    ],
+                                };
+                            @endphp
+                            <div class="bg-white border {{ $isPrimary ? 'border-amber-300 ring-2 ring-amber-400/20 shadow-md' : $typeTheme['border'] }} rounded-3xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group">
+                                <div>
+                                    {{-- ترويسة البطاقة: النوع وشارة الرئيسي --}}
+                                    <div class="flex items-center justify-between gap-2 mb-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-10 h-10 rounded-2xl {{ $typeTheme['icon_bg'] }} flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                                                <x-heroicon-s-folder class="w-5 h-5" />
+                                            </div>
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-xl border {{ $typeTheme['badge'] }}">
+                                                {{ $archiveFile->fileType->name ?? 'ملف أرشيف' }}
+                                            </span>
+                                        </div>
+
+                                        @if($isPrimary)
+                                            <span class="bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black text-[10px] px-2.5 py-1 rounded-xl shadow-xs flex items-center gap-1">
+                                                <x-heroicon-s-star class="w-3.5 h-3.5" />
+                                                <span>ملف التنظيم الرئيسي</span>
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    {{-- اسم الملف ورقم الملف --}}
+                                    <h4 class="text-sm font-extrabold text-gray-900 mb-2 line-clamp-2 leading-relaxed" title="{{ $archiveFile->file_name }}">
+                                        {{ $archiveFile->file_name }}
+                                    </h4>
+
+                                    <div class="flex flex-wrap items-center gap-2 text-xs mb-3">
+                                        <span class="text-gray-400 font-bold">رقم الملف:</span>
+                                        <span class="font-mono font-black text-xs px-2.5 py-0.5 rounded-lg bg-gray-100 text-gray-800 border border-gray-200/80" dir="ltr">
+                                            {{ $archiveFile->file_no }}
+                                        </span>
+                                    </div>
+
+                                    {{-- عدد الوثائق --}}
+                                    <div class="text-xs text-gray-500 font-semibold flex items-center gap-1.5">
+                                        <x-heroicon-s-document-text class="w-4 h-4 text-gray-400" />
+                                        <span>{{ $archiveFile->documents_count ?? $archiveFile->documents->count() }} وثيقة مؤرشفة</span>
+                                    </div>
+                                </div>
+
+                                {{-- شريط الإجراءات أسفل البطاقة --}}
+                                <div class="border-t border-gray-100 pt-3 mt-4 flex items-center justify-between gap-2">
+                                    <a href="{{ route('archive.files.show', $archiveFile->id) }}" target="_blank"
+                                       class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition-colors">
+                                        <span>فتح بالأرشيف</span>
+                                        <x-heroicon-s-arrow-top-right-on-square class="w-3.5 h-3.5" />
+                                    </a>
+
+                                    <div class="flex items-center gap-1">
+                                        @if(!$isPrimary && (auth()->user()->can('Update-Building') || auth()->user()->can('bhm.buildings.edit') || auth()->user()->can('Read-Buildings')))
+                                            <button type="button"
+                                                    @click="setPrimaryFile({{ $archiveFile->id }})"
+                                                    class="text-[11px] font-bold text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-2.5 py-1.5 rounded-xl transition-colors"
+                                                    title="تعيين هذا الملف كملف تنظيم رئيسي للمبنى">
+                                                تعيين كرئيسي
+                                            </button>
+                                        @endif
+
+                                        @if(auth()->user()->can('Update-Building') || auth()->user()->can('bhm.buildings.edit') || auth()->user()->can('Read-Buildings'))
+                                            <button type="button"
+                                                    @click="unlinkSpecificFile({{ $archiveFile->id }}, '{{ addslashes($archiveFile->file_no) }}')"
+                                                    class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                                                    title="إلغاء ربط هذا الملف بالمبنى">
+                                                <x-heroicon-s-trash class="w-4 h-4" />
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
                             @endforeach
                         </div>
                     @else
+                        {{-- حالة عدم وجود ملفات أرشيف --}}
                         <div class="text-center py-20 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
                             <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100 mx-auto mb-4">
                                 <x-heroicon-o-folder class="w-10 h-10 text-gray-300" />
                             </div>
-                            <h4 class="text-lg font-bold text-gray-700 mb-1">لا توجد ملفات أرشيف</h4>
-                            <p class="text-sm text-gray-500 mb-5">لم يتم العثور على أي ملفات مؤرشفة مرتبطة برقم هذا المبنى ({{ $building->file_number ?? 'غير محدد' }}).</p>
+                            <h4 class="text-lg font-bold text-gray-700 mb-1">لا توجد ملفات أرشيف مرتبطة</h4>
+                            <p class="text-sm text-gray-500 mb-5 max-w-md mx-auto">
+                                لم يتم ربط هذا المبنى بأي ملفات أرشيفية بعد. يمكنك البحث في أرشيف البلدية وربط ملفات التنظيم أو الجباية أو الحرف.
+                            </p>
                             <button type="button"
-                                    @click="openModal()"
-                                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-orange hover:bg-orange-dark text-white rounded-xl font-bold text-sm shadow-sm transition-colors">
+                                    @click="openModal('additional')"
+                                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-orange hover:bg-orange-dark text-white rounded-xl font-bold text-sm shadow-sm transition-colors cursor-pointer">
                                 <x-heroicon-s-folder-plus class="w-4 h-4" />
-                                إدارة ملف الأرشيف (إنشاء / ربط)
+                                <span>البحث وربط ملف أرشيف الآن</span>
                             </button>
                         </div>
                     @endif
@@ -831,7 +985,7 @@
             </div>
         </div>
 
-        {{-- نافذة إدارة ملف الأرشيف (إنشاء جديد / ربط بملف قائم) --}}
+        {{-- نافذة إدارة والبحث عن ملفات الأرشيف والربط المتقدم --}}
         <template x-teleport="body">
             <div x-show="showModal"
                  x-transition:enter="transition ease-out duration-300"
@@ -855,25 +1009,21 @@
                      x-transition:leave="transition ease-in duration-200"
                      x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                      x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                     class="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full overflow-hidden relative transition-all my-auto z-10"
-                     :class="mode === 'search' ? 'max-w-3xl' : 'max-w-xl'">
+                     class="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full max-w-3xl overflow-hidden relative transition-all my-auto z-10">
                 
                 {{-- رأس النافذة --}}
-                <div class="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/60">
-                    <div class="flex items-center gap-2.5">
-                        <template x-if="mode === 'search'">
-                            <button @click="mode = 'choose'; selectedFile = null" 
-                                    class="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-200/60 rounded-xl transition-colors ml-1"
-                                    title="الرجوع للخيارات">
-                                <x-heroicon-s-arrow-right class="w-5 h-5" />
-                            </button>
-                        </template>
+                <div class="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/70">
+                    <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-2xl bg-orange/10 text-orange flex items-center justify-center shrink-0 shadow-inner">
                             <x-heroicon-s-folder-plus class="w-5 h-5" />
                         </div>
                         <div>
-                            <h3 class="text-base font-extrabold text-gray-800" x-text="mode === 'choose' ? 'خيارات ملف الأرشيف للمبنى' : 'البحث عن ملفات الأرشيف والربط'"></h3>
-                            <p class="text-xs text-gray-400" x-text="mode === 'choose' ? 'اختر الإجراء المناسب لملف الأرشيف الخاص بهذا المبنى' : 'ابحث برقم الملف أو اسم المالك لربطه بهذا المبنى'"></p>
+                            <h3 class="text-base font-extrabold text-gray-800"
+                                x-text="targetMode === 'primary' ? 'ربط ملف أرشيف التنظيم الرئيسي' : 'ربط ملف أرشيف بالمبنى (متعدد الأقسام)'">
+                            </h3>
+                            <p class="text-xs text-gray-400"
+                               x-text="targetMode === 'primary' ? 'اختر ملف الأرشيف التنظيمي لتعيينه كملف رئيسي يظهر بأعلى بطاقة المبنى' : 'ابحث برقم الملف أو اسم المالك لربطه بقائمة ملفات الأرشيف التابعة للمبنى'">
+                            </p>
                         </div>
                     </div>
                     <button @click="closeModal()" class="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-colors">
@@ -883,7 +1033,7 @@
 
                 {{-- محتوى النافذة --}}
                 <div class="p-6">
-                    {{-- رسائل التنبيه --}}
+                    {{-- رسائل التنبيه والنجاح --}}
                     <div x-show="errorMessage" x-transition class="mb-4 p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-xs font-bold flex items-center gap-2">
                         <x-heroicon-s-x-circle class="w-4 h-4 shrink-0 text-red-500" />
                         <span x-text="errorMessage"></span>
@@ -894,60 +1044,26 @@
                         <span x-text="successMessage"></span>
                     </div>
 
-                    {{-- الحالة 1: شاشة الاختيار بين (إنشاء جديد) و (ربط بموجود) --}}
-                    <div x-show="mode === 'choose'">
-                        <div class="text-center mb-6">
-                            <p class="text-sm text-gray-600 leading-relaxed">
-                                لا يوجد ملف أرشيف مرتبط بهذا المبنى حالياً. يرجى اختيار الإجراء المطلوب:
-                            </p>
+                    {{-- قسم الفلترة وحقل البحث --}}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                        {{-- تصنيف الأرشيف --}}
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-bold text-gray-700 mb-1">قسم / نوع الأرشيف:</label>
+                            <select x-model="selectedTypeId"
+                                    @change="performSearch()"
+                                    class="w-full py-2.5 px-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:bg-white focus:border-orange focus:ring-2 focus:ring-orange/20 transition-all">
+                                <option value="">جميع أقسام الأرشيف</option>
+                                @if(isset($archiveFileTypes))
+                                    @foreach($archiveFileTypes as $type)
+                                        <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {{-- الخيار 1: إنشاء ملف تنظيمي جديد --}}
-                            <a href="{{ route('archive.files.create', ['type_id' => 1, 'file_no' => (filled($building->file_number) && trim($building->file_number) !== '0') ? $building->file_number : null]) }}"
-                               class="group flex flex-col items-center text-center p-6 bg-gradient-to-br from-orange/5 to-orange/10 hover:from-orange/15 hover:to-orange/20 border-2 border-orange/20 hover:border-orange rounded-3xl transition-all shadow-sm hover:shadow-md cursor-pointer">
-                                <div class="w-14 h-14 rounded-2xl bg-orange/20 text-orange flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-inner">
-                                    <x-heroicon-s-folder-plus class="w-7 h-7" />
-                                </div>
-                                <h4 class="font-extrabold text-sm text-gray-900 mb-1">إنشاء ملف تنظيمي جديد</h4>
-                                <p class="text-xs text-gray-500 leading-relaxed mb-4">
-                                    فتح استمارة إنشاء ملف جديد في قسم التنظيم داخل الأرشيف وتعبئة بياناته
-                                </p>
-                                <span class="mt-auto inline-flex items-center gap-1.5 px-4 py-2 bg-orange text-white text-xs font-bold rounded-xl shadow-xs group-hover:bg-orange-dark transition-colors">
-                                    <span>إنشاء ملف جديد</span>
-                                    <x-heroicon-s-arrow-left class="w-3.5 h-3.5" />
-                                </span>
-                            </a>
-
-                            {{-- الخيار 2: ربط بملف تنظيمي موجود --}}
-                            <button type="button"
-                                    @click="switchToSearch()"
-                                    class="group flex flex-col items-center text-center p-6 bg-gradient-to-br from-blue-50/50 to-blue-50 hover:from-blue-50 hover:to-blue-100/60 border-2 border-blue-200 hover:border-blue-500 rounded-3xl transition-all shadow-sm hover:shadow-md cursor-pointer">
-                                <div class="w-14 h-14 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-inner">
-                                    <x-heroicon-s-link class="w-7 h-7" />
-                                </div>
-                                <h4 class="font-extrabold text-sm text-gray-900 mb-1">ربط بملف تنظيمي موجود</h4>
-                                <p class="text-xs text-gray-500 leading-relaxed mb-4">
-                                    البحث في سجلات الأرشيف واختيار ملف تنظيمي قائم لربط هذا المبنى به
-                                </p>
-                                <span class="mt-auto inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl shadow-xs group-hover:bg-blue-700 transition-colors">
-                                    <span>البحث في الأرشيف</span>
-                                    <x-heroicon-s-magnifying-glass class="w-3.5 h-3.5" />
-                                </span>
-                            </button>
-                        </div>
-
-                        <div class="mt-6 pt-4 border-t border-gray-100 flex justify-end">
-                            <button @click="closeModal()" type="button" class="px-5 py-2 text-gray-500 hover:bg-gray-100 rounded-xl font-bold text-xs transition-colors">
-                                إلغاء
-                            </button>
-                        </div>
-                    </div>
-
-                    {{-- الحالة 2: شاشة البحث والربط بملف موجود --}}
-                    <div x-show="mode === 'search'" style="display: none;">
-                        {{-- حقل البحث --}}
-                        <div class="mb-4">
+                        {{-- حقل البحث بالاسم أو الرقم --}}
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-gray-700 mb-1">البحث برقم الملف أو اسم المواطن / المالك:</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-gray-400">
                                     <x-heroicon-s-magnifying-glass class="w-5 h-5" />
@@ -956,8 +1072,8 @@
                                        x-ref="searchInput"
                                        x-model="searchQuery"
                                        @input.debounce.300ms="performSearch()"
-                                       placeholder="ابحث برقم الملف (مثال: 9-34) أو اسم المواطن / المالك..."
-                                       class="w-full pr-11 pl-10 py-3 bg-gray-50/80 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-800 placeholder:text-gray-400 focus:bg-white focus:border-orange focus:ring-2 focus:ring-orange/20 transition-all">
+                                       placeholder="ابحث برقم الملف (مثال: 9-34 أو ا-10-12) أو اسم المالك..."
+                                       class="w-full pr-11 pl-10 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs sm:text-sm font-semibold text-gray-800 placeholder:text-gray-400 focus:bg-white focus:border-orange focus:ring-2 focus:ring-orange/20 transition-all">
                                 
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center">
                                     <template x-if="isSearching">
@@ -971,121 +1087,134 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {{-- قائمة نتائج البحث --}}
-                        <div class="mb-4">
-                            <div class="flex items-center justify-between mb-2 px-1">
-                                <span class="text-xs font-bold text-gray-500">اختر ملفاً من القائمة أدناه:</span>
-                                <span class="text-[11px] text-gray-400" x-text="searchResults.length + ' نتيجة'"></span>
-                            </div>
+                    {{-- قائمة نتائج البحث --}}
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between mb-2 px-1">
+                            <span class="text-xs font-bold text-gray-600">اختر ملفاً من النتائج أدناه للربط:</span>
+                            <span class="text-[11px] text-gray-400" x-text="searchResults.length + ' نتيجة'"></span>
+                        </div>
 
-                            <div class="max-h-52 overflow-y-auto divide-y divide-gray-100 rounded-2xl border border-gray-200 bg-white">
-                                <template x-for="file in searchResults" :key="file.id">
-                                    <div @click="selectFile(file)"
-                                         :class="selectedFile && selectedFile.id === file.id ? 'bg-orange/10 border-orange/40 text-orange-dark font-bold' : 'hover:bg-gray-50/80 cursor-pointer'"
-                                         class="p-3.5 flex items-center justify-between transition-colors cursor-pointer group">
-                                        <div class="flex items-center gap-3 min-w-0">
-                                            <div :class="selectedFile && selectedFile.id === file.id ? 'bg-orange text-white' : 'bg-orange/10 text-orange group-hover:scale-105'" 
-                                                 class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform shadow-2xs">
-                                                <x-heroicon-s-folder class="w-4 h-4" />
+                        <div class="max-h-60 overflow-y-auto divide-y divide-gray-100 rounded-2xl border border-gray-200 bg-white">
+                            <template x-for="file in searchResults" :key="file.id">
+                                <div @click="selectFile(file)"
+                                     :class="{
+                                         'bg-orange/10 border-orange/40 text-orange-dark font-bold': selectedFile && selectedFile.id === file.id,
+                                         'hover:bg-gray-50/80 cursor-pointer': !file.is_already_linked,
+                                         'opacity-60 bg-gray-50/40 cursor-not-allowed': file.is_already_linked
+                                     }"
+                                     class="p-3.5 flex items-center justify-between transition-colors group">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div :class="selectedFile && selectedFile.id === file.id ? 'bg-orange text-white' : 'bg-orange/10 text-orange group-hover:scale-105'" 
+                                             class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform shadow-2xs">
+                                            <x-heroicon-s-folder class="w-4 h-4" />
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="text-xs font-bold text-gray-800 truncate" x-text="file.file_name"></div>
+                                            <div class="text-[11px] text-gray-400 flex items-center gap-2 mt-0.5">
+                                                <span class="font-mono font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded text-[10px]" dir="ltr" x-text="file.file_no"></span>
+                                                <span>•</span>
+                                                <span class="font-bold text-gray-600" x-text="file.file_type"></span>
                                             </div>
-                                            <div class="min-w-0">
-                                                <div class="text-xs font-bold text-gray-800 truncate" x-text="file.file_name"></div>
-                                                <div class="text-[11px] text-gray-400 flex items-center gap-2 mt-0.5">
-                                                    <span class="font-mono font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded text-[10px]" dir="ltr" x-text="file.file_no"></span>
-                                                    <span>•</span>
-                                                    <span x-text="file.file_type"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <template x-if="file.is_already_linked">
+                                            <span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full font-bold flex items-center gap-1">
+                                                <x-heroicon-s-check-circle class="w-3.5 h-3.5 text-emerald-600" />
+                                                <span>مرتبط بالمبنى</span>
+                                            </span>
+                                        </template>
+
+                                        <template x-if="!file.is_already_linked">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[10px] bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-bold" x-text="file.documents_count + ' وثيقة'"></span>
+                                                <div :class="selectedFile && selectedFile.id === file.id ? 'border-orange bg-orange text-white' : 'border-gray-300 text-transparent'"
+                                                     class="w-5 h-5 rounded-full border flex items-center justify-center transition-colors">
+                                                    <x-heroicon-s-check class="w-3.5 h-3.5" />
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="flex items-center gap-2 shrink-0">
-                                            <span class="text-[10px] bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-bold" x-text="file.documents_count + ' وثيقة'"></span>
-                                            <div :class="selectedFile && selectedFile.id === file.id ? 'border-orange bg-orange text-white' : 'border-gray-300 text-transparent'"
-                                                 class="w-5 h-5 rounded-full border flex items-center justify-center transition-colors">
-                                                <x-heroicon-s-check class="w-3.5 h-3.5" />
-                                            </div>
-                                        </div>
+                                        </template>
                                     </div>
-                                </template>
+                                </div>
+                            </template>
 
-                                <template x-if="!isSearching && searchResults.length === 0">
-                                    <div class="p-8 text-center text-gray-400 text-xs">
-                                        <x-heroicon-o-folder-open class="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                                        <span>لم يتم العثور على ملفات مطابقة. يرجى تجربة كلمات بحث أخرى.</span>
+                            <template x-if="!isSearching && searchResults.length === 0">
+                                <div class="p-8 text-center text-gray-400 text-xs">
+                                    <x-heroicon-o-folder-open class="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                                    <span>لم يتم العثور على ملفات مطابقة. يرجى تجربة كلمات بحث أخرى أو تغيير تصنيف الأرشيف.</span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- بطاقة تأكيد الملف المختار للربط --}}
+                    <div x-show="selectedFile" x-transition class="mt-4 border border-emerald-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+                        <div class="bg-emerald-50/70 px-4 py-2.5 border-b border-emerald-100 flex items-center justify-between">
+                            <span class="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                                <x-heroicon-s-check-badge class="w-4 h-4 text-emerald-600" />
+                                <span>بيانات الملف المختار للربط</span>
+                            </span>
+                            <span class="text-[11px] text-emerald-600 font-bold">جاهز للربط</span>
+                        </div>
+
+                        <div class="p-4 space-y-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                    <div class="text-[10px] text-gray-400 font-bold mb-1">نوع الملف</div>
+                                    <div class="font-bold text-blue-700" x-text="selectedFile ? selectedFile.file_type : ''"></div>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 sm:col-span-2">
+                                    <div class="text-[10px] text-gray-400 font-bold mb-1">اسم ورقم الملف</div>
+                                    <div class="font-extrabold text-gray-900 flex items-center gap-2">
+                                        <span x-text="selectedFile ? selectedFile.file_name : ''"></span>
+                                        <span class="font-mono bg-white px-2 py-0.5 rounded border border-gray-200 text-xs font-bold" dir="ltr" x-text="selectedFile ? selectedFile.file_no : ''"></span>
                                     </div>
-                                </template>
-                            </div>
-                        </div>
-
-                        {{-- جدول بيانات الملف المختار للربط وبجانبه زر الربط --}}
-                        <div x-show="selectedFile" x-transition class="mt-4 border border-emerald-200 rounded-2xl overflow-hidden shadow-sm bg-white">
-                            <div class="bg-emerald-50/70 px-4 py-2.5 border-b border-emerald-100 flex items-center justify-between">
-                                <span class="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
-                                    <x-heroicon-s-check-badge class="w-4 h-4 text-emerald-600" />
-                                    بيانات الملف المختار للربط
-                                </span>
-                                <span class="text-[11px] text-emerald-600 font-medium">تأكيد الربط</span>
+                                </div>
                             </div>
 
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-right text-xs">
-                                    <thead class="bg-gray-50 text-gray-600 font-bold border-b border-gray-200">
-                                        <tr>
-                                            <th class="px-4 py-3">نوع الملف</th>
-                                            <th class="px-4 py-3">اسم الملف</th>
-                                            <th class="px-4 py-3">رقم الملف</th>
-                                            <th class="px-4 py-3 text-center">عدد الوثائق الموجودة فيه</th>
-                                            <th class="px-4 py-3 text-center">إجراء الربط</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100 bg-white">
-                                        <tr>
-                                            <td class="px-4 py-3.5 font-semibold text-gray-800 whitespace-nowrap">
-                                                <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg border border-blue-100 text-[11px]" x-text="selectedFile ? selectedFile.file_type : ''"></span>
-                                            </td>
-                                            <td class="px-4 py-3.5 font-bold text-gray-900" x-text="selectedFile ? selectedFile.file_name : ''"></td>
-                                            <td class="px-4 py-3.5 font-mono font-extrabold text-orange-dark text-xs whitespace-nowrap" dir="ltr" x-text="selectedFile ? selectedFile.file_no : ''"></td>
-                                            <td class="px-4 py-3.5 text-center whitespace-nowrap">
-                                                <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full font-bold text-[11px]">
-                                                    <x-heroicon-s-document-text class="w-3.5 h-3.5 text-gray-400" />
-                                                    <span x-text="selectedFile ? selectedFile.documents_count : 0"></span>
-                                                    <span>وثيقة</span>
-                                                </span>
-                                            </td>
-                                            <td class="px-4 py-3.5 text-center whitespace-nowrap">
-                                                <button type="button"
-                                                        @click="linkSelectedFile()"
-                                                        :disabled="isLinking"
-                                                        class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/30 transition-all disabled:opacity-50">
-                                                    <template x-if="!isLinking">
-                                                        <span class="flex items-center gap-1">
-                                                            <x-heroicon-s-link class="w-3.5 h-3.5" />
-                                                            ربط بهذا الملف
-                                                        </span>
-                                                    </template>
-                                                    <template x-if="isLinking">
-                                                        <span class="flex items-center gap-1">
-                                                            <svg class="animate-spin w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                                                            جاري الربط...
-                                                        </span>
-                                                    </template>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            {{-- خيار التعيين كملف تنظيم رئيسي --}}
+                            <div class="flex items-center justify-between p-3 bg-amber-50/60 rounded-xl border border-amber-200/80">
+                                <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-800">
+                                    <input type="checkbox" x-model="markAsPrimary" :disabled="targetMode === 'primary'" class="rounded text-orange focus:ring-orange/20 w-4 h-4">
+                                    <span>تعيين هذا الملف كملف تنظيم رئيسي للمبنى (يظهر في الخانة العلوية)</span>
+                                </label>
+                                <span class="text-[11px] text-amber-700 font-medium" x-text="markAsPrimary ? 'سيتم عرضه كملف رئيسي في أعلى بطاقة المبنى' : 'سيضاف كملف إضافي في تبويب الأرشيف'"></span>
+                            </div>
+
+                            <div class="flex justify-end pt-2">
+                                <button type="button"
+                                        @click="linkSelectedFile()"
+                                        :disabled="isLinking"
+                                        class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/30 transition-all disabled:opacity-50 cursor-pointer">
+                                    <template x-if="!isLinking">
+                                        <span class="flex items-center gap-1.5">
+                                            <x-heroicon-s-link class="w-4 h-4" />
+                                            <span>تأكيد ربط الملف بهذا المبنى</span>
+                                        </span>
+                                    </template>
+                                    <template x-if="isLinking">
+                                        <span class="flex items-center gap-1.5">
+                                            <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                            <span>جاري الربط...</span>
+                                        </span>
+                                    </template>
+                                </button>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-                            <button @click="mode = 'choose'; selectedFile = null" type="button" class="text-xs text-gray-500 hover:text-gray-800 font-bold flex items-center gap-1">
-                                <x-heroicon-s-arrow-right class="w-4 h-4" />
-                                <span>الرجوع للخيارات</span>
-                            </button>
-                            <button @click="closeModal()" type="button" class="px-5 py-2 text-gray-500 hover:bg-gray-100 rounded-xl font-bold text-xs transition-colors">
-                                إغلاق
-                            </button>
-                        </div>
+                    <div class="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+                        <a href="{{ route('archive.files.create', ['type_id' => 1]) }}" target="_blank" class="text-xs text-orange hover:text-orange-dark font-bold flex items-center gap-1">
+                            <x-heroicon-s-plus-circle class="w-4 h-4" />
+                            <span>إنشاء ملف جديد في نظام الأرشيف</span>
+                        </a>
+
+                        <button @click="closeModal()" type="button" class="px-5 py-2 text-gray-500 hover:bg-gray-100 rounded-xl font-bold text-xs transition-colors cursor-pointer">
+                            إغلاق
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1099,22 +1228,42 @@
         function buildingArchiveLinking(buildingId, initialFileNo, defaultSearchQuery) {
             return {
                 showModal: false,
-                mode: 'choose',
+                targetMode: 'additional',
                 searchQuery: defaultSearchQuery || initialFileNo || '',
+                selectedTypeId: '',
                 searchResults: [],
                 selectedFile: null,
+                markAsPrimary: false,
                 isSearching: false,
                 isLinking: false,
+                isUnlinking: false,
+                isSettingPrimary: false,
                 errorMessage: '',
                 successMessage: '',
 
-                openModal() {
+                openModal(target = 'additional') {
+                    this.targetMode = target;
                     this.showModal = true;
-                    this.mode = 'choose';
                     this.selectedFile = null;
                     this.errorMessage = '';
                     this.successMessage = '';
+
+                    if (target === 'primary') {
+                        this.selectedTypeId = '1';
+                        this.markAsPrimary = true;
+                    } else {
+                        this.selectedTypeId = '';
+                        this.markAsPrimary = false;
+                    }
+
+                    this.performSearch();
                     document.body.style.overflow = 'hidden';
+
+                    this.$nextTick(() => {
+                        if (this.$refs.searchInput) {
+                            this.$refs.searchInput.focus();
+                        }
+                    });
                 },
 
                 closeModal() {
@@ -1124,24 +1273,14 @@
                     document.body.style.overflow = '';
                 },
 
-                switchToSearch() {
-                    this.mode = 'search';
-                    this.selectedFile = null;
-                    this.errorMessage = '';
-                    this.performSearch();
-                    this.$nextTick(() => {
-                        if (this.$refs.searchInput) {
-                            this.$refs.searchInput.focus();
-                        }
-                    });
-                },
-
                 async performSearch() {
                     this.isSearching = true;
                     this.errorMessage = '';
                     try {
                         const params = new URLSearchParams({
-                            q: this.searchQuery
+                            q: this.searchQuery,
+                            type_id: this.selectedTypeId,
+                            building_id: buildingId
                         });
                         const res = await fetch(`{{ route('buildings.buildings.search-archive-files') }}?${params.toString()}`, {
                             headers: {
@@ -1164,6 +1303,9 @@
                 },
 
                 selectFile(file) {
+                    if (file.is_already_linked) {
+                        return;
+                    }
                     this.selectedFile = file;
                     this.errorMessage = '';
                 },
@@ -1182,7 +1324,9 @@
                                 'X-Requested-With': 'XMLHttpRequest'
                             },
                             body: JSON.stringify({
-                                file_no: this.selectedFile.file_no
+                                archive_file_id: this.selectedFile.id,
+                                file_no: this.selectedFile.file_no,
+                                is_primary: this.markAsPrimary
                             })
                         });
                         const json = await res.json();
@@ -1190,7 +1334,7 @@
                             this.successMessage = json.message || 'تم ربط المبنى بملف الأرشيف بنجاح!';
                             setTimeout(() => {
                                 window.location.reload();
-                            }, 800);
+                            }, 700);
                         } else {
                             this.errorMessage = json.message || 'حدث خطأ أثناء الربط، يرجى المحاولة مرة أخرى.';
                         }
@@ -1198,6 +1342,68 @@
                         this.errorMessage = 'فشل الاتصال بالخادم، يرجى المحاولة لاحقاً.';
                     } finally {
                         this.isLinking = false;
+                    }
+                },
+
+                async unlinkSpecificFile(fileId, fileNo) {
+                    if (!confirm(`هل أنت متأكد من رغبتك في إلغاء ربط ملف الأرشيف رقم (${fileNo}) بهذا المبنى؟`)) {
+                        return;
+                    }
+                    this.isUnlinking = true;
+                    try {
+                        const res = await fetch(`{{ url('/buildings/buildings') }}/${buildingId}/unlink-archive-file`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                archive_file_id: fileId
+                            })
+                        });
+                        const json = await res.json();
+                        if (res.ok && json.status === 'success') {
+                            window.location.reload();
+                        } else {
+                            alert(json.message || 'حدث خطأ أثناء إلغاء الربط.');
+                        }
+                    } catch (err) {
+                        alert('فشل الاتصال بالخادم، يرجى المحاولة لاحقاً.');
+                    } finally {
+                        this.isUnlinking = false;
+                    }
+                },
+
+                async setPrimaryFile(fileId) {
+                    if (!confirm('هل تريد تعيين هذا الملف كملف أرشيف تنظيم رئيسي للمبنى؟')) {
+                        return;
+                    }
+                    this.isSettingPrimary = true;
+                    try {
+                        const res = await fetch(`{{ url('/buildings/buildings') }}/${buildingId}/set-primary-archive-file`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                archive_file_id: fileId
+                            })
+                        });
+                        const json = await res.json();
+                        if (res.ok && json.status === 'success') {
+                            window.location.reload();
+                        } else {
+                            alert(json.message || 'حدث خطأ أثناء تعيين الملف الرئيسي.');
+                        }
+                    } catch (err) {
+                        alert('فشل الاتصال بالخادم، يرجى المحاولة لاحقاً.');
+                    } finally {
+                        this.isSettingPrimary = false;
                     }
                 }
             };

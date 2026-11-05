@@ -1,0 +1,1361 @@
+REST API v2
+المسارات وطريقة الطلبات وأكواد الردود. تاريخ التوليد: 2026-11-05 11:35:38
+
+اللغة: AR → EN
+العودة لقائمة الخدمات
+شكل الاستجابة
+كل الردود تحتوي على status و code و message.
+
+مثال نجاح:
+
+{
+  "status": true,
+  "code": 1001,
+  "message": "Success",
+  "data": { }
+}
+مثال خطأ:
+
+{
+  "status": false,
+  "code": 1004,
+  "message": "Invalid credentials",
+  "errors": { }
+}
+المسارات (Endpoints)
+بالأسفل طريقة استخدام كل Endpoint وما هي المخرجات المتوقعة.
+
+عنوان الموقع (Base URL): https://hotsms.ps
+
+مسار REST الأساسي: /api/rest/v2
+
+أخطاء التحقق (Validation) ترجع HTTP 422 بصيغة Laravel الافتراضية.
+
+Postman
+حمّل ملف Postman الجاهز واستورده (Import ← اختر الملف)، ثم عدّل base_url إلى نطاقك، وبعدها اتبع تسجيل الدخول على مرحلتين ليُحفظ api_token تلقائيًا.
+
+⬇️ مجموعة REST v2
+⬇️ ملف البيئة (مثال محلي)
+فهرس الخدمات
+POST
+تسجيل الدخول (مرحلتان)
+/api/rest/v2/auth/login
+POST
+تسجيل الخروج
+/api/rest/v2/auth/logout
+POST
+إرسال OTP
+/api/rest/v2/auth/otp/send
+POST
+التحقق من OTP
+/api/rest/v2/auth/otp/verify
+GET
+بيانات المستخدم
+/api/rest/v2/me
+GET
+الرصيد
+/api/rest/v2/credits
+GET
+أسماء المرسل المفعّلة
+/api/rest/v2/senders
+GET
+طلبات اسم المرسل
+/api/rest/v2/senders/requests
+GET
+الاستعلام عن حالة اسم مرسل
+/api/rest/v2/senders/status
+POST
+إضافة اسم مرسل
+/api/rest/v2/senders
+POST
+رفع التفويض
+/api/rest/v2/senders/{send_no}/authorization
+POST
+إرسال رسالة
+/api/rest/v2/messages/send
+POST
+ملخص إرسال رسالة
+/api/rest/v2/messages/send/summary
+POST
+إرسال إلى مجموعة
+/api/rest/v2/messages/sendgroup
+POST
+ملخص إرسال مجموعة
+/api/rest/v2/messages/sendgroup/summary
+POST
+إرسال متغيرات
+/api/rest/v2/messages/sendvar
+POST
+ملخص الإرسال المتغير
+/api/rest/v2/messages/sendvar/summary
+POST
+أرشفة رسالة
+/api/rest/v2/messages/archive
+POST
+تحديث حالة رسالة واتساب أرشيفية
+/api/rest/v2/messages/archive/status
+GET
+Webhook تقارير التسليم: الإعدادات
+/api/rest/v2/webhooks/dlr
+PUT
+Webhook تقارير التسليم: حفظ الرابط
+/api/rest/v2/webhooks/dlr
+POST
+Webhook تقارير التسليم: تفعيل
+/api/rest/v2/webhooks/dlr/enable
+POST
+Webhook تقارير التسليم: إيقاف
+/api/rest/v2/webhooks/dlr/disable
+POST
+Webhook تقارير التسليم: تقرير تجريبي
+/api/rest/v2/webhooks/dlr/test
+GET
+Webhook تقارير التسليم: آخر المحاولات
+/api/rest/v2/webhooks/dlr/deliveries
+DELETE
+Webhook تقارير التسليم: حذف
+/api/rest/v2/webhooks/dlr
+1
+تسجيل الدخول (مرحلتان)
+↑ العودة للفهرس
+POST
+/api/rest/v2/auth/login
+تسجيل الدخول (مرحلتان) تسجيل دخول على مرحلتين عبر نفس الرابط. المرحلة الأولى: أرسل user_name و user_pass فقط (بدون pin_code) — يرد النظام بالكود 1002 (OTP sent) ويرسل رمز تحقق برسالة SMS إلى جوال الحساب، صالحًا لمدة expires_in ثانية. المرحلة الثانية: أعد نفس الطلب بنفس البيانات مع إضافة pin_code المستلم — يرد النظام بالكود 1001 مع data.api_token الذي تستخدمه بعدها في كل الطلبات المحمية عبر الهيدر "Authorization: Bearer <api_token>". إذا كان هناك توكن سابق تتم إعادة استخدامه (data.reused=true) إلا إذا أرسلت force_new_token=true.
+التوثيق: لا يتطلب توكن
+الحد (Rate limit): 10/min
+Headers
+الاسم	إلزامي	مثال
+Content-Type	نعم	application/json
+Body
+الاسم	النوع	إلزامي	الشرح
+user_name	string	نعم	اسم المستخدم
+user_pass	string	نعم	كلمة المرور
+pin_code	string	لا	رمز OTP (4 أو 6 أرقام) يصلك برسالة SMS بعد المرحلة الأولى. لا تُرسله في المرحلة الأولى؛ مطلوب في المرحلة الثانية.
+force_new_token	boolean	لا	قيمة منطقية اختيارية. عند true يتم إصدار api_token جديد دائمًا بدل إعادة استخدام التوكن الحالي.
+مثال cURL
+# Step 1: send credentials WITHOUT pin_code -> an OTP is sent to the account mobile
+curl -X POST "https://hotsms.ps/api/rest/v2/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"user_name":"demo","user_pass":"demo"}'
+
+# Response: {"status":true,"code":1002,"message":"OTP sent","data":{"otp_required":true,"expires_in":120}}
+
+# Step 2: repeat the SAME request WITH the pin_code received by SMS -> returns api_token
+curl -X POST "https://hotsms.ps/api/rest/v2/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"user_name":"demo","user_pass":"demo","pin_code":"123456"}'
+مثال نجاح
+{
+    "step_1_response": {
+        "status": true,
+        "code": 1002,
+        "message": "OTP sent",
+        "data": {
+            "otp_required": true,
+            "expires_in": 120
+        }
+    },
+    "step_2_response": {
+        "status": true,
+        "code": 1001,
+        "message": "Success",
+        "data": {
+            "api_token": "<60-char token used as Authorization: Bearer>",
+            "reused": false
+        }
+    }
+}
+أكواد أخطاء شائعة
+1004 1201 1401 1402 1702 1703
+2
+تسجيل الخروج
+↑ العودة للفهرس
+POST
+/api/rest/v2/auth/logout
+تسجيل الخروج إلغاء التوكن الحالي.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 30/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+X-API-TOKEN	لا	<api_token>
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/auth/logout" \
+  -H "Authorization: Bearer <api_token>"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {}
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402
+3
+إرسال OTP
+↑ العودة للفهرس
+POST
+/api/rest/v2/auth/otp/send
+إرسال OTP إرسال رمز تحقق (OTP) برسالة SMS إلى رقم الجوال المحدد. يحتفظ النظام بالرمز مؤقتًا للتحقق منه لاحقًا عبر نقطة التحقق من OTP.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 600/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+X-API-TOKEN	لا	<api_token>
+Content-Type	نعم	application/json
+Body
+الاسم	النوع	إلزامي	الشرح
+sender	string	نعم	اسم المرسل المستخدم لإرسال OTP.
+mobile	string	نعم	رقم الجوال الهدف.
+msg_prefix	string	لا	نص اختياري يضاف قبل رمز OTP المولد.
+exp_min	integer	لا	مدة صلاحية OTP بالدقائق (اختياري، من 1 إلى 60).
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/auth/otp/send" \
+  -H "Authorization: Bearer <api_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"sender":"MyBrand","mobile":"970599999999","msg_prefix":"Your verification code is","exp_min":10}'
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "OTP sent",
+    "data": {
+        "mobile": "970599999999",
+        "sender": "MyBrand",
+        "expires_in_minutes": 10
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1201 1401 1402 1500 1602
+4
+التحقق من OTP
+↑ العودة للفهرس
+POST
+/api/rest/v2/auth/otp/verify
+التحقق من OTP التحقق من رمز OTP المرسل سابقًا لنفس المرسل ورقم الجوال. عند نجاح التحقق يُستهلك الرمز ولا يمكن استخدامه مرة أخرى.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 600/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+X-API-TOKEN	لا	<api_token>
+Content-Type	نعم	application/json
+Body
+الاسم	النوع	إلزامي	الشرح
+sender	string	نعم	نفس قيمة المرسل المستخدمة عند إرسال OTP.
+mobile	string	نعم	نفس رقم الجوال المستخدم عند إرسال OTP.
+otp	string	نعم	رمز OTP للتحقق (من 4 إلى 8 أرقام).
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/auth/otp/verify" \
+  -H "Authorization: Bearer <api_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"sender":"MyBrand","mobile":"970599999999","otp":"123456"}'
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "OTP verified",
+    "data": {
+        "verified": true,
+        "mobile": "970599999999",
+        "sender": "MyBrand"
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402 1500 1602 1702
+5
+بيانات المستخدم
+↑ العودة للفهرس
+GET
+/api/rest/v2/me
+بيانات المستخدم إرجاع بيانات الحساب العامة بما فيها finish_date (تاريخ انتهاء صلاحية الحساب، أو null إن لم يكن محددًا) و public_ip (عنوان IP الذي وصل منه الطلب).
+التوثيق: يتطلب توكن
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+X-API-TOKEN	لا	<api_token>
+مثال cURL
+curl -X GET "https://hotsms.ps/api/rest/v2/me" \
+  -H "Authorization: Bearer <api_token>"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "user": {
+            "user_no": 1,
+            "user_name": "demo",
+            "prev": "user",
+            "name": "Demo User",
+            "email": "demo@example.com",
+            "company": "Test Company",
+            "mobile": "+970599999999",
+            "public_ip": "203.0.113.10",
+            "credits": 123,
+            "due_amount": 0,
+            "finish_date": "2026-12-31"
+        }
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402
+6
+الرصيد
+↑ العودة للفهرس
+GET
+/api/rest/v2/credits
+الرصيد إرجاع الرصيد المتبقي لإرسال الرسائل.
+التوثيق: يتطلب توكن
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+X-API-TOKEN	لا	<api_token>
+مثال cURL
+curl -X GET "https://hotsms.ps/api/rest/v2/credits" \
+  -H "Authorization: Bearer <api_token>"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "credits": 123
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402
+7
+أسماء المرسل المفعّلة
+↑ العودة للفهرس
+GET
+/api/rest/v2/senders
+أسماء المرسل المفعّلة إرجاع أسماء المرسل المعتمدة على الحساب. استخدم هذه القيم عند الإرسال. الاسم المضاف حديثاً لا يظهر هنا حتى يفعّله الأدمن.
+التوثيق: يتطلب توكن
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+X-API-TOKEN	لا	<api_token>
+مثال cURL
+curl -X GET "https://hotsms.ps/api/rest/v2/senders" \
+  -H "Authorization: Bearer <api_token>"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "senders": [
+            "HotSMS",
+            "MyBrand",
+            "School 1"
+        ]
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402
+8
+طلبات اسم المرسل
+↑ العودة للفهرس
+GET
+/api/rest/v2/senders/requests
+طلبات اسم المرسل إرجاع طلبات اسم المرسل لهذا الحساب، بما فيها send_no والحالة ووجود التفويض. استخدم send_no لرفع التفويض لاحقاً.
+التوثيق: يتطلب توكن
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+X-API-TOKEN	لا	<api_token>
+مثال cURL
+curl -X GET "https://hotsms.ps/api/rest/v2/senders/requests" \
+  -H "Authorization: Bearer <api_token>"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "requests": [
+            {
+                "send_no": 18451,
+                "sender_name": "MyBrand",
+                "authorized_name": "Ahmed Ali",
+                "company_name": "Example Co",
+                "mobile": "970599999999",
+                "notes": "Marketing SMS",
+                "send_date": "2026-08-30",
+                "send_time": "21:10:05",
+                "send_ok": 0,
+                "send_auth": 0,
+                "status": "pending",
+                "has_attachment": false,
+                "attachment": null
+            }
+        ]
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402
+9
+الاستعلام عن حالة اسم مرسل
+↑ العودة للفهرس
+GET
+/api/rest/v2/senders/status
+الاستعلام عن حالة اسم مرسل أرسل sender_name ضمن معاملات رابط GET (نص مطلوب، بحد أقصى 50 حرفاً لدعم الأسماء القديمة). يرجع أحدث طلب مطابق ضمن الحساب مباشرة في data بنفس حقول قائمة الطلبات. المطابقة للاسم الكامل مع تجاهل حالة الأحرف والمسافات على الأطراف، دون بحث جزئي أو رموز بديلة. يتم اختيار الأحدث حسب send_date ثم send_time ثم send_no. الحالات: 0=pending، 1=approved، 2=rejected، 3=deleted، 4=blocked، وأي قيمة أخرى unknown. إذا لم يوجد طلب مطابق يرجع HTTP 404 والكود 1004 ورسالة Sender request not found؛ ويشمل ذلك الأسماء التابعة لحساب آخر أو الموجودة فقط في قائمة أسماء الحساب دون طلب تسجيل. المدخلات غير الصحيحة ترجع HTTP 422. متاح فقط على REST v2 باستخدام api_token.
+التوثيق: يتطلب توكن
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+Accept	نعم	application/json
+مثال cURL
+curl -G "https://hotsms.ps/api/rest/v2/senders/status" \
+  -H "Authorization: Bearer <api_token>" \
+  -H "Accept: application/json" \
+  --data-urlencode "sender_name=MyBrand"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "send_no": 18451,
+        "sender_name": "MyBrand",
+        "authorized_name": "Ahmed Ali",
+        "company_name": "Example Co",
+        "mobile": "970599999999",
+        "notes": "Marketing SMS",
+        "user_name": "demo",
+        "user_name_activate": "",
+        "send_date": "2026-08-30",
+        "send_time": "21:10:05",
+        "send_ok": 0,
+        "send_auth": 0,
+        "status": "pending",
+        "has_attachment": false,
+        "attachment": null
+    }
+}
+جميع القيم الممكنة لحالة اسم المرسل (enum)
+الحقل data.send_ok هو حالة طلب التسجيل كرقم صحيح، والحقل data.status هو الاسم النصّي الثابت المقابل لها. الجدول يعرض جميع القيم النصّية الممكنة. أما status خارج data فهو قيمة منطقية تدل على نجاح الاستعلام، ولا يدل على اعتماد اسم المرسل.
+
+data.send_ok (integer)	data.status (string enum)	الشرح
+0	pending	طلب التسجيل قيد المراجعة أو بانتظار الموافقة.
+1	approved	طلب التسجيل معتمد.
+2	rejected	طلب التسجيل مرفوض.
+3	deleted	تسجيل اسم المرسل محذوف.
+4	blocked	اسم المرسل محظور.
+أي رقم صحيح آخر	unknown	قيمة رقمية غير معروفة؛ تعامل معها كحالة غير معروفة وليست معتمدة.
+مثال: data.send_ok=0 يقابله دائماً data.status="pending". إرجاع HTTP 200 وstatus=true خارج data يعني نجاح الاستعلام، حتى لو كان الطلب قيد المراجعة أو مرفوضاً أو محذوفاً أو محظوراً. عدم وجود طلب مطابق يرجع HTTP 404، ولا يرجع حالة unknown.
+
+أكواد أخطاء شائعة
+1002 1003 1401 1402
+10
+إضافة اسم مرسل
+↑ العودة للفهرس
+POST
+/api/rest/v2/senders
+إضافة اسم مرسل تسجيل اسم مرسل بحالة send_ok=0 (بانتظار التفعيل)، بنفس قواعد صفحة المشترك. التفويض اختياري: يمكن إضافته لاحقاً عبر data.send_no، أو إرفاق ملف PDF/JPG/PNG (حتى 10MB) في نفس الطلب. يُحفظ الملف في مجلد auth_letter الخاص بالبورتال باسم {send_no}.{ext}.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 30/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+Content-Type	نعم	multipart/form-data
+Body
+الاسم	النوع	إلزامي	الشرح
+sender_name	string	نعم	من 1 إلى 11 حرفاً، ويجب أن يحتوي حرفاً إنجليزياً. المسموح: حروف وأرقام إنجليزية ومسافة ونقطة (.) وشرطة سفلية (_) وشرطة (-).
+authorized_name	string	نعم	اسم الشخص المفوض باستخدام اسم المرسل.
+company_name	string	نعم	اسم الشركة أو المؤسسة.
+mobile	string	نعم	رقم الجوال للتواصل (صيغة محلية أو دولية).
+notes	string	لا	ملاحظة اختيارية عن طبيعة الاستخدام (حد أقصى 500).
+attachment	file	لا	ملف التفويض اختياري: PDF أو JPG/PNG حتى 10MB.
+مثال cURL
+# Add the name only, then upload the letter later using data.send_no
+curl -X POST "https://hotsms.ps/api/rest/v2/senders" \
+  -H "Authorization: Bearer <api_token>" \
+  -F "sender_name=MyBrand" \
+  -F "authorized_name=Ahmed Ali" \
+  -F "company_name=Example Co" \
+  -F "mobile=970599999999" \
+  -F "notes=Marketing SMS"
+
+# Or add the name and the authorization letter together
+curl -X POST "https://hotsms.ps/api/rest/v2/senders" \
+  -H "Authorization: Bearer <api_token>" \
+  -F "sender_name=MyBrand" \
+  -F "authorized_name=Ahmed Ali" \
+  -F "company_name=Example Co" \
+  -F "mobile=970599999999" \
+  -F "notes=Marketing SMS" \
+  -F "attachment=@letter.pdf"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "send_no": 18451,
+        "sender_name": "MyBrand",
+        "send_ok": 0,
+        "send_auth": 0,
+        "status": "pending",
+        "message": "Sender name added. Upload the authorization letter using send_no.",
+        "has_attachment": false,
+        "attachment": null
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402 1608 1609 1610 1611 1612 1614
+11
+رفع التفويض
+↑ العودة للفهرس
+POST
+/api/rest/v2/senders/{send_no}/authorization
+رفع التفويض رفع أو استبدال ملف التفويض لاسم مرسل يملكه الحساب. الرقم send_no يأتي من رد الإضافة أو من قائمة الطلبات. الاسم غير المفعّل يمكن استبدال ملفه؛ الاسم قيد التفعيل يُرفع له التفويض فقط إن لم يكن هناك ملف.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 30/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+Content-Type	نعم	multipart/form-data
+Body
+الاسم	النوع	إلزامي	الشرح
+attachment	file	نعم	ملف التفويض: PDF أو JPG/PNG حتى 10MB.
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/senders/18451/authorization" \
+  -H "Authorization: Bearer <api_token>" \
+  -F "attachment=@letter.pdf"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "send_no": 18451,
+        "sender_name": "MyBrand",
+        "send_ok": 0,
+        "send_auth": 1,
+        "status": "pending",
+        "has_attachment": true,
+        "attachment": {
+            "original_name": "letter.pdf",
+            "mime_type": "application/pdf",
+            "size_bytes": 245760
+        }
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1004 1401 1402 1613 1614 1616
+12
+إرسال رسالة
+↑ العودة للفهرس
+POST
+/api/rest/v2/messages/send
+إرسال رسالة إرسال رسالة SMS إلى رقم واحد أو عدة أرقام. تُخصم كلفة الإرسال من رصيد الحساب، ويعرض الرد ملخصًا يشمل عدد الأرقام المقبولة والمرفوضة وتقرير الشبكات والكلفة الإجمالية وأرقامًا مرجعية للرسائل يمكنك متابعتها لاحقًا. يجب أن يكون اسم المرسل من الأسماء المعتمدة في حسابك.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 600/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+Content-Type	نعم	بحسب طريقة إرسال البيانات المختارة؛ راجع الأمثلة أدناه.
+Accept	لا	application/json
+Body
+الاسم	النوع	إلزامي	الشرح
+mobile	string	نعم	رقم/أرقام الجوال. عدة أرقام مفصولة بفواصل.
+message	string	نعم	نص الرسالة (حد أقصى 2000 حرف).
+sender	string	نعم	اسم/معرّف المرسل (إلزامي، حد أقصى 50 حرف).
+طرق إرسال البيانات
+يدعم مسار إرسال الرسائل هذا الحقول نفسها mobile وmessage وsender بالطرق الثلاث. اختر طريقة واحدة لكل طلب. تُذكر متطلبات المسارات الأخرى في توثيق كل مسار.
+
+الطريقة	الاختيار في Postman Body	Content-Type
+JSON — موصى به	raw → JSON	application/json
+Form Data	form-data	multipart/form-data; boundary=...
+URL Encoded	x-www-form-urlencoded	application/x-www-form-urlencoded
+يحدد Content-Type صيغة البيانات التي ترسلها، بينما يطلب Accept: application/json ردًا بصيغة JSON. استخدم Bearer Token نفسه مع جميع الطرق.
+
+عند استخدام Form Data، يولّد Postman وPHP cURL الهيدر multipart/form-data والـ boundary تلقائيًا. يفصل boundary بين الحقول. احذف أي Content-Type أضفته يدويًا عند الانتقال إلى Form Data.
+
+في Postman اختر raw → JSON بدل Text. قيمة Content-Type المضافة يدويًا تتجاوز القيمة التلقائية.
+
+يحتوي مجلد Messages على ثلاثة أمثلة محفوظة: Send message — JSON وSend message — Form Data وSend message — URL Encoded. كلها تستخدم المسار نفسه. شغّل مثالًا واحدًا؛ تشغيل الثلاثة يرسل ثلاث رسائل.
+
+JSON — موصى به
+Form Data
+URL Encoded
+JSON — موصى به
+مثال cURL
+نسخ
+curl 'https://hotsms.ps/api/rest/v2/messages/send' \
+  -H 'Authorization: Bearer YOUR_API_TOKEN' \
+  -H 'Accept: application/json' \
+  -H 'Content-Type: application/json' \
+  --data-raw '{
+    "mobile": "+201000000000",
+    "message": "Hello from SMS API",
+    "sender": "MyBrand"
+}'
+مثال PHP cURL
+نسخ
+استبدل الرابط وYOUR_API_TOKEN ببياناتك. يتطلب PHP تفعيل إضافة cURL. يطبع المثال رد API؛ راجع status وcode لمعرفة نتيجة الطلب.
+
+<?php
+
+$url = 'https://hotsms.ps/api/rest/v2/messages/send';
+$token = 'YOUR_API_TOKEN';
+$data = [
+    'mobile' => '+201000000000',
+    'message' => 'Hello from SMS API',
+    'sender' => 'MyBrand',
+];
+$headers = [
+    "Authorization: Bearer {$token}",
+    'Accept: application/json',
+    'Content-Type: application/json',
+];
+
+$ch = curl_init($url);
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 30,
+    CURLOPT_HTTPHEADER => $headers,
+    CURLOPT_POSTFIELDS => json_encode($data, JSON_THROW_ON_ERROR),
+]);
+
+$response = curl_exec($ch);
+if ($response === false) {
+    throw new RuntimeException(curl_error($ch));
+}
+
+echo $response;
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "provider": "queue_sms",
+        "provider_response": {
+            "accepted": 2,
+            "rejected": 0,
+            "rejected_sample": [],
+            "filter_flag": 0,
+            "filtered": false,
+            "networks_report": [
+                {
+                    "name": "Palestine",
+                    "code_no": "97259",
+                    "route_no": 20,
+                    "price": 1,
+                    "count": 2,
+                    "cost": 2
+                }
+            ],
+            "total_cost": 2,
+            "request_id": "3f9a1c2e7b4d8e01",
+            "sms_refs": [
+                501
+            ]
+        }
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1101 1201 1401 1402
+13
+ملخص إرسال رسالة
+↑ العودة للفهرس
+POST
+/api/rest/v2/messages/send/summary
+ملخص إرسال رسالة إرجاع المسار المتوقع وعدد الأجزاء والكلفة وحالة كفاية الرصيد لطلب إرسال عادي بدون إرسال فعلي وبدون خصم رصيد.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 600/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+Content-Type	نعم	application/json
+Body
+الاسم	النوع	إلزامي	الشرح
+mobile	string	نعم	
+message	string	نعم	
+sender	string	نعم	
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/messages/send/summary" \
+  -H "Authorization: Bearer <api_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"mobile":"+201000000000,+201000000001","message":"Hello","sender":"MyBrand"}'
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "accepted": 2,
+        "rejected": 0,
+        "rejected_sample": [],
+        "sms_type": "text",
+        "message_segments": 1,
+        "total_segments": 2,
+        "filter_flag": 0,
+        "filtered": false,
+        "networks_report": [
+            {
+                "name": "Palestine",
+                "code_no": "97259",
+                "route_no": 20,
+                "price": 1,
+                "count": 2,
+                "cost": 2
+            }
+        ],
+        "total_cost": 2,
+        "can_send": true,
+        "charge_credit": true,
+        "required_cost": 2,
+        "available_credit": 50,
+        "provider": "queue_sms",
+        "recipients": 2
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402
+14
+إرسال إلى مجموعة
+↑ العودة للفهرس
+POST
+/api/rest/v2/messages/sendgroup
+إرسال إلى مجموعة جلب جهات الاتصال من المجموعات المحددة التابعة للمستخدم الحالي، ثم تطبيع الأرقام وحذف التكرار والإرسال عبر نفس مسار SMS العادي.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 30/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+Content-Type	نعم	application/json
+Body
+الاسم	النوع	إلزامي	الشرح
+group_ids	array<int>	نعم	
+message	string	نعم	
+sender	string	نعم	
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/messages/sendgroup" \
+  -H "Authorization: Bearer <api_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"group_ids":[12,18],"message":"Hello group","sender":"MyBrand"}'
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "groups": [
+            {
+                "g_no": 12,
+                "g_name": "Customers"
+            },
+            {
+                "g_no": 18,
+                "g_name": "VIP"
+            }
+        ],
+        "recipients": 2,
+        "provider": "queue_sms",
+        "provider_response": {
+            "accepted": 2,
+            "rejected": 0,
+            "rejected_sample": [],
+            "filter_flag": 0,
+            "filtered": false,
+            "networks_report": [
+                {
+                    "name": "Palestine",
+                    "code_no": "97259",
+                    "route_no": 20,
+                    "price": 1,
+                    "count": 2,
+                    "cost": 2
+                }
+            ],
+            "total_cost": 2,
+            "request_id": "3f9a1c2e7b4d8e01",
+            "sms_refs": [
+                501
+            ]
+        }
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1101 1201 1401 1402 1601 1606
+15
+ملخص إرسال مجموعة
+↑ العودة للفهرس
+POST
+/api/rest/v2/messages/sendgroup/summary
+ملخص إرسال مجموعة جلب جهات الاتصال من المجموعات المحددة ثم إرجاع عدد المستلمين والمسار والكلفة المتوقعة بدون إرسال فعلي وبدون خصم رصيد.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 30/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+Content-Type	نعم	application/json
+Body
+الاسم	النوع	إلزامي	الشرح
+group_ids	array<int>	نعم	
+message	string	نعم	
+sender	string	نعم	
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/messages/sendgroup/summary" \
+  -H "Authorization: Bearer <api_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"group_ids":[12,18],"message":"Hello group","sender":"MyBrand"}'
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "accepted": 2,
+        "rejected": 0,
+        "rejected_sample": [],
+        "sms_type": "text",
+        "message_segments": 1,
+        "total_segments": 2,
+        "filter_flag": 0,
+        "filtered": false,
+        "networks_report": [
+            {
+                "name": "Palestine",
+                "code_no": "97259",
+                "route_no": 20,
+                "price": 1,
+                "count": 2,
+                "cost": 2
+            }
+        ],
+        "total_cost": 2,
+        "can_send": true,
+        "charge_credit": true,
+        "required_cost": 2,
+        "available_credit": 50,
+        "provider": "queue_sms",
+        "groups": [
+            {
+                "g_no": 12,
+                "g_name": "Customers"
+            },
+            {
+                "g_no": 18,
+                "g_name": "VIP"
+            }
+        ],
+        "recipients": 2
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402 1601 1606
+16
+إرسال متغيرات
+↑ العودة للفهرس
+POST
+/api/rest/v2/messages/sendvar
+إرسال متغيرات إرسال جماعي باستخدام قالب رسالة ومتغيرات لكل صف.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 30/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+Content-Type	نعم	application/json
+Body
+الاسم	النوع	إلزامي	الشرح
+sender_id	string	نعم	اسم/معرّف المرسل.
+mobile_column	string	نعم	اسم العمود داخل كل صف الذي يحتوي رقم الموبايل.
+message_template	string	نعم	قالب الرسالة مع متغيرات مثل {name} و {city}.
+rows	array<object>	نعم	مصفوفة من الصفوف (حد أقصى 5000). كل صف يحتوي المتغيرات المستخدمة في القالب.
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/messages/sendvar" \
+  -H "Authorization: Bearer <api_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"sender_id":"SMS","mobile_column":"mobile","message_template":"مرحبا {name}","rows":[{"mobile":"970599999999","name":"Ahmed"}]}'
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "accepted": 1,
+        "rejected": 0,
+        "rejected_sample": [],
+        "networks_report": [
+            {
+                "name": "Palestine",
+                "code_no": "97259",
+                "route_no": 20,
+                "price": 1,
+                "count": 1,
+                "cost": 1
+            }
+        ]
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402 1601 1602
+17
+ملخص الإرسال المتغير
+↑ العودة للفهرس
+POST
+/api/rest/v2/messages/sendvar/summary
+ملخص الإرسال المتغير تجهيز الصفوف وحساب المستلمين الصالحين وإجمالي الأجزاء والكلفة، ثم بيان ما إذا كان الرصيد الحالي يكفي بدون إرسال فعلي.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 30/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+Content-Type	نعم	application/json
+Body
+الاسم	النوع	إلزامي	الشرح
+sender_id	string	نعم	
+mobile_column	string	نعم	
+message_template	string	نعم	
+rows	array<object>	نعم	
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/messages/sendvar/summary" \
+  -H "Authorization: Bearer <api_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"sender_id":"SMS","mobile_column":"mobile","message_template":"مرحبا {name}","rows":[{"mobile":"970599999999","name":"Ahmed"}]}'
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "rows_count": 1,
+        "recipients": 1,
+        "accepted": 1,
+        "rejected": 0,
+        "rejected_sample": [],
+        "networks_report": [
+            {
+                "name": "Palestine",
+                "code_no": "97259",
+                "route_no": 20,
+                "price": 1,
+                "count": 1,
+                "cost": 1
+            }
+        ],
+        "total_segments": 1,
+        "required_cost": 1,
+        "available_credit": 50,
+        "charge_credit": true,
+        "can_send": true,
+        "provider": "queue_sms"
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402 1601 1602
+18
+أرشفة رسالة
+↑ العودة للفهرس
+POST
+/api/rest/v2/messages/archive
+أرشفة رسالة خدمة لحفظ الرسائل في سجل المرسلات دون إرسالها فعليًا ودون خصم أي رصيد. استخدمها عندما تُرسل رسالة عبر قناة أخرى (مثل واتساب) وترغب أن تظهر ضمن سجل مرسلاتك وتقاريرك في النظام. كل ما عليك هو تمرير رقم المستلم ونص الرسالة واسم المرسل ونوع الرسالة، وستُضاف مباشرة إلى السجل. يجب أن يكون اسم المرسل من الأسماء المعتمدة في حسابك، تمامًا مثل الرسائل العادية.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 600/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+Content-Type	نعم	application/json
+Body
+الاسم	النوع	إلزامي	الشرح
+mobile	string	نعم	رقم/أرقام المستلمين مفصولة بفواصل. يُقبل أي رقم رقمي دون فحص مسارات SMS أو مفاتيح الدول، ويُحفظ route_no بقيمة 0. تُزال علامات التنسيق فقط مثل + و00 في البداية والمسافات والأقواس والشرطات، وتُحوّل الأرقام العربية والفارسية إلى إنجليزية. لا يُحوّل 970 إلى 972 ولا العكس، وتبقى الأرقام المحلية كما هي دون إضافة مفتاح دولة.
+message	string	نعم	نص الرسالة المراد أرشفتها (حد أقصى 4000 حرف).
+sender	string	نعم	اسم/معرّف المرسل المعتمد في الحساب (مطلوب، حد أقصى 50 حرفًا).
+sms_type	integer	نعم	نوع الرسالة. حاليًا يُسمح فقط بالقيمة 300 (واتساب أرشيفي).
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/messages/archive" \
+  -H "Authorization: Bearer <api_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"mobile":"970599999999","message":"WhatsApp text","sender":"MyBrand","sms_type":300}'
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "archived": true,
+        "sms_ref": 501,
+        "sms_type": 300,
+        "sms_type_name": "whatsapp_archive",
+        "recipients": 1,
+        "total_cost": 0,
+        "queued": false
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402 1602
+19
+تحديث حالة رسالة واتساب أرشيفية
+↑ العودة للفهرس
+POST
+/api/rest/v2/messages/archive/status
+تحديث حالة رسالة واتساب أرشيفية يحدّث التقرير الحالي لنفس sms_ref وmobile معًا في رسالة واتساب أرشيفية تخص الحساب المحدد بالتوكن. تُكتب الحالة الجديدة فوق تقرير هذا الرقم ضمن هذا المرجع فقط، دون تجميع الحالات. مثلًا: تحديث الرقم 972599999999 ضمن المرجع 501 يبقي تقريره ضمن المرجع 502 وتقارير بقية مستلمي المرجع 501 كما هي. يجب أن يكون sms_type المحفوظ في قاعدة البيانات 300، ولا يلزم إرساله في طلب التحديث. النوعان 1 و2 يبقيان على نظام تقارير SMS المعتاد، ولا يمكن تحديثهما هنا. الحالات المقبولة حرفيًا: Accpted وSent وDelivered وRead وFailed. لا يُخصم رصيد ولا تُرسل رسالة. تُطبّق الطلبات حسب ترتيب معالجتها، وتكرار الحالة نفسها يحافظ على وقتها. updated_at هو وقت الحالة على الخادم، ويظهر أيضًا في حقل delivered_at بتقارير السجل؛ يبقى تاريخ ووقت الرسالة الأصلي كما هو. يرجع HTTP 404 والكود 1604 عند غياب الرسالة أو اختلاف المالك أو النوع أو عدم وجود الرقم ضمن مستلميها، وHTTP 422 للمدخلات غير الصالحة. status في أعلى الرد يعني نجاح الطلب، وdata.status هي حالة الرسالة.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 600/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+Content-Type	نعم	application/json
+Body
+الاسم	النوع	إلزامي	الشرح
+sms_ref	integer	نعم	مرجع الرسالة الذي أعاده طلب الأرشفة، عدد صحيح موجب. يحدد مع mobile التقرير المراد تحديثه.
+mobile	string	نعم	رقم مستلم واحد موجود ضمن sms_ref المحدد. يُنظّف تنسيقه كما عند الأرشفة دون تحويل مفتاح الدولة أو المقدمة المحلية. استخدم المقدمة المحفوظة؛ 970 و972 رقمان مستقلان. لا تتغير السجلات القديمة، فإذا كان الرقم محفوظًا بمقدمة 972 فاستخدم 972 لتحديثه.
+status	string	نعم	إحدى القيم Accpted أو Sent أو Delivered أو Read أو Failed، مع مراعاة حالة الأحرف.
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/messages/archive/status" -H "Authorization: Bearer <api_token>" -H "Content-Type: application/json" -d '{"sms_ref":501,"mobile":"972599999999","status":"Read"}'
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "sms_ref": 501,
+        "mobile": "972599999999",
+        "status": "Read",
+        "updated_at": "2026-10-07 12:00:00"
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402 1602 1604
+20
+Webhook تقارير التسليم: الإعدادات
+↑ العودة للفهرس
+GET
+/api/rest/v2/webhooks/dlr
+Webhook تقارير التسليم: الإعدادات يمكن إيصال تقارير التسليم إلى صفحة على خادمك لحظة وصولها من المشغّل: طلب GET واحد لكل تقرير إلى رابط تكتبه أنت، فيه متغيرات نستبدلها بقيم التقرير. الإعداد واحد لكل حساب وهو نفسه الظاهر في البوابة تحت الإعدادات > Webhooks. يعيد هذا الطلب الإعداد الحالي، والحالة (مفعّل، أو متوقف مؤقتًا بعد فشل، أو معطّل)، ومعاينة الرابط كما سيُنادى، وقائمة المتغيرات، وملخص آخر المحاولات. وإن لم يكن هناك إعداد تكون "configured" بقيمة false وتُعاد قائمة المتغيرات فقط.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 60/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+مثال cURL
+curl "https://hotsms.ps/api/rest/v2/webhooks/dlr" \
+  -H "Authorization: Bearer <api_token>"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "configured": true,
+        "url": "https://example.com/dlr.php?mobile={mobile}&id={request_id}&status={status}&time={dlr_time}",
+        "active": true,
+        "state": "active",
+        "paused_until": null,
+        "disabled_reason": null,
+        "disabled_at": null,
+        "preview": "https://example.com/dlr.php?mobile=972590000000&id=3f9a1c2e7b4d8e01&status=DELIVRD&time=2026-10-04+10%3A00%3A00",
+        "variables": [
+            "mobile",
+            "request_id",
+            "message_id",
+            "status",
+            "status_code",
+            "dlr_time"
+        ],
+        "summary": {
+            "pending": 0,
+            "sent": 1250,
+            "failed": 2,
+            "last_success": "2026-10-04 09:59:12"
+        },
+        "updated_at": "2026-10-01 12:00:00"
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402
+21
+Webhook تقارير التسليم: حفظ الرابط
+↑ العودة للفهرس
+PUT
+/api/rest/v2/webhooks/dlr
+Webhook تقارير التسليم: حفظ الرابط يحفظ الرابط ويفعّل الإرسال (PUT أو POST). المتغيرات: {mobile} رقم المستلم؛ {request_id} معرّف الطلب الذي أعاده طلب الإرسال، واحد لكل طلب مهما تعددت أرقامه وشبكاته؛ {message_id} رقم داخلي لكل مجموعة على شبكة واحدة (sms_refs)، اختياري؛ {status} إحدى DELIVRD أو UNDELIV أو EXPIRED أو REJECTD أو UNKNOWN؛ {status_code} الحالة رقمًا 2 أو 5 أو 3 أو 8؛ {dlr_time} وقت وصول التقرير. القواعد: http أو https، وصفحة أو مسار بعد اسم الموقع، ومتغير واحد على الأقل، وكل متغير قيمةً لبارامتر له اسم (mobile={mobile}) مع الفصل بـ &، ولا عناوين داخلية. بارامتراتك الثابتة (مفتاح سرّي، رقم حسابك) تمرّ كما هي. التقرير الذي لا يُرَدّ عليه بـ 2xx يُعاد بعد دقيقة ثم 5 ثم 15 دقيقة ثم ساعة ثم 3 ثم 6 ساعات، والرابط الذي يفشل يومًا كاملًا يُعطَّل حتى تعيد تفعيله. الحفظ يصفّر أي حالة فشل سابقة.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 30/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+Content-Type	نعم	application/json
+Body
+الاسم	النوع	إلزامي	الشرح
+url	string	نعم	صفحة على خادمك مع المتغيرات، مثل https://example.com/dlr.php?mobile={mobile}&id={request_id}&status={status}&time={dlr_time} (حد أقصى 2000 حرف).
+مثال cURL
+curl -X PUT "https://hotsms.ps/api/rest/v2/webhooks/dlr" \
+  -H "Authorization: Bearer <api_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com/dlr.php?mobile={mobile}&id={request_id}&status={status}&time={dlr_time}"}'
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "configured": true,
+        "url": "https://example.com/dlr.php?mobile={mobile}&id={request_id}&status={status}&time={dlr_time}",
+        "active": true,
+        "state": "active",
+        "paused_until": null,
+        "disabled_reason": null,
+        "disabled_at": null,
+        "preview": "https://example.com/dlr.php?mobile=972590000000&id=3f9a1c2e7b4d8e01&status=DELIVRD&time=2026-10-04+10%3A00%3A00",
+        "variables": [
+            "mobile",
+            "request_id",
+            "message_id",
+            "status",
+            "status_code",
+            "dlr_time"
+        ],
+        "summary": {
+            "pending": 0,
+            "sent": 1250,
+            "failed": 2,
+            "last_success": "2026-10-04 09:59:12"
+        },
+        "updated_at": "2026-10-01 12:00:00"
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402 1801 1802 1803 1804
+22
+Webhook تقارير التسليم: تفعيل
+↑ العودة للفهرس
+POST
+/api/rest/v2/webhooks/dlr/enable
+Webhook تقارير التسليم: تفعيل يعيد تفعيل الإرسال بعد أن أوقفته، أو بعد تعطيله تلقائيًا لفشله يومًا كاملًا. يعيد الإعداد كما في طلب GET.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 30/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/webhooks/dlr/enable" \
+  -H "Authorization: Bearer <api_token>"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "configured": true,
+        "url": "https://example.com/dlr.php?mobile={mobile}&id={request_id}&status={status}&time={dlr_time}",
+        "active": true,
+        "state": "active",
+        "paused_until": null,
+        "disabled_reason": null,
+        "disabled_at": null,
+        "preview": "https://example.com/dlr.php?mobile=972590000000&id=3f9a1c2e7b4d8e01&status=DELIVRD&time=2026-10-04+10%3A00%3A00",
+        "variables": [
+            "mobile",
+            "request_id",
+            "message_id",
+            "status",
+            "status_code",
+            "dlr_time"
+        ],
+        "summary": {
+            "pending": 0,
+            "sent": 1250,
+            "failed": 2,
+            "last_success": "2026-10-04 09:59:12"
+        },
+        "updated_at": "2026-10-01 12:00:00"
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402 1805
+23
+Webhook تقارير التسليم: إيقاف
+↑ العودة للفهرس
+POST
+/api/rest/v2/webhooks/dlr/disable
+Webhook تقارير التسليم: إيقاف يوقف الإرسال مع الاحتفاظ بالرابط. التقارير التي تصل أثناء الإيقاف لا تُرسل لاحقًا. يعيد الإعداد كما في طلب GET.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 30/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/webhooks/dlr/disable" \
+  -H "Authorization: Bearer <api_token>"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "configured": true,
+        "url": "https://example.com/dlr.php?mobile={mobile}&id={request_id}&status={status}&time={dlr_time}",
+        "active": false,
+        "state": "disabled",
+        "paused_until": null,
+        "disabled_reason": "user",
+        "disabled_at": "2026-10-04 10:05:00",
+        "preview": "https://example.com/dlr.php?mobile=972590000000&id=3f9a1c2e7b4d8e01&status=DELIVRD&time=2026-10-04+10%3A00%3A00",
+        "variables": [
+            "mobile",
+            "request_id",
+            "message_id",
+            "status",
+            "status_code",
+            "dlr_time"
+        ],
+        "summary": {
+            "pending": 0,
+            "sent": 1250,
+            "failed": 2,
+            "last_success": "2026-10-04 09:59:12"
+        },
+        "updated_at": "2026-10-04 10:05:00"
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402 1805
+24
+Webhook تقارير التسليم: تقرير تجريبي
+↑ العودة للفهرس
+POST
+/api/rest/v2/webhooks/dlr/test
+Webhook تقارير التسليم: تقرير تجريبي يدرج تقرير DELIVRD تجريبيًا على رقم الجوال المسجّل في حسابك. يُرسل خلال دقيقة مع التقارير الحقيقية ثم يظهر في قائمة المحاولات مع كود HTTP الذي ردّت به صفحتك، فتتأكد أن الصفحة تستلم البيانات. يجب أن يكون الإعداد موجودًا ومفعّلًا.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 10/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+مثال cURL
+curl -X POST "https://hotsms.ps/api/rest/v2/webhooks/dlr/test" \
+  -H "Authorization: Bearer <api_token>"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "event_id": 98211,
+        "mobile": "972590000001",
+        "queued": true
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402 1703 1805 1806
+25
+Webhook تقارير التسليم: آخر المحاولات
+↑ العودة للفهرس
+GET
+/api/rest/v2/webhooks/dlr/deliveries
+Webhook تقارير التسليم: آخر المحاولات آخر المحاولات، الأحدث أولًا: قيم التقرير، والحالة (pending أو sent أو failed)، وعدد المحاولات، وموعد المحاولة التالية ما دام ينتظر، وكود HTTP أو الخطأ في آخر محاولة. المُرسل يُحفظ 7 أيام والفاشل 30 يومًا.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 60/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+Body
+الاسم	النوع	إلزامي	الشرح
+limit	integer	لا	عدد الصفوف، من 1 إلى 200 (الافتراضي 50).
+مثال cURL
+curl "https://hotsms.ps/api/rest/v2/webhooks/dlr/deliveries?limit=50" \
+  -H "Authorization: Bearer <api_token>"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "deliveries": [
+            {
+                "id": 98211,
+                "mobile": "972590000001",
+                "status": "DELIVRD",
+                "status_code": 2,
+                "dlr_time": "2026-10-04 09:59:05",
+                "is_test": false,
+                "state": "sent",
+                "attempts": 1,
+                "next_attempt_at": null,
+                "sent_at": "2026-10-04 09:59:12",
+                "http_code": 200,
+                "error": null,
+                "created_at": "2026-10-04 09:59:06"
+            },
+            {
+                "id": 98210,
+                "mobile": "972590000002",
+                "status": "UNDELIV",
+                "status_code": 5,
+                "dlr_time": "2026-10-04 09:58:40",
+                "is_test": false,
+                "state": "pending",
+                "attempts": 2,
+                "next_attempt_at": "2026-10-04 10:14:00",
+                "sent_at": null,
+                "http_code": 503,
+                "error": "HTTP 503",
+                "created_at": "2026-10-04 09:58:41"
+            }
+        ]
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402 1805
+26
+Webhook تقارير التسليم: حذف
+↑ العودة للفهرس
+DELETE
+/api/rest/v2/webhooks/dlr
+Webhook تقارير التسليم: حذف يحذف الرابط وما ينتظر الإرسال من تقارير. ينجح حتى لو لم يكن هناك إعداد.
+التوثيق: يتطلب توكن
+الحد (Rate limit): 30/min
+Headers
+الاسم	إلزامي	مثال
+Authorization	نعم	Bearer <api_token>
+مثال cURL
+curl -X DELETE "https://hotsms.ps/api/rest/v2/webhooks/dlr" \
+  -H "Authorization: Bearer <api_token>"
+مثال نجاح
+{
+    "status": true,
+    "code": 1001,
+    "message": "Success",
+    "data": {
+        "deleted": true
+    }
+}
+أكواد أخطاء شائعة
+1002 1003 1401 1402
+أكواد النجاح
+الكود	HTTP	Message	الشرح	الإجراء المقترح
+1001	200	Success	تم تنفيذ الطلب بنجاح.	استخدم البيانات المرجعة.
+أكواد الأخطاء
+الكود	HTTP	Message	الشرح	الإجراء المقترح
+1002	401	Token not provided	لم يتم إرسال توكن API.	أرسل Authorization: Bearer <api_token> (أو X-API-TOKEN).
+1003	401	Unauthorized	توكن API غير صحيح أو تم إلغاؤه.	قم بتسجيل الدخول مرة أخرى للحصول على توكن صالح.
+1004	401	Invalid credentials	اسم المستخدم أو كلمة المرور غير صحيحة.	تحقق من البيانات وأعد المحاولة.
+1401	403	API access disabled	خدمة الـAPI غير مفعّلة لهذا الحساب.	تواصل مع الدعم لتفعيل خدمة الـAPI.
+1402	403	IP not allowed	عنوان الـIP الحالي غير موجود ضمن القائمة المسموح لها بالوصول لهذا الحساب.	أضف عنوان الـIP إلى القائمة المسموحة في إعدادات الحساب، أو اترك القائمة فارغة للسماح من أي عنوان.
+1101	402	Insufficient credits	لا يوجد رصيد كافي لإرسال الرسائل.	اشحن الرصيد أو تواصل مع الدعم.
+1201	502	Failed to send	فشل إرسال الرسالة (upstream أو تحقق). قد يكون رمز HTTP مثل 502 أو 422 أو غيره حسب سبب الفشل.	أعد المحاولة لاحقًا، وإذا استمرت المشكلة تواصل مع الدعم.
+1702	401	Invalid pin code	رمز التحقق (OTP) غير صحيح أو انتهت صلاحيته.	اطلب OTP مرة أخرى ثم أعد المحاولة باستخدام آخر رمز.
+1703	422	User mobile not found	تعذر إرسال OTP لأن رقم جوال المستخدم غير موجود.	حدّث رقم جوال المستخدم ثم أعد المحاولة.
+1601	422	Too many numbers	عدد الصفوف في الإرسال الجماعي يتجاوز الحد المسموح (مثلاً 5000).	قسّم الطلب إلى دفعات أصغر.
+1602	422	Invalid payload	جسم الطلب غير صالح لهذه النقطة (فشل التحقق أو صفوف غير صحيحة).	راجع الحقول المطلوبة وبنية JSON حسب التوثيق.
+1608	422	Sender name not allowed	اسم المرسل محجوز أو غير مسموح.	اختر اسم مرسل آخر (يجب أن يحتوي حرفاً إنجليزياً؛ حروف/أرقام إنجليزية مع المسافة و"." أو "_" أو "-" فقط، حتى 11).
+1609	422	Sender limit reached	وصلت الحد الأقصى لطلبات أسماء المرسل لهذا الحساب.	احذف طلبًا قائمًا أو راجع الدعم لزيادة sender_count.
+1610	422	Sender name already registered	اسم المرسل مسجّل مسبقًا لهذا الحساب.	استخدم اسمًا آخر أو انتظر موافقة/رفض الطلب الحالي.
+1611	422	Sender name blocked	اسم المرسل محظور على الحساب (من الإدارة).	راجع الدعم؛ جرّب اسمًا آخر إن وُجد.
+1612	422	Invalid mobile number	رقم الجوال ناقص أو غير صالح بعد التطبيع.	أرسل رقمًا صالحًا بصيغة محلية أو دولية.
+1613	422	Authorization letter required	ملف التفويض مفقود في مسار رفع التفويض.	أرسل الطلب بصيغة multipart/form-data مع attachment كملف PDF أو JPG/PNG (حتى 10MB).
+1614	500	Failed to store authorization letter	تعذر حفظ ملف التفويض في مجلد auth_letter الخاص بالبورتال.	أعد المحاولة لاحقًا، وإن استمرت المشكلة فتأكد أن AUTH_LETTER_STORAGE_PATH قابل للكتابة.
+1616	422	Authorization not allowed in this status	لا يمكن رفع التفويض لاسم المرسل في حالته الحالية.	الأسماء غير المفعّلة يمكن استبدال تفويضها. الأسماء قيد التفعيل تُرفع لها رسالة فقط إن لم يكن هناك ملف.
+1801	422	Invalid webhook URL	رابط الـ webhook غير صالح: ليس http/https، أو يحمل اسم مستخدم وكلمة سر، أو بلا صفحة أو مسار بعد اسم الموقع، أو اسم النطاق لا يُحلّ، أو يشير إلى عنوان داخلي. السبب الدقيق في errors.url.	أرسل رابط http(s) عامًا فيه صفحة، مثل https://example.com/dlr.php?mobile={mobile}.
+1802	422	Webhook URL has no variables	رابط الـ webhook بلا أي متغير، فلن تصل صفحتك أي بيانات.	أضف متغيرًا واحدًا على الأقل مثل {mobile} أو {status}.
+1803	422	Unknown webhook variable	رابط الـ webhook يحتوي متغيرًا غير معروف.	استخدم فقط {mobile} {request_id} {message_id} {status} {status_code} {dlr_time}.
+1804	422	Webhook variable must be a parameter value	متغير ليس قيمةً لبارامتر له اسم: نقصت = أو & قبله، أو متغيران في قيمة واحدة.	اكتب كل متغير بالشكل name={variable} وافصل بين البارامترات بـ &.
+1805	404	No webhook configured	لا يوجد webhook مضبوط على هذا الحساب.	احفظ رابطًا أولًا بـ PUT /webhooks/dlr.
+1806	422	Webhook is disabled	الـ webhook متوقف، فلا يمكن إدراج تقرير تجريبي.	نفّذ POST /webhooks/dlr/enable ثم أعد المحاولة.

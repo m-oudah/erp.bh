@@ -5,14 +5,10 @@ namespace App\Services;
 use App\Models\ArchiveFile;
 use App\Models\ArchiveFileType;
 use App\Models\Correspondence\InternalMemo;
-use App\Models\Correspondence\InternalTask;
 use App\Models\Correspondence\MemoAttachment;
 use App\Models\Correspondence\MemoMovement;
-use App\Models\Correspondence\TaskComment;
 use App\Models\User;
 use App\Notifications\MemoAssignedNotification;
-use App\Notifications\TaskAssignedNotification;
-use App\Notifications\TaskFeedbackNotification;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -86,10 +82,6 @@ class CorrespondenceService
                     }
                 }
             }
-
-            // Check for @mentions in initial content / directive
-            $fullText = $memo->content . ' ' . ($data['directive_text'] ?? '');
-            $this->extractAndAssignTasksFromText($memo, $fullText, $creator);
 
             // Notify all recipients
             foreach ($recipients as $recUser) {
@@ -167,12 +159,7 @@ class CorrespondenceService
                 }
             }
 
-            // 5. Check for @mentions in directive
-            if (!empty($directiveText)) {
-                $this->extractAndAssignTasksFromText($memo, $directiveText, $fromUser);
-            }
-
-            // 6. Notify each forwarded recipient
+            // 5. Notify each forwarded recipient
             foreach ($toUsers as $user) {
                 if ($user->id !== $fromUser->id) {
                     $user->notify(new MemoAssignedNotification($memo, $fromUser, $directiveText));
@@ -283,124 +270,5 @@ class CorrespondenceService
             'uploaded_by' => $uploader->id,
             'archive_document_id' => $archiveDoc?->id,
         ]);
-    }
-
-    /**
-     * Parse @mentions or tags from text and auto-create tasks
-     */
-    public function extractAndAssignTasksFromText(InternalMemo $memo, string $text, ?User $creator = null): array
-    {
-        $creator = $creator ?? auth()->user();
-        $createdTasks = [];
-
-        // Match patterns like @username or @[Full Name] or @{id}
-        // Match @name or @id
-        preg_match_all('/@([a-zA-Z0-9_\x{0600}-\x{06FF}]+)/u', $text, $matches);
-
-        if (!empty($matches[1])) {
-            $tags = array_unique($matches[1]);
-            foreach ($tags as $tag) {
-                // Find matching user by name or email or id
-                $user = User::where('id', $tag)
-                    ->orWhere('name', 'LIKE', "%{$tag}%")
-                    ->orWhere('email', 'LIKE', "{$tag}%")
-                    ->first();
-
-                if ($user && $user->id !== $creator->id) {
-                    $taskTitle = "مهمة مستخرجة من المراسلة {$memo->memo_number}";
-                    $taskDescription = "تم تكليفك بالمهمة عبر الإشارة إليك (@{$tag}) في المراسلة: {$memo->subject}.\nنص التوجيه: {$text}";
-
-                    $task = InternalTask::create([
-                        'memo_id' => $memo->id,
-                        'title' => $taskTitle,
-                        'description' => $taskDescription,
-                        'created_by' => $creator->id,
-                        'assigned_to' => $user->id,
-                        'priority' => $memo->priority,
-                        'due_date' => $memo->due_date,
-                        'status' => 'جديدة',
-                    ]);
-
-                    $user->notify(new TaskAssignedNotification($task, $creator));
-                    $createdTasks[] = $task;
-                }
-            }
-        }
-
-        return $createdTasks;
-    }
-
-    /**
-     * Create an internal task directly
-     */
-    public function createTask(array $data, ?User $creator = null): InternalTask
-    {
-        $creator = $creator ?? auth()->user();
-
-        $task = InternalTask::create([
-            'memo_id' => $data['memo_id'] ?? null,
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'created_by' => $creator->id,
-            'assigned_to' => $data['assigned_to'],
-            'due_date' => $data['due_date'] ?? null,
-            'priority' => $data['priority'] ?? 'عادية',
-            'status' => 'جديدة',
-        ]);
-
-        if ($task->assignee && $task->assignee->id !== $creator->id) {
-            $task->assignee->notify(new TaskAssignedNotification($task, $creator));
-        }
-
-        return $task;
-    }
-
-    /**
-     * Add a comment / feedback loop to a task
-     */
-    public function addTaskComment(
-        InternalTask $task,
-        string $commentText,
-        ?string $statusChange = null,
-        ?UploadedFile $attachment = null,
-        ?User $user = null
-    ): TaskComment {
-        $user = $user ?? auth()->user();
-
-        return DB::transaction(function () use ($task, $commentText, $statusChange, $attachment, $user) {
-            $attachmentPath = null;
-            $attachmentName = null;
-
-            if ($attachment) {
-                $attachmentPath = $attachment->store('task_attachments', 'public');
-                $attachmentName = $attachment->getClientOriginalName();
-            }
-
-            $comment = TaskComment::create([
-                'task_id' => $task->id,
-                'user_id' => $user->id,
-                'comment' => $commentText,
-                'status_change_to' => $statusChange,
-                'attachment_path' => $attachmentPath,
-                'attachment_name' => $attachmentName,
-            ]);
-
-            // Update status if changed
-            if ($statusChange && in_array($statusChange, ['جديدة', 'قيد التنفيذ', 'بانتظار الرد', 'تم الإنجاز', 'معلقة'])) {
-                $updateData = ['status' => $statusChange];
-                if ($statusChange === 'تم الإنجاز') {
-                    $updateData['completed_at'] = now();
-                }
-                $task->update($updateData);
-            }
-
-            // Notify participants (creator if commenter is assignee, or assignee if commenter is creator)
-            $recipient = ($user->id === $task->created_by) ? $task->assignee : $task->creator;
-            if ($recipient && $recipient->id !== $user->id) {
-                $recipient->notify(new TaskFeedbackNotification($task, $comment, $user));
-            }
-
-            return $comment;
-        });
     }
 }

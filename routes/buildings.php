@@ -12,7 +12,10 @@ Route::middleware(['auth', 'verified'])->prefix('buildings')->name('buildings.')
     Route::get('/buildings/search-archive-files', [BhmBuildingController::class, 'searchArchiveFiles'])->name('buildings.search-archive-files')->middleware('can:Read-Buildings');
     Route::post('/buildings/{id}/link-archive-file', [BhmBuildingController::class, 'linkArchiveFile'])->name('buildings.link-archive-file')->middleware('can:Read-Buildings');
     Route::post('/buildings/{id}/unlink-archive-file', [BhmBuildingController::class, 'unlinkArchiveFile'])->name('buildings.unlink-archive-file')->middleware('can:Read-Buildings');
+    Route::post('/buildings/{id}/set-primary-archive-file', [BhmBuildingController::class, 'setPrimaryArchiveFile'])->name('buildings.set-primary-archive-file')->middleware('can:Read-Buildings');
     Route::get('/buildings', [BhmBuildingController::class, 'index'])->name('buildings.index')->middleware('can:Read-Buildings');
+    Route::get('/buildings/create', [BhmBuildingController::class, 'create'])->name('buildings.create')->middleware('can:Read-Buildings');
+    Route::post('/buildings', [BhmBuildingController::class, 'store'])->name('buildings.store');
     Route::get('/buildings/{id}', [BhmBuildingController::class, 'show'])->name('buildings.show')->middleware('can:Read-Buildings');
     Route::get('/buildings/{id}/edit', [BhmBuildingController::class, 'edit'])->name('buildings.edit');
     Route::put('/buildings/{id}', [BhmBuildingController::class, 'update'])->name('buildings.update');

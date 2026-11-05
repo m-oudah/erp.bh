@@ -1,12 +1,40 @@
 <x-customers-layout>
     <div class="space-y-6">
         
-        <div class="flex items-center justify-between mb-2">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
             <div>
                 <h2 class="text-2xl font-bold text-gray-800">سجل المواطنين</h2>
                 <p class="text-gray-500 mt-1 text-sm">إدارة سجلات المواطنين والعملاء العامين والبحث في بياناتهم</p>
             </div>
+            @if(auth()->user()->can('Create-Client') || auth()->user()->can('bhm.subscriptions.edit') || auth()->user()->can('Read-Subscriptions'))
+            <a href="{{ route('customers.citizens.create') }}"
+               class="inline-flex items-center gap-2 bg-orange hover:bg-orange-dark text-white font-bold py-2.5 px-5 rounded-xl shadow-sm transition-all text-sm shrink-0">
+                <x-heroicon-o-user-plus class="w-4 h-4" />
+                <span>إضافة مواطن جديد</span>
+            </a>
+            @endif
         </div>
+
+        {{-- Flash Alerts --}}
+        @if (session('success'))
+        <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-bold flex items-center justify-between gap-2 shadow-xs animate-fade-in">
+            <div class="flex items-center gap-2">
+                <x-heroicon-s-check-circle class="w-5 h-5 text-emerald-600 shrink-0" />
+                <span>{{ session('success') }}</span>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-700 hover:text-emerald-950 text-xs font-bold">✕</button>
+        </div>
+        @endif
+
+        @if (session('error'))
+        <div class="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-800 text-xs font-bold flex items-center justify-between gap-2 shadow-xs animate-fade-in">
+            <div class="flex items-center gap-2">
+                <x-heroicon-s-x-circle class="w-5 h-5 text-red-600 shrink-0" />
+                <span>{{ session('error') }}</span>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="text-red-700 hover:text-red-950 text-xs font-bold">✕</button>
+        </div>
+        @endif
 
         <!-- Filter Form - Customers -->
         <div class="bg-gray-50/50 rounded-2xl p-4 md:p-5 border border-gray-100">
@@ -60,9 +88,16 @@
                             <td class="px-5 py-3 text-navy-dark font-medium">{{ $cus->name ?? '-' }}</td>
                             <td class="px-5 py-3 text-gray-600" dir="ltr">{{ $cus->mobile ?? $cus->telephone ?? '-' }}</td>
                             <td class="px-5 py-3 text-center">
-                                <a href="{{ route('customers.show', $cus->id) }}" class="inline-flex items-center justify-center text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-lg transition-colors" title="عرض السجل">
-                                    <x-heroicon-o-user class="w-4 h-4" />
-                                </a>
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <a href="{{ route('customers.show', $cus->id) }}" class="inline-flex items-center justify-center text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-lg transition-colors" title="عرض السجل">
+                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                    </a>
+                                    @if(auth()->user()->can('Update-Client') || auth()->user()->can('bhm.subscriptions.edit') || auth()->user()->can('Read-Subscriptions'))
+                                    <a href="{{ route('customers.citizens.edit', $cus->id) }}" class="inline-flex items-center justify-center text-orange hover:text-orange-dark bg-orange/10 hover:bg-orange/20 p-1.5 rounded-lg transition-colors" title="تعديل بيانات المواطن">
+                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                    </a>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                         @empty
