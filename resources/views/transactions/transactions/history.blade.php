@@ -98,31 +98,6 @@
         </a>
     </div>
 
-    {{-- Tabs Selection Strip --}}
-    <div class="flex items-center justify-between border-b border-gray-200">
-        <div class="flex items-center gap-2 -mb-px">
-            <a href="{{ route('transactions.index', array_merge(request()->except('tab'), ['tab' => 'transactions'])) }}"
-               class="relative pb-3 px-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2
-                      {{ $activeTab === 'transactions' ? 'text-teal-800 border-b-2 border-primary font-black' : 'text-tertiary hover:text-slate-800' }}">
-                <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                <span>سجل المعاملات الرسمية</span>
-                <span class="bg-teal-50 text-teal-800 border border-teal-200 rounded-full px-2 py-0.5 text-[10px] font-extrabold">{{ $counts['all'] ?? 0 }}</span>
-            </a>
-
-            <a href="{{ route('transactions.index', array_merge(request()->except('tab'), ['tab' => 'drafts'])) }}"
-               class="relative pb-3 px-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2
-                      {{ $activeTab === 'drafts' ? 'text-teal-800 border-b-2 border-primary font-black' : 'text-tertiary hover:text-slate-800' }}">
-                <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-                </svg>
-                <span>طلبات البوابة الإلكترونية</span>
-                <span class="bg-amber-50 text-amber-800 border border-amber-200 rounded-full px-2 py-0.5 text-[10px] font-extrabold">{{ $counts['drafts'] ?? 0 }}</span>
-            </a>
-        </div>
-    </div>
-
     {{-- Search & Filter Bar (مطابق تماماً لبرنامج المراسلات الداخلية) --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-3.5">
         <form method="GET" action="{{ route('transactions.index') }}" class="flex flex-wrap items-center gap-2.5">

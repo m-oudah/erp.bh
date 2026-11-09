@@ -65,7 +65,7 @@ Route::middleware('auth')->group(function () {
         });
 
         // Users Management
-        Route::resource('users', \App\Http\Controllers\Settings\UserManagementController::class)->only(['index', 'edit', 'update']);
+        Route::resource('users', \App\Http\Controllers\Settings\UserManagementController::class)->except(['show']);
 
         // Archive Module Settings
         Route::prefix('archive')->name('archive.')->group(function () {

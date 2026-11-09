@@ -62,16 +62,7 @@
                     @endif
                 </a>
 
-                {{-- Citizens Registry Tab --}}
-                <a href="{{ route('customers.citizens.index') }}"
-                   class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 text-tertiary hover:bg-gray-50 hover:text-gray-800">
-                    <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 bg-amber-50 text-secondary">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
-                    </div>
-                    <span>سجل المواطنين</span>
-                </a>
+               
 
                 {{-- Create Tab (when on create page) --}}
                 @if(request()->routeIs('transactions.create'))
