@@ -30,6 +30,106 @@ class PortalController extends Controller
     }
 
     /**
+     * Check SMS rate limits for a citizen:
+     * 1. Max 2 SMS requests per 24 hours.
+     * 2. 5 minutes (300 seconds) wait time before requesting the 2nd time.
+     *
+     * @param string $idCard
+     * @param string|null $mobile
+     * @return array
+     */
+    public function checkSmsRateLimit(string $idCard, ?string $mobile = null): array
+    {
+        $idCard = trim($idCard);
+        $normMobile = $mobile ? SmsGatewayService::normalizeMobile($mobile) : null;
+
+        // Query all OTP verifications created within the last 24 hours for this citizen / mobile
+        $recentOtps = CitizenOtpVerification::where(function ($q) use ($idCard, $mobile, $normMobile) {
+            $q->where('id_card', $idCard);
+            if ($mobile) {
+                $q->orWhere('mobile', $mobile);
+            }
+            if ($normMobile && $normMobile !== $mobile) {
+                $q->orWhere('mobile', $normMobile);
+            }
+        })
+        ->where('created_at', '>=', now()->subHours(24))
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+        $attemptsCount = $recentOtps->count();
+
+        // Rule 1: Maximum 2 requests within 24 hours
+        if ($attemptsCount >= 2) {
+            $oldestInWindow = $recentOtps->last();
+            $resetTime = $oldestInWindow->created_at->copy()->addHours(24);
+            $waitSeconds = max(1, now()->diffInSeconds($resetTime, false));
+            $hoursLeft = ceil($waitSeconds / 3600);
+
+            return [
+                'allowed' => false,
+                'reason' => 'daily_limit',
+                'message' => "يُمنع طلب رمز التحقق أكثر من مرتين خلال 24 ساعة. لقد استنفدت عدد المحاولات المسموح بها، يرجى المحاولة بعد {$hoursLeft} ساعة أو استخدام رمز الدخول السابق.",
+                'wait_seconds' => $waitSeconds,
+                'attempts_count' => $attemptsCount,
+            ];
+        }
+
+        // Rule 2: 5 minutes (300 seconds) cooldown before requesting the 2nd code
+        if ($attemptsCount == 1) {
+            $lastOtp = $recentOtps->first();
+            $elapsed = now()->diffInSeconds($lastOtp->created_at);
+            $cooldown = 300; // 5 minutes (300 seconds)
+
+            if ($elapsed < $cooldown) {
+                $remaining = $cooldown - $elapsed;
+                $minutes = floor($remaining / 60);
+                $seconds = $remaining % 60;
+                $timeText = ($minutes > 0 ? "{$minutes} دقيقة و " : "") . "{$seconds} ثانية";
+
+                return [
+                    'allowed' => false,
+                    'reason' => 'cooldown',
+                    'message' => "يجب الانتظار 5 دقائق قبل طلب الرمز للمرة الثانية. متبقي {$timeText} قبل إمكانية إعادة الإرسال.",
+                    'wait_seconds' => $remaining,
+                    'attempts_count' => $attemptsCount,
+                ];
+            }
+        }
+
+        return [
+            'allowed' => true,
+            'reason' => null,
+            'message' => null,
+            'wait_seconds' => 0,
+            'attempts_count' => $attemptsCount,
+        ];
+    }
+
+    /**
+     * AJAX endpoint to check SMS cooldown / rate limit for a citizen.
+     */
+    public function checkCooldown(Request $request)
+    {
+        $idCard = trim($request->input('id_card', ''));
+        $mobile = trim($request->input('mobile', ''));
+
+        if (empty($idCard)) {
+            return response()->json([
+                'allowed' => true,
+                'reason' => null,
+                'message' => null,
+                'wait_seconds' => 0,
+                'attempts_count' => 0,
+            ]);
+        }
+
+        $result = $this->checkSmsRateLimit($idCard, $mobile);
+
+        return response()->json($result);
+    }
+
+    /**
      * Send OTP SMS to Citizen.
      */
     public function sendOtp(Request $request)
@@ -72,6 +172,7 @@ class PortalController extends Controller
         // Check if citizen already has a verified login code (Subsequent Login)
         $existingVerifiedOtp = CitizenOtpVerification::where('id_card', $idCard)
             ->where('is_verified', true)
+            ->where('otp_code', '!=', '123456')
             ->latest('id')
             ->first();
 
@@ -91,13 +192,16 @@ class PortalController extends Controller
                 ->with('success', 'أهلاً بك مجدداً! أدخل رمز الدخول المعتمد الخاص بك (الذي وصلك سابقاً عبر رسالة SMS).');
         }
 
-        // Check if there is an active OTP sent within the last 60 seconds for new registrations
-        $recentOtp = CitizenOtpVerification::where('id_card', $idCard)
-            ->where('created_at', '>=', now()->subSeconds(60))
-            ->first();
+        // Enforce rate limit rules: Max 2 in 24 hours, and 5 minutes cooldown before 2nd request
+        $rateCheck = $this->checkSmsRateLimit($idCard, $normMobile);
+        if (!$rateCheck['allowed']) {
+            CitizenAccessLog::logAction($idCard, $normMobile, $citizen['name'], 'otp_rate_limited', $rateCheck['message']);
 
-        if ($recentOtp) {
-            return back()->withInput()->with('error', 'تم إرسال رمز تحقق مسبقاً، يرجى الانتظار دقيقة واحدة قبل طلب رمز جديد.');
+            return back()->withInput()
+                ->with('error', $rateCheck['message'])
+                ->with('cooldown_seconds', $rateCheck['wait_seconds'])
+                ->with('is_daily_limit', $rateCheck['reason'] === 'daily_limit')
+                ->with('active_tab', 'sms');
         }
 
         // First-Time Login: Generate a real random 6-digit code (never static 123456)
@@ -166,6 +270,7 @@ class PortalController extends Controller
         // Look up verified permanent OTP
         $verification = CitizenOtpVerification::where('id_card', $idCard)
             ->where('is_verified', true)
+            ->where('otp_code', '!=', '123456')
             ->latest('id')
             ->first();
 
@@ -214,8 +319,11 @@ class PortalController extends Controller
         $mobile = session('portal_pending_mobile');
         $name = session('portal_pending_name');
         $isFirstLogin = session('portal_is_first_login', false);
-        $sentAt = session('portal_otp_sent_at', now()->timestamp);
-        $resendAvailableIn = max(0, 60 - (now()->timestamp - $sentAt));
+
+        $rateCheck = $this->checkSmsRateLimit($idCard, $mobile);
+        $resendAvailableIn = ($rateCheck['reason'] === 'cooldown') ? $rateCheck['wait_seconds'] : 0;
+        $isDailyLimit = ($rateCheck['reason'] === 'daily_limit');
+        $attemptsCount = $rateCheck['attempts_count'];
 
         // Masked mobile for privacy (e.g. 059****123)
         $maskedMobile = (strlen($mobile) >= 7) 
@@ -223,7 +331,8 @@ class PortalController extends Controller
             : $mobile;
 
         return view('portal.auth.verify-otp', compact(
-            'idCard', 'mobile', 'maskedMobile', 'name', 'isFirstLogin', 'resendAvailableIn'
+            'idCard', 'mobile', 'maskedMobile', 'name', 'isFirstLogin', 
+            'resendAvailableIn', 'isDailyLimit', 'attemptsCount'
         ));
     }
 
@@ -250,6 +359,7 @@ class PortalController extends Controller
 
         // Find the latest verification record for this citizen
         $verification = CitizenOtpVerification::where('id_card', $idCard)
+            ->where('otp_code', '!=', '123456')
             ->latest('id')
             ->first();
 
@@ -304,11 +414,15 @@ class PortalController extends Controller
         $mobile = session('portal_pending_mobile');
         $name = session('portal_pending_name');
 
-        // Check if 60 seconds have passed
-        $sentAt = session('portal_otp_sent_at', 0);
-        if (now()->timestamp - $sentAt < 60) {
-            $diff = 60 - (now()->timestamp - $sentAt);
-            return back()->with('error', "يرجى الانتظار {$diff} ثانية قبل إعادة إرسال الرمز.");
+        // Enforce rate limits: Max 2 in 24 hours & 5 minutes cooldown before 2nd request
+        $rateCheck = $this->checkSmsRateLimit($idCard, $mobile);
+        if (!$rateCheck['allowed']) {
+            CitizenAccessLog::logAction($idCard, $mobile, $name, 'resend_rate_limited', $rateCheck['message']);
+
+            return back()
+                ->with('error', $rateCheck['message'])
+                ->with('cooldown_seconds', $rateCheck['wait_seconds'])
+                ->with('is_daily_limit', $rateCheck['reason'] === 'daily_limit');
         }
 
         // Generate a new random 6-digit code

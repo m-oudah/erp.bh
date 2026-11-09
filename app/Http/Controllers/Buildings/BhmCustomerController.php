@@ -187,4 +187,107 @@ class BhmCustomerController extends Controller
         
         return view('buildings.customers.show_customer', compact('customer'));
     }
+
+    public function searchCitizenApi(Request $request)
+    {
+        $idNumber = trim($request->input('citizen_id', $request->input('q', '')));
+        
+        if (empty($idNumber)) {
+            return response()->json([
+                'found' => false,
+                'message' => 'يرجى إدخال رقم الهوية للبحث.'
+            ]);
+        }
+
+        $customer = BhmCustomer::where('id_no', $idNumber)->first();
+
+        if (!$customer) {
+            return response()->json([
+                'found' => false,
+                'message' => 'المواطن غير مسجل مسبقاً في النظام. يمكنك إضافته الآن.'
+            ]);
+        }
+
+        // Fetch properties / buildings linked to this customer
+        $buildings = \App\Models\Buildings\BhmBuilding::where('file_number', 'like', "%{$idNumber}%")
+            ->orWhere('building_name', 'like', "%{$customer->name}%")
+            ->take(10)
+            ->get();
+
+        $properties = [];
+        foreach ($buildings as $b) {
+            $properties[] = [
+                'id' => $b->id,
+                'piece_number' => $b->parcel_number ?? '',
+                'voucher_number' => $b->block_number ?? '',
+                'detailed_address' => $b->building_name ?? $customer->address ?? '',
+                'regulation_file_number' => $b->file_number ?? '',
+                'subscription_number' => '',
+                'relation_status' => 'owner',
+            ];
+        }
+
+        return response()->json([
+            'found' => true,
+            'citizen' => [
+                'id' => $customer->id,
+                'citizen_id' => $customer->id_no,
+                'name' => $customer->name,
+                'phone' => $customer->mobile ?? $customer->telephone ?? '',
+                'properties' => $properties,
+            ]
+        ]);
+    }
+
+    public function storeCitizenApi(Request $request)
+    {
+        $validated = $request->validate([
+            'citizen_id' => 'required|string|min:7|max:20',
+            'name' => 'required|string|max:300',
+            'phone' => 'nullable|string|max:30',
+            'properties' => 'nullable|array',
+        ]);
+
+        $customer = BhmCustomer::updateOrCreate(
+            ['id_no' => trim($validated['citizen_id'])],
+            [
+                'name' => trim($validated['name']),
+                'mobile' => trim($validated['phone'] ?? ''),
+            ]
+        );
+
+        $savedProperties = [];
+        if (!empty($validated['properties'])) {
+            foreach ($validated['properties'] as $prop) {
+                $building = \App\Models\Buildings\BhmBuilding::create([
+                    'file_number' => !empty($prop['regulation_file_number']) ? $prop['regulation_file_number'] : ('REG-' . date('Y') . '-' . rand(100, 999)),
+                    'parcel_number' => $prop['piece_number'] ?? null,
+                    'block_number' => $prop['voucher_number'] ?? null,
+                    'building_name' => $prop['detailed_address'] ?? 'عقار تابع للمواطن ' . $customer->name,
+                ]);
+
+                $savedProperties[] = [
+                    'id' => $building->id,
+                    'piece_number' => $building->parcel_number,
+                    'voucher_number' => $building->block_number,
+                    'detailed_address' => $building->building_name,
+                    'regulation_file_number' => $building->file_number,
+                    'subscription_number' => $prop['subscription_number'] ?? '',
+                    'relation_status' => $prop['relation_status'] ?? 'owner',
+                ];
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'تم حفظ بيانات المواطن والعقار بنجاح.',
+            'citizen' => [
+                'id' => $customer->id,
+                'citizen_id' => $customer->id_no,
+                'name' => $customer->name,
+                'phone' => $customer->mobile,
+                'properties' => $savedProperties,
+            ]
+        ]);
+    }
 }

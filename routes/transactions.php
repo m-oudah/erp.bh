@@ -32,6 +32,7 @@ Route::middleware(['auth'])->prefix('transactions')->name('transactions.')->grou
     Route::get('/create', [BhmTransactionController::class, 'create'])->name('create');
     Route::post('/', [BhmTransactionController::class, 'store'])->name('store');
     Route::get('/{id}', [BhmTransactionController::class, 'show'])->name('show');
+    Route::get('/{id}/print', [BhmTransactionController::class, 'print'])->name('print');
     Route::delete('/{id}', [BhmTransactionController::class, 'destroy'])->name('destroy');
 
 });

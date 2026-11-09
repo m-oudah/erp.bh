@@ -12,6 +12,11 @@ class BhmCustomer extends Model
     protected $table = 'bhm_customers';
     protected $guarded = [];
 
+    public function getFullNameAttribute()
+    {
+        return $this->name;
+    }
+
     public function crafts()
     {
         return $this->hasMany(\App\Models\Crafts\BhmCraft::class, 'customer_id');

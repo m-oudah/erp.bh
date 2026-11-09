@@ -3,12 +3,27 @@
 
     <div class="w-full max-w-sm sm:max-w-md bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden animate-fade-in my-auto"
          x-data="{
-             resendSeconds: {{ $resendAvailableIn }},
+             resendSeconds: {{ (int) $resendAvailableIn }},
+             isDailyLimit: {{ $isDailyLimit ? 'true' : 'false' }},
              timer: null,
+
              init() {
-                 this.timer = setInterval(() => {
-                     if (this.resendSeconds > 0) this.resendSeconds--;
-                 }, 1000);
+                 if (this.resendSeconds > 0) {
+                     this.timer = setInterval(() => {
+                         if (this.resendSeconds > 0) {
+                             this.resendSeconds--;
+                         } else {
+                             clearInterval(this.timer);
+                             this.timer = null;
+                         }
+                     }, 1000);
+                 }
+             },
+
+             formatTime(sec) {
+                 const m = Math.floor(sec / 60);
+                 const s = sec % 60;
+                 return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
              }
          }">
 
@@ -101,28 +116,70 @@
             </form>
 
             {{-- Resend & Change Number Actions --}}
-            <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 text-[11px]">
+            <div class="pt-2 border-t border-slate-100 flex flex-col gap-2.5">
                 
-                {{-- Resend Form --}}
-                <form method="POST" action="{{ route('portal.resend-otp') }}">
-                    @csrf
-                    <button type="submit"
-                            :disabled="resendSeconds > 0"
-                            class="text-teal-700 hover:text-teal-900 font-bold hover:underline disabled:text-slate-400 disabled:no-underline disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                {{-- Dynamic Countdown Timer Notice (5 Minutes) --}}
+                <div x-show="resendSeconds > 0 && !isDailyLimit" x-cloak class="p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex items-center justify-between gap-2 shadow-2xs">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-amber-600 shrink-0 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>نسيت الرمز؟ إرسال رمز جديد</span>
-                        <template x-if="resendSeconds > 0">
-                            <span class="font-mono">(<span x-text="resendSeconds"></span>ث)</span>
-                        </template>
-                    </button>
-                </form>
+                        <div>
+                            <p class="font-bold text-[11px] text-amber-950">يجب الانتظار 5 دقائق قبل طلب الرمز للمرة الثانية</p>
+                            <p class="text-[10px] text-amber-800">الوقت المتبقي لإمكانية إعادة طلب الرمز:</p>
+                        </div>
+                    </div>
+                    <div class="font-mono font-black text-sm bg-white border border-amber-300 text-amber-950 px-2.5 py-0.5 rounded-lg dir-ltr shrink-0 shadow-2xs"
+                         x-text="formatTime(resendSeconds) + ' د'"></div>
+                </div>
 
-                {{-- Back to Login --}}
-                <a href="{{ route('portal.login') }}" class="text-slate-500 hover:text-slate-800 font-medium hover:underline">
-                    العودة لشاشة الدخول ←
-                </a>
+                {{-- Daily Limit Notice (Max 2 requests in 24 hours) --}}
+                <div x-show="isDailyLimit" x-cloak class="p-2.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-950 text-xs flex items-start gap-2 shadow-2xs">
+                    <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div class="space-y-0.5">
+                        <p class="font-bold text-[11px] text-rose-950">تم استنفاد الحد الأقصى لطلب الرمز (مرتان خلال 24 ساعة)</p>
+                        <p class="text-[10px] text-rose-800 leading-tight">
+                            يُمنع طلب رمز التحقق أكثر من مرتين خلال 24 ساعة. يرجى إدخال رمز الدخول الذي وصلك مسبقاً.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 text-[11px]">
+                    {{-- Resend Form --}}
+                    <form method="POST" action="{{ route('portal.resend-otp') }}">
+                        @csrf
+                        <template x-if="!isDailyLimit">
+                            <button type="submit"
+                                    :disabled="resendSeconds > 0"
+                                    class="text-teal-700 hover:text-teal-900 font-bold hover:underline disabled:text-slate-400 disabled:no-underline disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                <span>نسيت الرمز؟ إرسال رمز جديد</span>
+                                <template x-if="resendSeconds > 0">
+                                    <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-300 px-1.5 py-0.5 rounded font-mono font-bold text-[10px] dir-ltr">
+                                        (<span x-text="formatTime(resendSeconds)"></span>)
+                                    </span>
+                                </template>
+                            </button>
+                        </template>
+                        <template x-if="isDailyLimit">
+                            <span class="text-slate-400 font-bold flex items-center gap-1 text-[10.5px] cursor-not-allowed">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                </svg>
+                                <span>تم استنفاد طلب الرمز اليومي (2/2)</span>
+                            </span>
+                        </template>
+                    </form>
+
+                    {{-- Back to Login --}}
+                    <a href="{{ route('portal.login') }}" class="text-slate-500 hover:text-slate-800 font-medium hover:underline shrink-0">
+                        العودة لشاشة الدخول ←
+                    </a>
+                </div>
             </div>
 
         </div>

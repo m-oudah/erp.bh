@@ -169,19 +169,52 @@
                 </div>
             </a>
 
+            @php
+                $unreadCorrespondenceCount = auth()->user()?->unreadNotifications()->count() ?? 0;
+            @endphp
             <!-- 6. Active Module: Internal Correspondence (المراسلات الداخلية) -->
             <a href="{{ route('correspondence.memos.index') }}"
+               x-data="{
+                   unreadCount: {{ (int) $unreadCorrespondenceCount }},
+                   fetchUnread() {
+                       fetch('{{ route('notifications.unread') }}')
+                           .then(res => res.json())
+                           .then(data => {
+                               this.unreadCount = data.count || 0;
+                           }).catch(() => {});
+                   }
+               }"
+               x-init="fetchUnread(); setInterval(() => fetchUnread(), 30000)"
                class="group relative bg-white rounded-3xl p-5 border border-slate-200/80 hover:border-primary/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5 cursor-pointer min-h-[230px]">
                 
                 <div>
                     <div class="flex items-start justify-between gap-3 mb-4">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-50 text-secondary group-hover:bg-secondary group-hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm shrink-0 ring-1 ring-secondary/20">
-                            <x-heroicon-s-inbox-stack class="w-6 h-6" style="color: inherit;" />
+                        {{-- أيقونة موديول المراسلات مع عداد الإشعارات --}}
+                        <div class="relative">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-secondary group-hover:bg-secondary group-hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm shrink-0 ring-1 ring-secondary/20 relative">
+                                <x-heroicon-s-inbox-stack class="w-6 h-6" style="color: inherit;" />
+                                
+                                {{-- عداد الإشعارات على أيقونة المراسلات في حال وجود جديد --}}
+                                <template x-if="unreadCount > 0">
+                                    <span class="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white ring-2 ring-white shadow-md leading-none animate-bounce"
+                                          x-text="unreadCount"
+                                          title="مراسلات جديدة غير مقروءة"></span>
+                                </template>
+                            </div>
                         </div>
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-teal-50 text-teal-700 border border-teal-200 shadow-2xs shrink-0">
-                            <span class="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
-                            نشط ومفعّل
-                        </span>
+
+                        <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                            <template x-if="unreadCount > 0">
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs shrink-0">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                    <span x-text="unreadCount + ' جديدة'"></span>
+                                </span>
+                            </template>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-teal-50 text-teal-700 border border-teal-200 shadow-2xs shrink-0">
+                                <span class="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
+                                نشط ومفعّل
+                            </span>
+                        </div>
                     </div>
 
                     <h3 class="text-lg font-extrabold text-slate-800 group-hover:text-primary transition-colors tracking-tight leading-snug">
@@ -197,43 +230,17 @@
                         <span>الدخول للموديول</span>
                         <x-heroicon-s-arrow-left class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" />
                     </span>
-                    <span class="text-[11px] font-extrabold bg-teal-50 text-teal-700 px-2.5 py-1 rounded-lg border border-teal-200">
-                        متاح الآن
-                    </span>
-                </div>
-            </a>
-
-            <!-- 7. Active Module: Citizen Portal (بوابة المواطنين للاستعلام) -->
-            <a href="{{ route('portal.login') }}" target="_blank"
-               class="group relative bg-white rounded-3xl p-5 border border-slate-200/80 hover:border-amber-500/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5 cursor-pointer min-h-[230px]">
-                
-                <div>
-                    <div class="flex items-start justify-between gap-3 mb-4">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 group-hover:bg-amber-600 group-hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm shrink-0 ring-1 ring-amber-500/20">
-                            <x-heroicon-s-user-group class="w-6 h-6" style="color: inherit;" />
-                        </div>
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs shrink-0">
-                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                            بوابة المواطنين
+                    <template x-if="unreadCount > 0">
+                        <span class="text-[11px] font-extrabold bg-rose-50 text-rose-700 px-2.5 py-1 rounded-lg border border-rose-200 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                            <span x-text="unreadCount + ' وارد جديد'"></span>
                         </span>
-                    </div>
-
-                    <h3 class="text-lg font-extrabold text-slate-800 group-hover:text-amber-800 transition-colors tracking-tight leading-snug">
-                        بوابة الاستعلام الذاتي للمواطنين
-                    </h3>
-                    <p class="text-xs text-tertiary font-normal leading-relaxed mt-2">
-                        استعلام المواطن برقم الهوية والجوال والتحقق عبر SMS OTP عن العقارات والوحدات والحرف
-                    </p>
-                </div>
-
-                <div class="flex items-center justify-between text-xs font-bold text-amber-800 pt-4 mt-4 border-t border-slate-100 group-hover:text-amber-950">
-                    <span class="flex items-center gap-1.5 text-[11px]">
-                        <span>فتح البوابة الخارجية</span>
-                        <x-heroicon-s-arrow-top-right-on-square class="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform" />
-                    </span>
-                    <span class="text-[11px] font-extrabold bg-amber-50 text-amber-800 px-2.5 py-1 rounded-lg border border-amber-200">
-                        متاح الآن
-                    </span>
+                    </template>
+                    <template x-if="unreadCount == 0">
+                        <span class="text-[11px] font-extrabold bg-teal-50 text-teal-700 px-2.5 py-1 rounded-lg border border-teal-200">
+                            متاح الآن
+                        </span>
+                    </template>
                 </div>
             </a>
 

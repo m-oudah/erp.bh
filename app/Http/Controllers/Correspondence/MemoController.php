@@ -191,6 +191,56 @@ class MemoController extends Controller
         return view('correspondence.memos.show', compact('memo', 'users', 'departments'));
     }
 
+    public function print(InternalMemo $memo)
+    {
+        $memo->load([
+            'creator.department',
+            'assignee.department',
+            'recipients.department',
+            'targetDepartment',
+            'closer',
+            'movements.fromUser.department',
+            'movements.toUser.department',
+            'movements.toDepartment',
+            'attachments',
+        ]);
+
+        $groupedMovements = [];
+        foreach ($memo->movements as $m) {
+            $lastIdx = count($groupedMovements) - 1;
+            if (
+                $lastIdx >= 0 &&
+                $groupedMovements[$lastIdx]['action_type'] === $m->action_type &&
+                $groupedMovements[$lastIdx]['from_user_id'] === $m->from_user_id &&
+                $groupedMovements[$lastIdx]['directive_text'] === $m->directive_text &&
+                abs(strtotime((string)$groupedMovements[$lastIdx]['created_at']) - strtotime((string)$m->created_at)) <= 30
+            ) {
+                if ($m->toUser && !in_array($m->toUser->id, array_map(fn($u) => $u->id, $groupedMovements[$lastIdx]['recipients']))) {
+                    $groupedMovements[$lastIdx]['recipients'][] = $m->toUser;
+                }
+            } else {
+                $initialRecipients = [];
+                if ($m->action_type === 'إنشاء المراسلة' && $memo->recipients->isNotEmpty()) {
+                    $initialRecipients = $memo->recipients->all();
+                } elseif ($m->toUser) {
+                    $initialRecipients = [$m->toUser];
+                }
+
+                $groupedMovements[] = [
+                    'movement' => $m,
+                    'action_type' => $m->action_type,
+                    'from_user_id' => $m->from_user_id,
+                    'fromUser' => $m->fromUser,
+                    'directive_text' => $m->directive_text,
+                    'created_at' => $m->created_at,
+                    'recipients' => $initialRecipients,
+                ];
+            }
+        }
+
+        return view('correspondence.memos.print', compact('memo', 'groupedMovements'));
+    }
+
     public function forwardPage(InternalMemo $memo)
     {
         $memo->load([

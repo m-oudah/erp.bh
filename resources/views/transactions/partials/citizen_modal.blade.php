@@ -10,7 +10,7 @@
             </button>
         </div>
 
-        <div class="flex-1 px-6 py-6 space-y-6 overflow-y-auto scrollbar-thin scrollbar-track-slate-200 scrollbar-thumb-[#14723a]/50">
+        <div class="flex-1 px-6 py-6 space-y-6 overflow-y-auto scrollbar-thin scrollbar-track-slate-200 scrollbar-thumb-teal-600/50">
             <div id="modal_alert" class="hidden rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"></div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -31,7 +31,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-2">الحالة التنظيمية للمواطن</label>
-                    <select id="modal_citizen_status" class="w-full text-sm px-4 py-3 rounded-2xl border border-slate-300 bg-white outline-none focus:ring-2 focus:ring-[#14723a]/20 focus:border-[#14723a] transition">
+                    <select id="modal_citizen_status" class="w-full text-sm px-4 py-3 rounded-2xl border border-slate-300 bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                         <option value="owner">مالك</option>
                         <option value="beneficiary">منتفع</option>
                         <option value="other">أخرى</option>
@@ -40,7 +40,7 @@
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <div class="text-xs font-black uppercase tracking-[0.3em] text-slate-500">العقارات المرتبطة</div>
-                        <button type="button" id="toggle_new_property_btn" class="text-xs font-bold text-[#14723a] hover:underline flex items-center gap-1">
+                        <button type="button" id="toggle_new_property_btn" class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
                             <i data-lucide="plus" class="w-3 h-3"></i> إضافة عقار جديد
                         </button>
                     </div>
@@ -85,13 +85,13 @@
                     </div>
                 </div>
                 <div class="mt-4 flex items-center gap-3">
-                    <button id="modal_add_property_button" type="button" class="inline-flex items-center justify-center rounded-3xl bg-[#14723a] px-5 py-3 text-sm font-black text-white hover:bg-[#115e30] transition">أضف العقار</button>
+                    <button id="modal_add_property_button" type="button" class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-black text-white hover:bg-primary-dark transition">أضف العقار</button>
                     <span id="modal_add_property_hint" class="text-sm text-slate-500">أضف كل عقار تريد ربطه بالمواطن.</span>
                 </div>
             </div>
             <div class="mt-8 flex items-center justify-between gap-3 pt-6 border-t border-slate-200">
                 <button type="button" class="modal-close-btn inline-flex items-center justify-center rounded-3xl border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 hover:bg-slate-100 transition shadow-sm">إلغاء</button>
-                <button id="modal_save_btn" type="button" class="inline-flex items-center justify-center rounded-3xl bg-[#14723a] px-6 py-3 text-sm font-black text-white hover:bg-[#115e30] transition shadow-md shadow-emerald-700/20">حفظ المواطن واختيار العقار</button>
+                <button id="modal_save_btn" type="button" class="inline-flex items-center justify-center rounded-2xl bg-primary px-6 py-2.5 text-sm font-black text-white hover:bg-primary-dark transition shadow-md shadow-primary/20">حفظ المواطن واختيار العقار</button>
             </div>
         </div>
     </div>
@@ -293,7 +293,7 @@
 
             const radioWrapper = document.createElement('label');
             radioWrapper.className = 'inline-flex items-center gap-2 text-slate-700';
-            radioWrapper.innerHTML = `<input type="radio" name="modal_property_select" class="w-4 h-4 text-[#14723a] border-slate-300" ${selectedModalPropertyIndex === index ? 'checked' : ''}>`;
+            radioWrapper.innerHTML = `<input type="radio" name="modal_property_select" class="w-4 h-4 text-primary border-slate-300" ${selectedModalPropertyIndex === index ? 'checked' : ''}>`;
             radioWrapper.querySelector('input').addEventListener('change', () => {
                 selectedModalPropertyIndex = index;
             });

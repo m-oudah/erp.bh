@@ -27,6 +27,11 @@ Route::middleware(['auth', 'verified'])->prefix('crafts')->name('crafts.')->grou
     
     // Economical Activities (Crafts)
     Route::get('/economical', [\App\Http\Controllers\Buildings\BhmEconomicalController::class, 'index'])->name('economical.index')->middleware('can:Read-Crafts');
+    Route::get('/economical/create', [\App\Http\Controllers\Buildings\BhmEconomicalController::class, 'create'])->name('economical.create')->middleware('can:Create-Craft');
+    Route::post('/economical', [\App\Http\Controllers\Buildings\BhmEconomicalController::class, 'store'])->name('economical.store')->middleware('can:Create-Craft');
+    Route::get('/economical/search-buildings', [\App\Http\Controllers\Buildings\BhmEconomicalController::class, 'searchBuildings'])->name('economical.search-buildings');
+    Route::get('/economical/search-citizens', [\App\Http\Controllers\Buildings\BhmEconomicalController::class, 'searchCitizens'])->name('economical.search-citizens');
+    Route::get('/economical/building-units/{buildingId}', [\App\Http\Controllers\Buildings\BhmEconomicalController::class, 'getBuildingUnits'])->name('economical.building-units');
     Route::get('/economical/{id}', [\App\Http\Controllers\Buildings\BhmEconomicalController::class, 'show'])->name('economical.show')->middleware('can:Read-Crafts');
     Route::get('/economical/{id}/edit', [\App\Http\Controllers\Buildings\BhmEconomicalController::class, 'edit'])->name('economical.edit')->middleware('can:Update-Craft');
     Route::put('/economical/{id}', [\App\Http\Controllers\Buildings\BhmEconomicalController::class, 'update'])->name('economical.update')->middleware('can:Update-Craft');

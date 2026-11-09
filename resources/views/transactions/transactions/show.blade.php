@@ -1,344 +1,345 @@
-<x-app-layout>
-    <x-slot name="module_title">
-        <div>
-            <div class="text-[#14723a] text-[10px] font-bold mb-0.5 tracking-wider">نظام قلم الجمهور</div>
-            <h1 class="font-bold text-xl tracking-wide flex items-center gap-2 leading-none text-slate-800">
-                المعاملات والتراسل
-            </h1>
-            <p class="text-slate-500 text-xs mt-1.5 font-medium">بلدية بيت حانون - الخدمات الإلكترونية</p>
-        </div>
-    </x-slot>
-
-
-
-
-<header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center">
-        <div class="flex items-center space-x-4 space-x-reverse">
-            <a href="{{ route('transactions.index') }}" class="w-10 h-10 bg-slate-50 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 transition-colors">
-                <i data-lucide="arrow-right" class="w-5 h-5"></i>
+<x-transactions-layout>
+    {{-- Header Action Bar (مطابق لشريط مراسلات الداخلية) --}}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-5 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <a href="{{ route('transactions.index') }}" class="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-slate-600 transition-colors" title="العودة للقائمة">
+                <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
             </a>
             <div>
-                <h1 class="text-base font-black text-slate-800 leading-tight">تفاصيل المعاملة: <span class="font-mono text-[#14723a]">{{ $transaction->transaction_number }}</span></h1>
-                <p class="text-[10px] text-slate-500 font-medium">{{ optional($transaction->type)->name ?? 'بدون نوع' }} - مقدمة من: {{ $transaction->customer->full_name }}</p>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="text-xl font-black text-slate-900 tracking-tight font-mono">{{ $transaction->transaction_number }}</h2>
+                    <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                        {{ optional($transaction->transactionType)->name ?? 'معاملة عامة' }}
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold {{ $transaction->status_badge_class }}">
+                        {{ $transaction->status_label }}
+                    </span>
+                </div>
+                <h1 class="text-xs font-bold text-tertiary mt-1">
+                    مقدمة من: <span class="text-slate-800 font-extrabold">{{ $transaction->customer->name ?? $transaction->customer->full_name ?? 'مواطن' }}</span>
+                    @if($transaction->customer && $transaction->customer->id_no)
+                        <span class="font-mono text-slate-400 mr-1.5">(هوية: {{ $transaction->customer->id_no }})</span>
+                    @endif
+                </h1>
             </div>
         </div>
-        <div class="flex gap-2">
-            <a href="{{ route('transactions.print', $transaction->id) }}" class="flex bg-[#14723a] hover:bg-[#14723a]/90 text-white px-3.5 py-2 rounded-lg text-xs font-bold items-center gap-1.5 transition-all shadow-sm">
-                <i data-lucide="printer" class="w-4 h-4"></i> طباعة المعاملة
-            </a>
+
+        {{-- Top Right Actions --}}
+        <div class="flex items-center gap-2">
+            <button type="button"
+                    onclick="openPrintModal()"
+                    class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-teal-700 shadow-sm transition-all flex items-center gap-1.5 cursor-pointer hover:shadow">
+                <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                </svg>
+                <span>طباعة المعاملة</span>
+            </button>
         </div>
     </div>
-</header>
 
-<main class="flex-grow p-6">
-    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+    {{-- Main Layout: 2 Columns (Details & Timeline/Attachments) --}}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
-        <!-- العمود الأيمن (التفاصيل والردود الفنية) -->
-        <div class="lg:col-span-2 space-y-6">
-            
+        {{-- Right / Main Column (8 cols) --}}
+        <div class="lg:col-span-8 space-y-5">
             @if($transaction->trashed())
-            <div class="bg-red-50 border-r-4 border-red-600 p-4 rounded-xl mb-6 shadow-sm flex items-start gap-3">
-                <i data-lucide="trash-2" class="w-6 h-6 text-red-600 shrink-0"></i>
-                <div>
-                    <h3 class="text-red-800 font-black text-lg">هذه المعاملة محذوفة</h3>
-                    <p class="text-red-700 text-sm mt-1">أنت تشاهد أرشيف معاملة محذوفة. لا يمكنك اتخاذ أي إجراءات عليها أو إضافة ردود فنية جديدة. هذه الصفحة معروضة لغرض الاطلاع فقط بناءً على صلاحياتك كمدير للنظام.</p>
+                <div class="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-2xl flex items-start gap-3">
+                    <svg class="w-5 h-5 text-rose-600 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h4 class="font-bold text-sm">هذه المعاملة محذوفة أو مؤرشفة</h4>
+                        <p class="text-xs text-rose-700 mt-0.5">الصفحة معروضة للاطلاع فقط بناءً على صلاحيات الإشراف.</p>
+                    </div>
                 </div>
-            </div>
             @endif
 
-            <!-- تفاصيل الطلب -->
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
-                <div class="absolute top-0 right-0 left-0 h-1 bg-[#14723a]"></div>
-                <!-- نوع المعاملة -->
-                <div class="mb-4 pb-4 border-b border-slate-100 flex items-center justify-between">
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 block mb-0.5">نوع المعاملة</span>
-                        <h3 class="text-lg font-black text-[#14723a]">{{ optional($transaction->transactionType)->name ?? 'معاملة عامة' }}</h3>
-                    </div>
+            {{-- 1. Transaction Details Card --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 left-0 h-1 bg-primary"></div>
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
+                    <span class="text-xs font-bold text-slate-500">موضوع وتفاصيل المعاملة</span>
+                    <span class="text-[11px] font-bold text-slate-400">تاريخ التسجيل: {{ $transaction->created_at->format('Y-m-d H:i') }}</span>
                 </div>
-
-                <h2 class="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
-                    <i data-lucide="file-text" class="w-5 h-5 text-[#14723a]"></i>
-                    تفاصيل الطلب
-                </h2>
-                <div class="bg-slate-50 rounded-xl p-4 text-sm text-slate-700 leading-relaxed border border-slate-100">
-                    {{ optional($transaction)->details ?? 'لا توجد تفاصيل.' }}
+                <div class="text-sm text-slate-800 leading-relaxed font-medium bg-slate-50/70 p-4 rounded-xl border border-slate-100">
+                    {{ $transaction->details ?? 'لا توجد تفاصيل إضافية مسجلة.' }}
                 </div>
             </div>
 
-                  <!-- بطاقة المواطن والعقار -->
-            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-                <h2 class="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
-                    <i data-lucide="user" class="w-5 h-5 text-[#14723a]"></i>
-                    مقدم الطلب والعقار
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 text-sm">
-                    <div>
-                        <p class="text-[14px] text-slate-400 font-bold mb-0.5">الاسم</p>
-                        <p class="font-bold text-[#14723a]">{{ $transaction->customer->full_name }}</p>
+            {{-- 2. Citizen & Property Card --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <h3 class="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span>بيانات المواطن والعقار المستهدف</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span class="text-slate-400 block mb-1">اسم المواطن</span>
+                        <span class="font-bold text-slate-800 text-sm">{{ $transaction->customer->name ?? $transaction->customer->full_name ?? '-' }}</span>
                     </div>
-                    <div>
-                        <p class="text-[14px] text-slate-400 font-bold mb-0.5">رقم الهوية</p>
-                        <p class="text-xs font-mono font-bold text-slate-700">{{ $transaction->customer->id_no }}</p>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span class="text-slate-400 block mb-1">رقم الهوية</span>
+                        <span class="font-bold text-slate-800 font-mono text-sm">{{ $transaction->customer->id_no ?? '-' }}</span>
                     </div>
-                    <div>
-                        <p class="text-[14px] text-slate-400 font-bold mb-0.5">رقم الجوال</p>
-                        <p class="text-xs font-mono font-bold text-slate-700">{{ $transaction->customer->mobile }}</p>
-                    </div>
-                </div>
-                <div class="pt-4 mt-2 border-t border-slate-100">
-                    <h3 class="text-[14px] font-bold text-slate-400 mb-2">العقار المستهدف</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                            <p class="text-[13px] text-slate-400 font-bold mb-0.5">القطعة</p>
-                            <p class="font-bold text-slate-700 font-mono">{{ '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[13px] text-slate-400 font-bold mb-0.5">القسيمة</p>
-                            <p class="font-bold text-slate-700 font-mono">{{ '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[13px] text-slate-400 font-bold mb-0.5">العنوان التفصيلي</p>
-                            <p class="text-xs font-bold text-slate-700">{{ '-' ?? 'غير محدد' }}</p>
-                        </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span class="text-slate-400 block mb-1">رقم الجوال</span>
+                        <span class="font-bold text-slate-800 font-mono text-sm">{{ $transaction->customer->mobile ?? '-' }}</span>
                     </div>
                 </div>
-            </div>
 
-
-
-            <!-- الردود الفنية المتوازية -->
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                <h2 class="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
-                    <i data-lucide="git-merge" class="w-5 h-5 text-[#14723a]"></i>
-                    ردود الأقسام الفنية
-                </h2>
-                
-                <div class="space-y-4">
-                    @foreach($transaction->departmentResponses as $response)
-                    <div class="border rounded-xl p-4 {{ $response->status === 'pending' ? 'border-amber-200 bg-amber-50/30' : 'border-emerald-200 bg-emerald-50/30' }}">
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 rounded-lg {{ $response->status === 'pending' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600' }} flex items-center justify-center">
-                                    <i data-lucide="building" class="w-4 h-4"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-sm text-slate-800">{{ $response->department_name }}</h4>
-                                    <p class="text-[10px] text-slate-500">
-                                        الحالة: 
-                                        @if($response->status === 'pending')
-                                            <span class="text-amber-600 font-bold">قيد الدراسة</span>
-                                        @else
-                                            <span class="text-emerald-600 font-bold">تم الرد ({{ $response->updated_at->format('Y-m-d H:i') }})</span>
-                                        @endif
-                                    </p>
-                                </div>
-                            </div>
-                            @if($response->is_delayed)
-                                <span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">متأخر (تجاوز SLA)</span>
-                            @endif
+                @if($transaction->building)
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xs font-bold text-slate-500">العقار المرتبط بالمعاملة:</span>
+                            <span class="font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded text-xs border border-teal-200">ملف رقم #{{ $transaction->building->file_number }}</span>
                         </div>
-
-                        @if($response->status === 'responded')
-                            <div class="bg-white rounded-lg p-3 text-sm text-slate-700 border border-slate-100">
-                                {{ $response->response_text }}
-                            </div>
-                        @endif
-
-                        <!-- Form for department head to respond (مخفي عن الرقابة الإدارية) -->
-                        @if(!$transaction->trashed() && $response->status === 'pending' && !auth()->user()->is_audit_control && str_contains(auth()->user()->department_name ?? '', $response->department_name))
-                            <form action="{{ route('transactions.department-responses.update', $response->id) }}" method="POST" class="mt-4 pt-4 border-t border-slate-200 border-dashed">
-                                @csrf
-                                @method('PUT')
-                                <input type="hidden" name="department_id" value="{{ $response->department_id }}">
-                                <div class="space-y-2">
-                                    <label class="block text-xs font-bold text-[#14723a]">إضافة الرد الفني للقسم</label>
-                                    <textarea name="response_text" rows="3" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-[#14723a] focus:border-[#14723a] resize-none" placeholder="اكتب الرأي الفني للقسم هنا..." required></textarea>
-                                    <div class="flex justify-end">
-                                        <button type="submit" class="bg-[#14723a] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#115e30]">إرسال الرد</button>
-                                    </div>
-                                </div>
-                            </form>
-                        @endif
-
-                        {{-- رسالة إعلامية للرقابة الإدارية عند وجود ردود معلقة --}}
-                        @if(auth()->user()->is_audit_control && $response->status === 'pending')
-                            <div class="mt-3 pt-3 border-t border-dashed border-purple-200 flex items-center gap-2 text-xs text-purple-600 bg-purple-50/50 rounded-lg px-3 py-2">
-                                <i data-lucide="eye" class="w-3.5 h-3.5 shrink-0"></i>
-                               <span>لم يتم الرد على هذه المعاملة حتى الآن.</span>
-                            </div>
-                        @endif
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-
-            <!-- قرار رئيس البلدية -->
-            @if(auth()->user()->role === 'mayor' || $transaction->status === 'approved' || $transaction->status === 'closed')
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
-                <div class="absolute top-0 right-0 left-0 h-1 bg-blue-500"></div>
-                <h2 class="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
-                    <i data-lucide="award" class="w-5 h-5 text-blue-600"></i>
-                    قرار السيد رئيس البلدية
-                </h2>
-                
-                @if(!$transaction->trashed() && ($transaction->status === 'pending' || $transaction->status === 'returned'))
-                    @if(auth()->user()->role === 'mayor')
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-6 mb-2 border-b border-slate-100 pb-3">
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="mayor_action" value="decision"
-                                       class="w-4 h-4 text-blue-600"
-                                       onchange="toggleMayorAction('decision')" checked>
-                                <span class="text-sm font-bold text-slate-700">اتخاذ قرار (اعتماد / رفض)</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="mayor_action" value="forward"
-                                       class="w-4 h-4 text-blue-600"
-                                       onchange="toggleMayorAction('forward')">
-                                <span class="text-sm font-bold text-slate-700">إعادة توجيه المعاملة</span>
-                            </label>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                            <div>الشارع: <span class="font-bold text-slate-700">{{ $transaction->building->street_name ?? 'غير محدد' }}</span></div>
+                            <div>رقم المبنى: <span class="font-bold text-slate-700">{{ $transaction->building->building_number ?? '-' }}</span></div>
+                            <div>الحوض / القطعة: <span class="font-bold text-slate-700 font-mono">{{ $transaction->building->block_number ?? '-' }} / {{ $transaction->building->parcel_number ?? '-' }}</span></div>
                         </div>
-
-                        <div id="mayor-decision">
-                            <form action="{{ route('transactions.status.update', $transaction->id) }}" method="POST" class="space-y-4">
-                                @csrf
-                                @method('PUT')
-                                @method('PUT')
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-600 mb-1">رأي رئيس البلدية وتوجيهاته</label>
-                                    <textarea name="mayor_opinion" rows="3" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500 resize-none" placeholder="ملاحظات رئيس البلدية..."></textarea>
-                                </div>
-                                <div class="flex gap-3">
-                                    <button type="submit" name="status" value="approved" class="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-bold hover:bg-blue-700 text-center">اعتماد وموافقة نهائية</button>
-                                    <button type="submit" name="status" value="rejected" class="flex-1 bg-rose-600 text-white py-2 rounded-lg text-sm font-bold hover:bg-rose-700 text-center">رفض المعاملة وإغلاقها</button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <div id="mayor-forward" class="hidden">
-                            @php
-                                $assignedDeptIds = $transaction->departmentResponses->pluck('department_id')->toArray();
-                                $availableDepts = $departments->filter(fn($d) => !in_array($d->id, $assignedDeptIds));
-                            @endphp
-                            <form action="{{ route('transactions.mayor.forward', $transaction->id) }}" method="POST" class="space-y-3">
-                                @csrf
-                                @method('PUT')
-                                <label class="block text-xs font-bold text-blue-600">اختر الأقسام لإعادة توجيه المعاملة إليها</label>
-                                @if($availableDepts->isEmpty())
-                                    <p class="text-xs text-slate-400 italic">جميع الأقسام مُضافة بالفعل لهذه المعاملة.</p>
-                                @else
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-blue-100 rounded-lg p-3 bg-white">
-                                        @foreach($availableDepts as $dept)
-                                        <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 p-1.5 rounded-lg transition">
-                                            <input type="checkbox" name="forward_departments[]" value="{{ $dept->id }}"
-                                                   class="w-4 h-4 text-blue-600 rounded">
-                                            <span class="text-sm text-slate-700 font-medium">{{ $dept->name }}</span>
-                                        </label>
-                                        @endforeach
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-600 mb-1 mt-2">ملاحظات التوجيه (اختياري)</label>
-                                        <textarea name="mayor_note" rows="2" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500 resize-none" placeholder="أضف ملاحظة للتوجيه..."></textarea>
-                                    </div>
-                                    <div class="flex justify-end mt-3">
-                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-md transition-all flex items-center gap-1.5">
-                                            <i data-lucide="forward" class="w-3.5 h-3.5"></i>
-                                            إعادة توجيه المعاملة
-                                        </button>
-                                    </div>
-                                @endif
-                            </form>
-                        </div>
-                    </div>
-                    @endif
-                @else
-                    <div class="bg-slate-50 p-4 rounded-xl border {{ $transaction->status === 'approved' ? 'border-emerald-200' : 'border-rose-200' }}">
-                        <p class="text-sm font-bold mb-2">
-                            الحالة النهائية: 
-                            @if($transaction->status === 'approved') <span class="text-emerald-600">معتمدة ومغلقة بإيجاب</span>
-                            @else <span class="text-rose-600">مرفوضة ومغلقة</span> @endif
-                        </p>
-                        @if($transaction->mayor_opinion)
-                        <div class="text-sm text-slate-700 bg-white p-3 rounded-lg border border-slate-200">
-                            <strong>توجيهات الرئيس:</strong> <br>
-                            {{ $transaction->mayor_opinion }}
-                        </div>
-                        @endif
                     </div>
                 @endif
             </div>
-            @endif
 
+            {{-- 3. Department Responses & Workflow --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <h3 class="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                    <span>الدراسات الفنية وردود الأقسام المختصة</span>
+                </h3>
+                
+                <div class="space-y-3">
+                    @forelse($transaction->departmentResponses as $response)
+                        <div class="border rounded-2xl p-4 {{ $response->status === 'pending' ? 'border-amber-200 bg-amber-50/30' : 'border-teal-200 bg-teal-50/20' }}">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-lg {{ $response->status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700' }} flex items-center justify-center font-bold text-xs">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                        </svg>
+                                    </div>
+                                    <h4 class="font-bold text-xs text-slate-900">{{ $response->department_name }}</h4>
+                                </div>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $response->status === 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-teal-100 text-teal-800' }}">
+                                    {{ $response->status === 'pending' ? 'قيد الدراسة والمتابعة' : 'تم الرد الفني' }}
+                                </span>
+                            </div>
+                            @if($response->response_text)
+                                <div class="bg-white rounded-xl p-3 text-xs text-slate-800 border border-slate-100 leading-relaxed font-medium mt-2">
+                                    {{ $response->response_text }}
+                                </div>
+                            @endif
+                        </div>
+                    @empty
+                        <div class="text-center py-6 text-xs text-slate-400 bg-slate-50 rounded-xl">
+                            لا توجد ردود فنية مسجلة حتى الآن.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- 4. Mayor / Executive Decision --}}
+            @if($transaction->mayor_opinion || $transaction->status === 'approved' || $transaction->status === 'closed')
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 left-0 h-1 bg-secondary"></div>
+                    <h3 class="text-sm font-black text-slate-800 mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        <span>قرار وتوجيهات رئيس البلدية</span>
+                    </h3>
+                    <div class="bg-amber-50/40 border border-amber-200/60 rounded-xl p-4 text-xs font-semibold text-slate-800 leading-relaxed">
+                        {{ $transaction->mayor_opinion ?? 'تم اعتماد المعاملة رسمياً.' }}
+                    </div>
+                </div>
+            @endif
         </div>
 
-        <!-- العمود الأيسر (البيانات الجانبية والمرفقات وسجل التدقيق) -->
-        <div class="space-y-6">
-            
-          
-
-            <!-- المرفقات -->
-            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-                <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
-                    <h3 class="text-sm font-black text-slate-800 flex items-center gap-2">
-                        <i data-lucide="paperclip" class="w-4 h-4 text-slate-400"></i>
-                        المرفقات
-                    </h3>
+        {{-- Left / Sidebar Column (4 cols) --}}
+        <div class="lg:col-span-4 space-y-5">
+            {{-- Status Card --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <span class="text-xs font-bold text-slate-400 block mb-2">حالة المعاملة الحالية</span>
+                <div class="p-3 rounded-xl {{ $transaction->status_badge_class }} flex items-center justify-between">
+                    <span class="font-black text-xs">{{ $transaction->status_label }}</span>
+                    <div class="w-2.5 h-2.5 rounded-full {{ $transaction->status === 'approved' ? 'bg-emerald-500' : ($transaction->status === 'returned' ? 'bg-amber-500' : 'bg-primary') }}"></div>
                 </div>
-                
-                <ul class="space-y-2 mb-4">
-                    @forelse($transaction->attachments as $attachment)
-                    <li class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-colors">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="file" class="w-4 h-4 text-slate-400"></i>
-                            <a href="{{ Storage::url($attachment->file_path) }}" target="_blank" class="text-xs font-bold text-[#14723a] hover:underline">{{ $attachment->file_label }}</a>
-                        </div>
-                    </li>
-                    @empty
-                    <li class="text-xs text-slate-400 text-center py-2">لا يوجد مرفقات</li>
-                    @endforelse
-                </ul>
-            </div>
-
-            <!-- سجل التدقيق المصغر -->
-            <div class="bg-slate-800 rounded-2xl border border-slate-700 p-5 shadow-sm text-slate-300">
-                <h3 class="text-sm font-black text-white mb-4 flex items-center gap-2 border-b border-slate-700 pb-2">
-                    <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i>
-                    سجل حركات المعاملة
-                </h3>
-                <div class="space-y-4 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-600 before:to-transparent pr-4 border-r border-slate-600 mr-2">
-                    @foreach($transaction->logs()->orderBy('created_at', 'desc')->take(5)->get() as $log)
-                    <div class="relative pl-4">
-                        <div class="absolute right-[-21px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-slate-800 ring-2 ring-slate-800"></div>
-                        <div class="text-[10px] text-slate-400 font-mono mb-0.5">{{ $log->created_at->format('Y-m-d H:i') }}</div>
-                        <div class="text-xs text-white font-bold">{{ $log->action }}</div>
-                        <div class="text-[10px] text-slate-400">بواسطة: {{ $log->user_name }}</div>
+                <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-slate-500 space-y-2">
+                    <div class="flex justify-between">
+                        <span>نوع المعاملة:</span>
+                        <span class="font-bold text-slate-800">{{ optional($transaction->transactionType)->name ?? '-' }}</span>
                     </div>
-                    @endforeach
+                    <div class="flex justify-between">
+                        <span>مدة الإنجاز المستهدفة (SLA):</span>
+                        <span class="font-bold text-teal-800 font-mono">{{ optional($transaction->transactionType)->sla_days ?? 0 }} أيام</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>الرسوم المقررة:</span>
+                        <span class="font-bold text-slate-800">{{ optional($transaction->transactionType)->request_fees ?? 'مجاني' }}</span>
+                    </div>
                 </div>
             </div>
 
+            {{-- Attachments Card --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <h4 class="text-xs font-black text-slate-800 mb-3 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                    </svg>
+                    <span>المرفقات والوثائق</span>
+                </h4>
+                <div class="space-y-2">
+                    @forelse($transaction->attachments as $att)
+                        <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                            <span class="font-bold text-slate-700 truncate">{{ $att->file_label ?? 'مرفق' }}</span>
+                            <a href="{{ Storage::url($att->file_path) }}" target="_blank" class="text-teal-700 hover:underline font-bold text-[11px] shrink-0">عرض</a>
+                        </div>
+                    @empty
+                        <p class="text-xs text-slate-400 text-center py-3">لا توجد مرفقات مرفوعة مع المعاملة</p>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- Audit Trail Timeline --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <h4 class="text-xs font-black text-slate-800 mb-3 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>سجل حركات المعاملة</span>
+                </h4>
+                <div class="space-y-3">
+                    @forelse($transaction->logs()->orderBy('created_at', 'desc')->take(6)->get() as $log)
+                        <div class="flex items-start gap-2.5 text-xs">
+                            <div class="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0"></div>
+                            <div>
+                                <p class="font-bold text-slate-800">{{ $log->action }}</p>
+                                <p class="text-[10px] text-slate-400 font-medium">{{ $log->user_name ?? 'النظام' }} — {{ $log->created_at->diffForHumans() }}</p>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="flex items-start gap-2.5 text-xs">
+                            <div class="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0"></div>
+                            <div>
+                                <p class="font-bold text-slate-800">إنشاء وتوثيق المعاملة</p>
+                                <p class="text-[10px] text-slate-400 font-medium">{{ $transaction->created_at->diffForHumans() }}</p>
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
         </div>
     </div>
-</main>
 
-<script>
-function toggleMayorAction(action) {
-    const decisionDiv = document.getElementById('mayor-decision');
-    const forwardDiv = document.getElementById('mayor-forward');
-    
-    if (action === 'decision') {
-        if(decisionDiv) decisionDiv.classList.remove('hidden');
-        if(forwardDiv) forwardDiv.classList.add('hidden');
-    } else {
-        if(decisionDiv) decisionDiv.classList.add('hidden');
-        if(forwardDiv) forwardDiv.classList.remove('hidden');
-    }
-}
-</script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    {{-- Print Preview Popup Modal --}}
+    <div id="print_modal" class="fixed inset-0 z-50 hidden overflow-hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        {{-- Backdrop --}}
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="closePrintModal()"></div>
+
+        <div class="fixed inset-0 flex items-center justify-center p-2 sm:p-3 text-center z-10 pointer-events-none">
+            <div class="pointer-events-auto relative transform overflow-hidden rounded-2xl sm:rounded-3xl bg-white text-right shadow-2xl transition-all w-full max-w-5xl h-[98vh] flex flex-col border border-slate-200">
+                
+                {{-- Modal Header --}}
+                <div class="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-slate-50/90 shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-teal-50 border border-teal-200/80 text-primary flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black text-slate-800">معاينة نموذج طباعة المعاملة</h3>
+                            <p class="text-[11px] font-bold text-slate-500 font-mono">{{ $transaction->transaction_number }}</p>
+                        </div>
+                    </div>
+
+                    {{-- Actions --}}
+                    <div class="flex items-center gap-2">
+                        <button type="button" 
+                                onclick="printIframeDocument()" 
+                                class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-teal-700 shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                            <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                            </svg>
+                            <span>طباعة الآن</span>
+                        </button>
+                        
+                        <button type="button" 
+                                onclick="closePrintModal()" 
+                                class="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                                title="إغلاق النافذة">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Modal Body: Iframe Container (Full Height) --}}
+                <div class="flex-1 min-h-0 bg-slate-100 p-2 sm:p-3 overflow-hidden flex flex-col relative">
+                    <iframe id="print_frame" 
+                            src="about:blank" 
+                            data-src="{{ route('transactions.print', $transaction->id) }}?modal=1"
+                            class="w-full h-full rounded-2xl bg-white border border-gray-200 shadow-inner"
+                            title="نموذج طباعة المعاملة"></iframe>
+                </div>
+
+                {{-- Modal Footer --}}
+                <div class="flex items-center justify-between px-6 py-2.5 border-t border-gray-100 bg-white text-xs shrink-0">
+                    <span class="text-slate-500 font-medium">يمكنك مراجعة كافة تفاصيل المعاملة ثم الضغط على "طباعة الآن" أو إغلاق النافذة.</span>
+                    <button type="button" 
+                            onclick="closePrintModal()" 
+                            class="px-4 py-1.5 rounded-xl border border-slate-300 font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+                        إغلاق
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
     <script>
-        lucide.createIcons();
+        function openPrintModal() {
+            const modal = document.getElementById('print_modal');
+            const iframe = document.getElementById('print_frame');
+            if (iframe && (!iframe.src || iframe.src === 'about:blank' || iframe.src.indexOf('about:blank') !== -1)) {
+                iframe.src = iframe.getAttribute('data-src');
+            }
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function closePrintModal() {
+            const modal = document.getElementById('print_modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        function printIframeDocument() {
+            const iframe = document.getElementById('print_frame');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePrintModal();
+            }
+        });
     </script>
-</x-app-layout>
+    @endpush
+</x-transactions-layout>

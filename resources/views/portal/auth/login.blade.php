@@ -2,7 +2,62 @@
     <x-slot name="title">تسجيل الدخول - بوابة المواطنين</x-slot>
 
     <div class="w-full max-w-sm sm:max-w-md bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden animate-fade-in my-auto"
-         x-data="{ tab: '{{ old('tab', (session('active_tab') ?? ((isset($errors) && $errors->has('mobile')) ? 'sms' : 'direct'))) }}' }">
+         x-data="{
+             tab: '{{ old('tab', (session('active_tab') ?? ((isset($errors) && $errors->has('mobile')) || session('cooldown_seconds') || session('is_daily_limit') ? 'sms' : 'direct'))) }}',
+             idCard: '{{ old('id_card', '') }}',
+             mobile: '{{ old('mobile', '') }}',
+             cooldownSeconds: {{ (int) session('cooldown_seconds', 0) }},
+             isDailyLimit: {{ session('is_daily_limit', false) ? 'true' : 'false' }},
+             timer: null,
+
+             init() {
+                 if (this.cooldownSeconds > 0) {
+                     this.startTimer();
+                 }
+                 if (this.idCard.length >= 9) {
+                     this.checkStatus();
+                 }
+             },
+
+             startTimer() {
+                 if (this.timer) clearInterval(this.timer);
+                 this.timer = setInterval(() => {
+                     if (this.cooldownSeconds > 0) {
+                         this.cooldownSeconds--;
+                     } else {
+                         clearInterval(this.timer);
+                         this.timer = null;
+                     }
+                 }, 1000);
+             },
+
+             formatTime(sec) {
+                 const m = Math.floor(sec / 60);
+                 const s = sec % 60;
+                 return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+             },
+
+             async checkStatus() {
+                 if (!this.idCard || this.idCard.length < 7) return;
+                 try {
+                     const res = await fetch(`{{ route('portal.check-cooldown') }}?id_card=${encodeURIComponent(this.idCard)}&mobile=${encodeURIComponent(this.mobile)}`);
+                     const data = await res.json();
+                     if (data.reason === 'daily_limit') {
+                         this.isDailyLimit = true;
+                         this.cooldownSeconds = 0;
+                     } else if (data.reason === 'cooldown' && data.wait_seconds > 0) {
+                         this.isDailyLimit = false;
+                         this.cooldownSeconds = data.wait_seconds;
+                         this.startTimer();
+                     } else {
+                         this.isDailyLimit = false;
+                         this.cooldownSeconds = 0;
+                     }
+                 } catch (e) {
+                     console.error(e);
+                 }
+             }
+         }">
         
         {{-- Card Header: Municipality Identity --}}
         <div class="p-3.5 sm:p-5 text-white text-center relative overflow-hidden shrink-0"
@@ -16,10 +71,9 @@
 
             <div class="flex items-center justify-center gap-1.5 mb-0.5">
                 <span class="text-xs font-black tracking-wide text-amber-300">بلدية بيت حانون</span>
-                <span class="text-[9px] bg-amber-400/20 text-amber-300 font-bold px-1.5 py-0.2 rounded-full border border-amber-400/30">بوابة المواطنين</span>
             </div>
             <h2 class="text-sm sm:text-base font-black text-white tracking-wide">
-                الاستعلام الذاتي عن العقارات والحرف
+               بوابة استعلام المواطنين
             </h2>
             <p class="text-[10.5px] sm:text-[11px] text-teal-100/90 mt-0.5 font-medium leading-tight">
                 استعلم عن عقاراتك، وحداتك السكنية، وسجلات الحرف والمهن
@@ -75,7 +129,7 @@
                                    inputmode="numeric"
                                    required
                                    autofocus
-                                   placeholder="مثال: 400123456"
+                                   placeholder="أدخل رقم الهوية (9 أرقام)"
                                    value="{{ old('id_card') }}"
                                    class="w-full pr-9 pl-3 py-2 rounded-xl border border-slate-300 text-slate-900 text-sm font-bold tracking-wider placeholder:font-normal placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-colors shadow-2xs">
                         </div>
@@ -162,8 +216,10 @@
                                    id="sms_id_card"
                                    inputmode="numeric"
                                    required
-                                   placeholder="مثال: 400123456"
+                                   placeholder="أدخل رقم الهوية (9 أرقام)"
                                    value="{{ old('id_card') }}"
+                                   x-model="idCard"
+                                   @input.debounce.500ms="checkStatus()"
                                    class="w-full pr-9 pl-3 py-2 rounded-xl border border-slate-300 text-slate-900 text-sm font-bold tracking-wider placeholder:font-normal placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-colors shadow-2xs">
                         </div>
                     </div>
@@ -185,8 +241,10 @@
                                    id="sms_mobile"
                                    inputmode="tel"
                                    required
-                                   placeholder="مثال: 0599123456"
+                                   placeholder="مثال: 059XXXXXXX"
                                    value="{{ old('mobile') }}"
+                                   x-model="mobile"
+                                   @input.debounce.500ms="checkStatus()"
                                    class="w-full pr-9 pl-3 py-2 rounded-xl border border-slate-300 text-slate-900 text-sm font-bold tracking-wider placeholder:font-normal placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-colors shadow-2xs">
                         </div>
                         @error('mobile')
@@ -194,15 +252,60 @@
                         @enderror
                     </div>
 
+                    {{-- Dynamic Countdown Timer Card (Active Cooldown 5 minutes) --}}
+                    <div x-show="cooldownSeconds > 0" x-cloak class="p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex items-center justify-between gap-2 shadow-2xs">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-600 shrink-0 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <p class="font-bold text-[11px] text-amber-950">يجب الانتظار 5 دقائق قبل طلب الرمز للمرة الثانية</p>
+                                <p class="text-[10px] text-amber-800">الوقت المتبقي لإمكانية الإرسال:</p>
+                            </div>
+                        </div>
+                        <div class="font-mono font-black text-sm bg-white border border-amber-300 text-amber-950 px-2 py-0.5 rounded-lg dir-ltr shrink-0 shadow-2xs"
+                             x-text="formatTime(cooldownSeconds) + ' د'"></div>
+                    </div>
+
+                    {{-- Dynamic Daily Limit Card (Max 2 requests in 24 hours) --}}
+                    <div x-show="isDailyLimit" x-cloak class="p-2.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-950 text-xs flex items-start gap-2 shadow-2xs">
+                        <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <div class="space-y-0.5">
+                            <p class="font-bold text-[11px] text-rose-950">تم استنفاد الحد الأقصى لطلب الرمز (مرتان خلال 24 ساعة)</p>
+                            <p class="text-[10px] text-rose-800 leading-tight">
+                                يُمنع طلب الرمز أكثر من مرتين خلال 24 ساعة. يمكنك الدخول المباشر برمزك السابق.
+                            </p>
+                        </div>
+                    </div>
+
                     {{-- Submit Button --}}
                     <div class="pt-1">
                         <button type="submit"
+                                :disabled="cooldownSeconds > 0 || isDailyLimit"
+                                :class="(cooldownSeconds > 0 || isDailyLimit) ? 'bg-slate-200 text-slate-500 border border-slate-300 cursor-not-allowed shadow-none' : 'text-white hover:opacity-95 shadow-md hover:shadow-lg active:scale-[0.99] cursor-pointer'"
                                 style="background: linear-gradient(135deg, #0f766e 0%, #115e59 100%); background-color: #0f766e;"
-                                class="w-full py-2.5 px-4 rounded-xl font-black text-white hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-700 shadow-md transition-all flex items-center justify-center gap-2 text-sm cursor-pointer hover:shadow-lg active:scale-[0.99]">
-                            <span>متابعة وإرسال رمز SMS</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                            </svg>
+                                :style="(cooldownSeconds > 0 || isDailyLimit) ? 'background: #e2e8f0 !important; color: #64748b !important;' : ''"
+                                class="w-full py-2.5 px-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2">
+                            <template x-if="cooldownSeconds > 0">
+                                <span class="flex items-center gap-1.5 font-bold text-xs text-amber-900">
+                                    <span>انتظر</span>
+                                    <span class="font-mono font-black bg-amber-100 text-amber-950 px-1.5 py-0.5 rounded border border-amber-300 dir-ltr" x-text="formatTime(cooldownSeconds)"></span>
+                                    <span>قبل طلب الرمز للمرة الثانية</span>
+                                </span>
+                            </template>
+                            <template x-if="cooldownSeconds === 0 && isDailyLimit">
+                                <span class="text-rose-700 text-xs">تم استنفاد الحد الأقصى (مرتان / 24 ساعة)</span>
+                            </template>
+                            <template x-if="cooldownSeconds === 0 && !isDailyLimit">
+                                <span class="flex items-center gap-2">
+                                    <span>متابعة وإرسال رمز SMS</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                                    </svg>
+                                </span>
+                            </template>
                         </button>
                     </div>
                 </form>

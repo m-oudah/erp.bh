@@ -55,6 +55,15 @@ Route::middleware('auth')->group(function () {
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Settings\SystemSettingsController::class, 'index'])->name('index');
 
+        // General Settings & Database Backup
+        Route::prefix('general')->name('general.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Settings\GeneralSettingsController::class, 'index'])->name('index');
+            Route::get('/backup', [\App\Http\Controllers\Settings\GeneralSettingsController::class, 'backup'])->name('backup');
+            Route::post('/backup/export', [\App\Http\Controllers\Settings\GeneralSettingsController::class, 'exportBackup'])->name('backup.export');
+            Route::get('/backup/download/{filename}', [\App\Http\Controllers\Settings\GeneralSettingsController::class, 'downloadBackup'])->name('backup.download');
+            Route::delete('/backup/delete/{filename}', [\App\Http\Controllers\Settings\GeneralSettingsController::class, 'deleteBackup'])->name('backup.delete');
+        });
+
         // Users Management
         Route::resource('users', \App\Http\Controllers\Settings\UserManagementController::class)->only(['index', 'edit', 'update']);
 

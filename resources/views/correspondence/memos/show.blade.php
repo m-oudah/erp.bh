@@ -23,6 +23,16 @@
 
         {{-- Actions --}}
         <div class="flex items-center gap-2">
+            {{-- Print Memo Button --}}
+            <button type="button"
+                    onclick="openPrintModal()"
+                    class="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-teal-700 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                </svg>
+                <span>طباعة المراسلة</span>
+            </button>
+
             @if ($memo->autoArchiveFile)
                 <a href="{{ route('archive.files.show', $memo->autoArchiveFile->id) }}"
                    target="_blank"
@@ -472,4 +482,109 @@
             </form>
         </div>
     </div>
+
+    {{-- 4. Print Preview Popup Modal --}}
+    <div id="print_modal" class="fixed inset-0 z-50 hidden overflow-hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        {{-- Backdrop --}}
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="closePrintModal()"></div>
+
+        <div class="fixed inset-0 flex items-center justify-center p-2 sm:p-3 text-center z-10 pointer-events-none">
+            <div class="pointer-events-auto relative transform overflow-hidden rounded-2xl sm:rounded-3xl bg-white text-right shadow-2xl transition-all w-full max-w-5xl h-[98vh] flex flex-col border border-slate-200">
+                
+                {{-- Modal Header --}}
+                <div class="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-slate-50/90 shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-teal-50 border border-teal-200/80 text-primary flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black text-slate-800">معاينة نموذج طباعة المراسلة الداخلية</h3>
+                            <p class="text-[11px] font-bold text-slate-500 font-mono">{{ $memo->memo_number }}</p>
+                        </div>
+                    </div>
+
+                    {{-- Actions --}}
+                    <div class="flex items-center gap-2">
+                        <button type="button" 
+                                onclick="printIframeDocument()" 
+                                class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-teal-700 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                            <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                            </svg>
+                            <span>طباعة الآن</span>
+                        </button>
+                        
+                        <button type="button" 
+                                onclick="closePrintModal()" 
+                                class="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                                title="إغلاق النافذة">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Modal Body: Iframe Container (Full Height) --}}
+                <div class="flex-1 min-h-0 bg-slate-100 p-2 sm:p-3 overflow-hidden flex flex-col relative">
+                    <iframe id="print_frame" 
+                            src="about:blank" 
+                            data-src="{{ route('correspondence.memos.print', $memo->id) }}?modal=1"
+                            class="w-full h-full rounded-2xl bg-white border border-gray-200 shadow-inner"
+                            title="نموذج طباعة المراسلة"></iframe>
+                </div>
+
+                {{-- Modal Footer --}}
+                <div class="flex items-center justify-between px-6 py-2.5 border-t border-gray-100 bg-white text-xs shrink-0">
+                    <span class="text-slate-500 font-medium">يمكنك مراجعة كافة تفاصيل المراسلة والردود والتوجيهات ثم الضغط على "طباعة الآن" أو إغلاق النافذة.</span>
+                    <button type="button" 
+                            onclick="closePrintModal()" 
+                            class="px-4 py-1.5 rounded-xl border border-slate-300 font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+                        إغلاق
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        function openPrintModal() {
+            const modal = document.getElementById('print_modal');
+            const iframe = document.getElementById('print_frame');
+            if (iframe && (!iframe.src || iframe.src === 'about:blank' || iframe.src.indexOf('about:blank') !== -1)) {
+                iframe.src = iframe.getAttribute('data-src');
+            }
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function closePrintModal() {
+            const modal = document.getElementById('print_modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        function printIframeDocument() {
+            const iframe = document.getElementById('print_frame');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePrintModal();
+            }
+        });
+    </script>
+    @endpush
 </x-correspondence-layout>

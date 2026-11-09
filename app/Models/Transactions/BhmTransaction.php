@@ -56,6 +56,28 @@ class BhmTransaction extends Model
         return $this->hasMany(BhmTransactionAuditLog::class, 'transaction_id');
     }
 
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'pending' => 'قيد الدراسة والمتابعة',
+            'approved' => 'معتمدة ومكتملة',
+            'returned' => 'مرجعة للاستيفاء',
+            'closed' => 'مغلقة',
+            default => $this->status ?? 'قيد الدراسة',
+        };
+    }
+
+    public function getStatusBadgeClassAttribute(): string
+    {
+        return match ($this->status) {
+            'pending' => 'bg-amber-50 text-amber-800 border border-amber-200',
+            'approved' => 'bg-emerald-50 text-emerald-800 border border-emerald-200',
+            'returned' => 'bg-rose-50 text-rose-800 border border-rose-200',
+            'closed' => 'bg-slate-100 text-slate-700 border border-slate-200',
+            default => 'bg-gray-100 text-gray-700 border border-gray-200',
+        };
+    }
+
     public function getIsDelayedAttribute(): bool
     {
         if ($this->status !== 'pending') {

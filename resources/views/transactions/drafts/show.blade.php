@@ -1,50 +1,36 @@
-<x-app-layout>
-    <x-slot name="module_title">
-        <div>
-            <div class="text-[#14723a] text-[10px] font-bold mb-0.5 tracking-wider">نظام قلم الجمهور</div>
-            <h1 class="font-bold text-xl tracking-wide flex items-center gap-2 leading-none text-slate-800">
-                المعاملات والتراسل
-            </h1>
-            <p class="text-slate-500 text-xs mt-1.5 font-medium">بلدية بيت حانون - الخدمات الإلكترونية</p>
-        </div>
-    </x-slot>
-
-@section('title', 'مراجعة الطلب الوارد من الموقع')
-
-
-
-
-{{-- Sticky Back Bar --}}
-<header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
-        <div class="flex items-center space-x-4 space-x-reverse">
-            <a href="{{ route('transactions.index', ['tab' => 'drafts']) }}" class="w-10 h-10 bg-slate-50 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 transition-colors">
-                <i data-lucide="arrow-right" class="w-5 h-5"></i>
+<x-transactions-layout>
+    {{-- Header Action Bar --}}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-5 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <a href="{{ route('transactions.index', ['tab' => 'drafts']) }}" class="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-slate-600 transition-colors" title="العودة للطلبات">
+                <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
             </a>
             <div>
-                <h1 class="text-base font-black text-slate-800 leading-tight">
-                    مراجعة طلب وارد من الموقع
-                    <span class="font-mono text-indigo-600">#{{ $draft->id }}</span>
-                </h1>
-                <p class="text-[10px] text-slate-500 font-medium">
-                    {{ $draft->service_requested }} — مقدم من: {{ $draft->full_name }}
-                    <span class="inline-flex items-center gap-1 mr-2 px-2 py-0.5 rounded-full text-[10px] font-bold
-                        {{ $draft->status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }}">
-                        {{ $draft->status === 'pending' ? 'قيد المراجعة' : 'تم التحويل' }}
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="text-xl font-black text-slate-900 tracking-tight">مراجعة طلب وارد من الموقع</h2>
+                    <span class="font-mono text-teal-800 font-bold bg-teal-50 px-2.5 py-0.5 rounded-lg border border-teal-200 text-xs">
+                        {{ $draft->ticket_number ?? ('#'.$draft->id) }}
                     </span>
-                </p>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold
+                        {{ $draft->status === 'pending' ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200' }}">
+                        {{ $draft->status === 'pending' ? 'بانتظار المراجعة والتحويل' : 'تم التحويل' }}
+                    </span>
+                </div>
+                <h1 class="text-xs font-bold text-tertiary mt-1">
+                    {{ $draft->service_requested }} — مقدم من: <span class="text-slate-800 font-extrabold">{{ $draft->full_name }}</span>
+                </h1>
             </div>
         </div>
-        <div class="flex gap-2">
-            <span class="text-xs text-slate-400 font-medium self-center">
-                {{ \Carbon\Carbon::parse($draft->created_at)->diffForHumans() }}
+        <div>
+            <span class="text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+                وارد منذ: {{ \Carbon\Carbon::parse($draft->created_at)->diffForHumans() }}
             </span>
         </div>
     </div>
-</header>
 
-<main class="flex-grow p-6 bg-slate-50 min-h-screen">
-    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {{-- ====== RIGHT COLUMN: Main Form (2/3) ====== --}}
         <div class="lg:col-span-2 space-y-5">
@@ -62,13 +48,13 @@
                 @endif
 
                 {{-- Section 1: Citizen Search --}}
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="bg-[#14723a]/5 border-b border-[#14723a]/15 px-6 py-4 flex items-center justify-between">
-                        <h2 class="text-sm font-black text-[#14723a] flex items-center gap-2">
-                            <i data-lucide="user-check" class="w-4 h-4"></i>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div class="bg-primary/5 border-b border-primary/15 px-6 py-4 flex items-center justify-between">
+                        <h2 class="text-sm font-black text-primary flex items-center gap-2">
+                            <i data-lucide="user-check" class="w-4 h-4 text-secondary"></i>
                             أولاً: ربط الطلب بمواطن مسجل في النظام
                         </h2>
-                        <a href="{{ route('customers.create') }}" target="_blank" class="text-xs text-[#14723a] hover:underline flex items-center gap-1 font-bold cursor-pointer">
+                        <a href="{{ route('customers.citizens.create') }}" target="_blank" class="text-xs text-secondary hover:underline flex items-center gap-1 font-bold cursor-pointer">
                             <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
                             إضافة مواطن جديد
                         </a>
@@ -85,8 +71,8 @@
                                         maxlength="9" minlength="9" pattern="[0-9]{9}"
                                         oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 9)"
                                         placeholder="مثال: 105234567"
-                                        class="w-full text-sm px-3 py-2.5 font-semibold rounded-lg border border-slate-300 focus:ring-2 focus:ring-[#14723a]/20 focus:border-[#14723a] outline-none" />
-                                    <button type="button" id="search_btn" class="flex-shrink-0 bg-[#14723a] hover:bg-[#14723a]/90 text-white px-4 rounded-lg text-sm font-black transition-all">
+                                        class="w-full text-sm px-3 py-2.5 font-semibold rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                                    <button type="button" id="search_btn" class="flex-shrink-0 bg-primary hover:bg-primary-dark text-white px-4 rounded-lg text-sm font-black transition-all">
                                         <i data-lucide="search" class="w-4 h-4"></i>
                                     </button>
                                 </div>
@@ -118,19 +104,19 @@
                         <select name="property_id" id="property_select" class="hidden"></select>
 
                         {{-- Property Display --}}
-                        <div class="bg-emerald-50/50 border border-emerald-200 rounded-xl p-4 hidden" id="selected-property-display-container">
+                        <div class="bg-teal-50/50 border border-teal-200 rounded-xl p-4 hidden" id="selected-property-display-container">
                             <div class="flex items-center justify-between mb-3">
-                                <p class="text-xs font-black text-[#14723a] flex items-center gap-1.5">
-                                    <i data-lucide="building-2" class="w-4 h-4"></i>
+                                <p class="text-xs font-black text-primary flex items-center gap-1.5">
+                                    <i data-lucide="building-2" class="w-4 h-4 text-secondary"></i>
                                     العقار المختار
                                 </p>
                                 <div class="flex items-center gap-2 text-xs">
                                     <span class="text-slate-500 font-semibold">تبديل:</span>
-                                    <select id="selected_property_switch" class="bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-bold text-slate-700 outline-none focus:border-[#14723a]"></select>
+                                    <select id="selected_property_switch" class="bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-bold text-slate-700 outline-none focus:border-primary"></select>
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-semibold text-slate-600">
-                                <div><span class="block text-[10px] text-slate-400 mb-0.5">الحالة</span><span id="selected_property_status" class="text-[#14723a] font-bold">-</span></div>
+                                <div><span class="block text-[10px] text-slate-400 mb-0.5">الحالة</span><span id="selected_property_status" class="text-primary font-bold">-</span></div>
                                 <div><span class="block text-[10px] text-slate-400 mb-0.5">رقم القطعة</span><span id="selected_piece" class="font-bold text-slate-800">-</span></div>
                                 <div><span class="block text-[10px] text-slate-400 mb-0.5">رقم القسيمة</span><span id="selected_voucher" class="font-bold text-slate-800">-</span></div>
                                 <div><span class="block text-[10px] text-slate-400 mb-0.5">ملف التنظيم</span><span id="selected_reg_file" class="font-bold text-slate-800">-</span></div>
@@ -147,10 +133,10 @@
                 </div>
 
                 {{-- Section 2: Conversion Decision --}}
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="bg-slate-50 border-b border-slate-200 px-6 py-4">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div class="bg-slate-50 border-b border-gray-100 px-6 py-4">
                         <h2 class="text-sm font-black text-slate-800 flex items-center gap-2">
-                            <i data-lucide="git-branch" class="w-4 h-4 text-[#14723a]"></i>
+                            <i data-lucide="git-branch" class="w-4 h-4 text-secondary"></i>
                             ثانياً: قرار التحويل والتوجيه
                         </h2>
                     </div>
@@ -158,8 +144,8 @@
                     <div class="p-6 space-y-5">
                         {{-- Type Selector --}}
                         <div class="flex gap-3">
-                            <label class="flex-1 flex items-center gap-3 bg-white p-3 rounded-xl border-2 border-[#14723a] cursor-pointer hover:bg-emerald-50/30 transition shadow-sm" id="radio-transaction-label">
-                                <input type="radio" name="convert_to" value="transaction" checked class="w-4 h-4 text-[#14723a] focus:ring-[#14723a] border-slate-300" onchange="toggleForm(this)">
+                            <label class="flex-1 flex items-center gap-3 bg-white p-3 rounded-xl border-2 border-primary cursor-pointer hover:bg-teal-50/30 transition shadow-sm" id="radio-transaction-label">
+                                <input type="radio" name="convert_to" value="transaction" checked class="w-4 h-4 text-primary focus:ring-primary border-slate-300" onchange="toggleForm(this)">
                                 <div>
                                     <span class="block text-xs font-black text-slate-800">معاملة رسمية</span>
                                     <span class="text-[10px] text-slate-400">تتطلب توجيه لأقسام</span>
@@ -178,7 +164,7 @@
                         <div class="space-y-4 mt-5">
                             <div id="transaction-fields">
                                 <label class="block text-xs font-bold text-slate-700 mb-1.5">نوع المعاملة <span class="text-rose-500">*</span></label>
-                                <select name="transaction_type_id" id="transaction_type_id" class="w-full text-sm px-4 py-2.5 font-semibold rounded-lg border border-slate-300 bg-white outline-none focus:ring-2 focus:ring-[#14723a]/20 focus:border-[#14723a]">
+                                <select name="transaction_type_id" id="transaction_type_id" class="w-full text-sm px-4 py-2.5 font-semibold rounded-lg border border-slate-300 bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
                                     <option value="">ابحث عن نوع المعاملة...</option>
                                     @foreach($transactionTypes as $type)
                                         <option value="{{ $type->id }}">{{ $type->name }} ({{ $type->sla_days }} أيام)</option>
@@ -200,8 +186,8 @@
                                 <label class="block text-xs font-bold text-slate-700 mb-2">توجيه إلى الأقسام الفنية <span class="text-rose-500">*</span></label>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                                     @foreach($departments as $dept)
-                                        <label class="flex items-center gap-3 bg-slate-50 hover:bg-emerald-50/30 p-3 rounded-xl border border-slate-200 hover:border-[#14723a]/30 cursor-pointer transition-all">
-                                            <input type="checkbox" name="departments[]" value="{{ $dept->id }}" class="h-4 w-4 text-[#14723a] focus:ring-[#14723a] border-slate-300 rounded" />
+                                        <label class="flex items-center gap-3 bg-slate-50 hover:bg-teal-50/30 p-3 rounded-xl border border-slate-200 hover:border-primary/40 cursor-pointer transition-all">
+                                            <input type="checkbox" name="departments[]" value="{{ $dept->id }}" class="h-4 w-4 text-primary focus:ring-primary border-slate-300 rounded" />
                                             <span class="text-xs font-bold text-slate-700">{{ $dept->name }}</span>
                                         </label>
                                     @endforeach
@@ -213,7 +199,7 @@
                     {{-- Submit --}}
                     <div class="bg-slate-50 border-t border-slate-100 px-6 py-4 flex justify-end gap-3">
                         <a href="{{ route('transactions.index', ['tab' => 'drafts']) }}" class="text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 px-5 py-2.5 rounded-lg transition-all">إلغاء</a>
-                        <button type="submit" class="flex items-center gap-2 text-xs font-black text-white bg-[#14723a] hover:bg-[#14723a]/90 px-6 py-2.5 rounded-lg transition-all shadow-md">
+                        <button type="submit" class="flex items-center gap-2 text-xs font-black text-white bg-primary hover:bg-primary-dark px-6 py-2.5 rounded-xl transition-all shadow-md shadow-primary/20 cursor-pointer">
                             <i data-lucide="check-circle" class="w-4 h-4"></i>
                             اعتماد وتحويل الطلب
                         </button>
@@ -328,13 +314,13 @@
         if (radio.value === 'transaction') {
             txFields.style.display = 'block';
             cmpFields.style.display = 'none';
-            transLabel.classList.replace('border-slate-200', 'border-[#14723a]');
+            transLabel.classList.replace('border-slate-200', 'border-primary');
             complLabel.classList.replace('border-rose-400', 'border-slate-200');
         } else {
             txFields.style.display = 'none';
             cmpFields.style.display = 'block';
             complLabel.classList.replace('border-slate-200', 'border-rose-400');
-            transLabel.classList.replace('border-[#14723a]', 'border-slate-200');
+            transLabel.classList.replace('border-primary', 'border-slate-200');
         }
     }
 
@@ -454,4 +440,4 @@
     <script>
         lucide.createIcons();
     </script>
-</x-app-layout>
+</x-transactions-layout>

@@ -11,6 +11,7 @@ Route::middleware(['auth'])->prefix('correspondence')->name('correspondence.')->
     Route::get('/memos/create', [MemoController::class, 'create'])->name('memos.create');
     Route::post('/memos', [MemoController::class, 'store'])->name('memos.store');
     Route::get('/memos/{memo}', [MemoController::class, 'show'])->name('memos.show');
+    Route::get('/memos/{memo}/print', [MemoController::class, 'print'])->name('memos.print');
     Route::get('/memos/{memo}/forward', [MemoController::class, 'forwardPage'])->name('memos.forward-page');
     Route::post('/memos/{memo}/forward', [MemoController::class, 'forward'])->name('memos.forward');
     Route::post('/memos/{memo}/close', [MemoController::class, 'close'])->name('memos.close');

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('portal')->name('portal.')->group(function () {
     // Guest Citizen Routes (Login & OTP)
     Route::get('/login', [PortalController::class, 'showLogin'])->name('login');
+    Route::get('/login/check-cooldown', [PortalController::class, 'checkCooldown'])->name('check-cooldown');
     Route::post('/login/send-otp', [PortalController::class, 'sendOtp'])->name('send-otp');
     Route::post('/login/direct', [PortalController::class, 'directLogin'])->name('login.direct');
     Route::get('/login/verify', [PortalController::class, 'showVerifyOtp'])->name('verify-otp');

@@ -23,41 +23,6 @@
 
         <!-- Left side (User Menu & Actions) -->
         <div class="flex items-center gap-2.5 sm:gap-3">
-            
-            {{-- زر موديول المراسلات الداخلية المباشر مع ظهور عدد الإشعارات/المراسلات غير المقروءة على الأيقونة --}}
-            <div x-data="{
-                unreadCount: 0,
-                fetchData() {
-                    fetch('{{ route('notifications.unread') }}')
-                        .then(res => res.json())
-                        .then(data => {
-                            this.unreadCount = data.count || 0;
-                        }).catch(() => {});
-                }
-            }" x-init="fetchData(); setInterval(() => fetchData(), 30000)">
-                <a href="{{ route('correspondence.memos.index') }}"
-                   class="h-11 sm:h-12 flex items-center gap-2.5 px-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/15 shadow-sm text-white group relative cursor-pointer"
-                   title="المراسلات الداخلية">
-                    
-                    {{-- أيقونة موديول المراسلات وبادج عدد الإشعارات --}}
-                    <div class="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center text-white shrink-0 relative group-hover:bg-white/25 transition-colors">
-                        <x-heroicon-s-inbox-stack class="w-5 h-5" style="color: rgb(217 119 6);" />
-                        
-                        <template x-if="unreadCount > 0">
-                            <span class="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white ring-2 ring-teal-600 shadow-sm leading-none animate-bounce"
-                                  x-text="unreadCount"></span>
-                        </template>
-                    </div>
-
-                    <span class="hidden sm:inline text-xs font-bold text-white">المراسلات الداخلية</span>
-
-                    <template x-if="unreadCount > 0">
-                        <span class="hidden md:inline-flex bg-rose-500 text-white font-black rounded-full text-[10px] px-1.5 py-0.5 min-w-[18px] text-center shadow-xs leading-none"
-                              x-text="unreadCount"></span>
-                    </template>
-                </a>
-            </div>
-
             {{-- أيقونة وزر بوابة الأنظمة متناسقة بنفس ارتفاع وحجم قائمة اسم المستخدم --}}
             @if(!request()->routeIs('dashboard'))
                 <a href="{{ route('dashboard') }}" 

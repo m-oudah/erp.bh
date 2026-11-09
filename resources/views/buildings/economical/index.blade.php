@@ -3,8 +3,8 @@
         
         <div class="flex items-center justify-between mb-2">
             <div>
-                <h2 class="text-2xl font-bold text-gray-800">الأنشطة الاقتصادية</h2>
-                <p class="text-gray-500 mt-1 text-sm">إدارة وتتبع الرخص والمحلات والحرف ضمن المباني</p>
+                <h2 class="text-2xl font-bold text-gray-800">الأنشطة الاقتصادية والحرف</h2>
+                <p class="text-gray-500 mt-1 text-sm">إدارة وتتبع الرخص والمحلات والحرف والأنشطة الاقتصادية</p>
             </div>
             <div class="flex items-center gap-2">
                 <div class="hidden md:flex items-center gap-2">
@@ -12,12 +12,10 @@
                         إجمالي: {{ $economicals->total() }} نشاط
                     </span>
                 </div>
-                @can('bhm.economical.create')
-                <a href="#" class="inline-flex items-center gap-2 bg-orange hover:bg-orange-dark text-white font-bold py-2.5 px-5 rounded-xl shadow-md transition-all text-sm">
+                <a href="{{ route('crafts.economical.create') }}" class="inline-flex items-center gap-2 bg-orange hover:bg-orange-dark text-white font-bold py-2.5 px-5 rounded-xl shadow-md transition-all text-sm">
                     <x-heroicon-o-plus class="w-4 h-4" />
-                    إضافة نشاط
+                    إضافة نشاط / حرفة
                 </a>
-                @endcan
             </div>
         </div>
 
@@ -215,7 +213,7 @@
                             <td class="px-5 py-3">
                                 <div class="flex items-center gap-2">
                                     @if($eco->isLicensed == 1)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">مرخص</span>
+                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">مرخص</span>
                                     @else
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600">غير مرخص</span>
                                     @endif
@@ -239,15 +237,13 @@
                                 @endif
                             </td>
                             <td class="px-5 py-3 text-center">
-                                <div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <a href="{{ route('crafts.economical.show', $eco->id) }}" class="text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-lg transition-colors" title="التفاصيل">
+                                <div class="flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                                    <a href="{{ route('crafts.economical.show', $eco->id) }}" class="text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-lg transition-colors" title="عرض التفاصيل">
                                         <x-heroicon-o-eye class="w-4 h-4" />
                                     </a>
-                                    @can('Update-Craft')
-                                    <a href="{{ route('crafts.economical.edit', $eco->id) }}" class="text-orange hover:text-orange-dark bg-orange/10 hover:bg-orange/20 p-1.5 rounded-lg transition-colors" title="تعديل">
+                                    <a href="{{ route('crafts.economical.edit', $eco->id) }}" class="text-orange hover:text-orange-dark bg-orange/10 hover:bg-orange/20 p-1.5 rounded-lg transition-colors" title="تعديل النشاط">
                                         <x-heroicon-o-pencil-square class="w-4 h-4" />
                                     </a>
-                                    @endcan
                                 </div>
                             </td>
                         </tr>
