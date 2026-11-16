@@ -4,7 +4,7 @@ use App\Http\Controllers\Correspondence\MemoController;
 use App\Http\Controllers\Correspondence\NotificationController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth'])->prefix('correspondence')->name('correspondence.')->group(function () {
+Route::middleware(['auth', 'module.access:correspondence'])->prefix('correspondence')->name('correspondence.')->group(function () {
     // Internal Correspondence (المراسلات الداخلية)
     Route::get('/', [MemoController::class, 'index'])->name('index');
     Route::get('/memos', [MemoController::class, 'index'])->name('memos.index');

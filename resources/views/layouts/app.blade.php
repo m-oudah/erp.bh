@@ -31,6 +31,8 @@
             </footer>
         </div>
         
+        <x-unified-citizen-modal />
+
         @stack('scripts')
     </body>
 </html>

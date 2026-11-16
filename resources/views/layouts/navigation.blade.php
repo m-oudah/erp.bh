@@ -39,9 +39,13 @@
             <x-dropdown align="left" width="48">
                 <x-slot name="trigger">
                     <button class="h-11 sm:h-12 flex items-center gap-2.5 px-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/15 shadow-sm focus:outline-none cursor-pointer">
-                        {{-- أيقونة المستخدم على يمين اسم المستخدم (في اتجاه RTL) --}}
-                        <div class="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center text-white shrink-0">
-                            <x-heroicon-s-user class="w-5 h-5" style="color: rgb(217 119 6);" />
+                        {{-- أيقونة أو صورة المستخدم على يمين اسم المستخدم (في اتجاه RTL) --}}
+                        <div class="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center text-white shrink-0 overflow-hidden">
+                            @if(Auth::user()->avatar_url)
+                                <img src="{{ Auth::user()->avatar_url }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover rounded-lg" />
+                            @else
+                                <x-heroicon-s-user class="w-5 h-5" style="color: rgb(217 119 6);" />
+                            @endif
                         </div>
 
                         {{-- اسم المستخدم والمسمى الوظيفي --}}
@@ -61,10 +65,12 @@
                         <span>الملف الشخصي</span>
                     </x-dropdown-link>
                     
+                    @if(Auth::user() && Auth::user()->canAccessModule('settings'))
                     <x-dropdown-link :href="route('settings.index')" class="flex items-center gap-2 font-medium">
                         <x-heroicon-o-cog-6-tooth class="w-5 h-5" style="color: rgb(217 119 6);" />
                         <span>إعدادات النظام</span>
                     </x-dropdown-link>
+                    @endif
                     
                     <hr class="my-1 border-gray-100">
                     

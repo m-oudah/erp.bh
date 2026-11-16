@@ -5,7 +5,7 @@ use App\Http\Controllers\Buildings\BhmDashboardController;
 
 use App\Http\Controllers\Buildings\BhmBuildingController;
 
-Route::middleware(['auth', 'verified'])->prefix('buildings')->name('buildings.')->group(function () {
+Route::middleware(['auth', 'verified', 'module.access:buildings'])->prefix('buildings')->name('buildings.')->group(function () {
     Route::get('/', [BhmDashboardController::class, 'index'])->name('dashboard');
     
     // Buildings

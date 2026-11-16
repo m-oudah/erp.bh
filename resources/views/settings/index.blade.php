@@ -48,6 +48,17 @@
                 </div>
             </a>
 
+            <!-- HR & Payroll Settings (إعدادات شئون الموظفين والرواتب) -->
+            <a href="{{ route('settings.hr.index') }}" class="group bg-white rounded-3xl p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 flex items-center gap-4 hover:border-emerald-500 hover:shadow-md transition-all">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    <x-heroicon-s-academic-cap class="w-7 h-7" />
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">إعدادات شئون الموظفين والرواتب</h3>
+                    <p class="text-sm text-gray-500 font-medium">سلم درجات الخدمة المدنية، المربوط، وبنود الرواتب</p>
+                </div>
+            </a>
+
             <!-- Other future settings can go here -->
 
         </div>

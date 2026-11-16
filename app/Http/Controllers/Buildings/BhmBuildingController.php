@@ -523,6 +523,24 @@ class BhmBuildingController extends Controller
                 'notes' => $request->input('owner_notes'),
                 'is_approve' => 1,
             ]);
+
+            // Unify with bhm_customers
+            if ($request->filled('owner_id_card')) {
+                $fullName = trim(collect([
+                    $request->input('owner_first_name'),
+                    $request->input('owner_second_name'),
+                    $request->input('owner_third_name'),
+                    $request->input('owner_sur_name'),
+                ])->filter()->implode(' '));
+
+                \App\Models\Buildings\BhmCustomer::updateOrCreate(
+                    ['id_no' => trim($request->input('owner_id_card'))],
+                    [
+                        'name' => $fullName ?: 'مالك عقار',
+                        'mobile' => $request->input('owner_phone', ''),
+                    ]
+                );
+            }
         }
 
         return redirect()->route('buildings.buildings.show', $building->id)

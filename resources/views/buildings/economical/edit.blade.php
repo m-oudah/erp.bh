@@ -299,32 +299,49 @@
                                 </div>
                             </div>
 
-                            {{-- صندوق البحث السريع عن المواطنين --}}
-                            <div class="relative w-64 hidden sm:block">
-                                <input type="text"
-                                       x-model="citizenSearch"
-                                       @input.debounce.300ms="searchCitizens()"
-                                       placeholder="بحث برقم الهوية أو الاسم..."
-                                       class="w-full text-xs bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-gray-800 focus:bg-white focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20">
-                                <div x-show="isSearchingCitizens" class="absolute left-2.5 top-2">
-                                    <span class="w-3.5 h-3.5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin inline-block"></span>
+                            <div class="flex items-center gap-2">
+                                {{-- صندوق البحث السريع عن المواطنين --}}
+                                <div class="relative w-64 hidden sm:block">
+                                    <input type="text"
+                                           x-model="citizenSearch"
+                                           @input.debounce.300ms="searchCitizens()"
+                                           placeholder="بحث برقم الهوية أو الاسم..."
+                                           class="w-full text-xs bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-gray-800 focus:bg-white focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20">
+                                    <div x-show="isSearchingCitizens" class="absolute left-2.5 top-2">
+                                        <span class="w-3.5 h-3.5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin inline-block"></span>
+                                    </div>
+                                    {{-- Dropdown results --}}
+                                    <div x-show="citizenResults.length > 0"
+                                         @click.outside="citizenResults = []"
+                                         class="absolute z-50 left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 max-h-56 overflow-y-auto divide-y divide-gray-50">
+                                        <template x-for="c in citizenResults" :key="c.id_no">
+                                            <button type="button"
+                                                    @click="selectCitizen(c)"
+                                                    class="w-full text-right p-2.5 hover:bg-teal-50/60 transition-colors flex items-center justify-between text-xs cursor-pointer">
+                                                <div>
+                                                    <div class="font-bold text-gray-800" x-text="c.name"></div>
+                                                    <div class="font-mono text-gray-400 text-[10px]" x-text="c.id_no"></div>
+                                                </div>
+                                                <span class="text-[10px] bg-teal-100/70 text-teal-700 px-2 py-0.5 rounded font-bold">تحديد</span>
+                                            </button>
+                                        </template>
+                                    </div>
                                 </div>
-                                {{-- Dropdown results --}}
-                                <div x-show="citizenResults.length > 0"
-                                     @click.outside="citizenResults = []"
-                                     class="absolute z-50 left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 max-h-56 overflow-y-auto divide-y divide-gray-50">
-                                    <template x-for="c in citizenResults" :key="c.id_no">
-                                        <button type="button"
-                                                @click="selectCitizen(c)"
-                                                class="w-full text-right p-2.5 hover:bg-teal-50/60 transition-colors flex items-center justify-between text-xs cursor-pointer">
-                                            <div>
-                                                <div class="font-bold text-gray-800" x-text="c.name"></div>
-                                                <div class="font-mono text-gray-400 text-[10px]" x-text="c.id_no"></div>
-                                            </div>
-                                            <span class="text-[10px] bg-teal-100/70 text-teal-700 px-2 py-0.5 rounded font-bold">تحديد</span>
-                                        </button>
-                                    </template>
-                                </div>
+
+                                <button type="button"
+                                        onclick="window.openCitizenModal({
+                                            title: 'تسجيل مواطن جديد لصاحب الحرفة',
+                                            onSuccess: function(c) {
+                                                document.getElementById('id_card').value = c.id_no || '';
+                                                document.getElementById('owner_name').value = c.name || '';
+                                                const mobileInput = document.getElementById('job_mobile');
+                                                if (mobileInput) mobileInput.value = c.mobile || c.telephone || '';
+                                            }
+                                        })"
+                                        class="text-xs text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer shadow-2xs">
+                                    <x-heroicon-s-user-plus class="w-4 h-4 text-teal-600" />
+                                    <span>إضافة مواطن</span>
+                                </button>
                             </div>
                         </div>
 

@@ -1,18 +1,41 @@
 <x-customers-layout>
     <div class="space-y-6">
         
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-800">سجل المواطنين</h2>
-                <p class="text-gray-500 mt-1 text-sm">إدارة سجلات المواطنين والعملاء العامين والبحث في بياناتهم</p>
+        {{-- Header with Back Button and Actions --}}
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 mb-2">
+            <div class="flex items-center gap-3.5">
+                <a href="{{ route('customers.dashboard') }}"
+                   class="bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 p-2.5 rounded-2xl transition-all shadow-2xs shrink-0 flex items-center justify-center group"
+                   title="الرجوع للقائمة الرئيسية">
+                    <x-heroicon-o-arrow-right class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform text-teal-700" />
+                </a>
+                <div>
+                    <div class="flex items-center gap-2 mb-0.5">
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-teal-50 text-teal-700 border border-teal-200">
+                            سجل المواطنين الموحد
+                        </span>
+                        <span class="text-xs text-gray-400">بلدية بيت حانون</span>
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">سجل المواطنين</h2>
+                    <p class="text-xs text-gray-500 mt-0.5 font-medium">إدارة ومتابعة بيانات المواطنين والعملاء العامين في النظام الموحد</p>
+                </div>
             </div>
-            @if(auth()->user()->can('Create-Client') || auth()->user()->can('bhm.subscriptions.edit') || auth()->user()->can('Read-Subscriptions'))
-            <a href="{{ route('customers.citizens.create') }}"
-               class="inline-flex items-center gap-2 bg-orange hover:bg-orange-dark text-white font-bold py-2.5 px-5 rounded-xl shadow-sm transition-all text-sm shrink-0">
-                <x-heroicon-o-user-plus class="w-4 h-4" />
-                <span>إضافة مواطن جديد</span>
-            </a>
-            @endif
+
+            <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+                <a href="{{ route('customers.dashboard') }}"
+                   class="inline-flex items-center gap-2 text-xs font-bold text-slate-700 bg-gray-100 hover:bg-gray-200 px-4 py-2.5 rounded-xl transition-all shadow-2xs border border-gray-200/60">
+                    <x-heroicon-s-squares-2x2 class="w-4 h-4 text-teal-700" />
+                    <span>الرجوع للقائمة الرئيسية</span>
+                </a>
+
+                @if(auth()->user()->can('Create-Client') || auth()->user()->can('bhm.subscriptions.edit') || auth()->user()->can('Read-Subscriptions'))
+                <a href="{{ route('customers.citizens.create') }}"
+                   class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all text-xs shrink-0">
+                    <x-heroicon-s-user-plus class="w-4 h-4" />
+                    <span>إضافة مواطن جديد</span>
+                </a>
+                @endif
+            </div>
         </div>
 
         {{-- Flash Alerts --}}
@@ -83,16 +106,25 @@
                     </thead>
                     <tbody class="divide-y divide-gray-50">
                         @forelse($data as $cus)
-                        <tr class="hover:bg-blue-50/30 transition-colors group">
-                            <td class="px-5 py-3 font-mono text-gray-800 font-semibold">{{ $cus->id_no ?? '-' }}</td>
-                            <td class="px-5 py-3 text-navy-dark font-medium">{{ $cus->name ?? '-' }}</td>
+                        <tr class="hover:bg-blue-50/30 transition-colors group cursor-pointer" onclick="if(!event.target.closest('a, button')) window.open('{{ route('customers.citizens.show', $cus->id) }}', '_blank')">
+                            <td class="px-5 py-3 font-mono text-gray-800 font-semibold">
+                                <a href="{{ route('customers.citizens.show', $cus->id) }}" target="_blank" class="hover:text-primary hover:underline">
+                                    {{ $cus->id_no ?? '-' }}
+                                </a>
+                            </td>
+                            <td class="px-5 py-3 text-navy-dark font-bold">
+                                <a href="{{ route('customers.citizens.show', $cus->id) }}" target="_blank" class="text-teal-800 hover:text-teal-950 hover:underline inline-flex items-center gap-1.5 font-bold">
+                                    <span>{{ $cus->name ?? '-' }}</span>
+                                    <x-heroicon-m-arrow-top-right-on-square class="w-3.5 h-3.5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </a>
+                            </td>
                             <td class="px-5 py-3 text-gray-600" dir="ltr">{{ $cus->mobile ?? $cus->telephone ?? '-' }}</td>
                             <td class="px-5 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <a href="{{ route('customers.show', $cus->id) }}" class="inline-flex items-center justify-center text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-lg transition-colors" title="عرض السجل">
+                                    <a href="{{ route('customers.citizens.show', $cus->id) }}" target="_blank" class="inline-flex items-center justify-center text-teal-600 hover:text-teal-800 bg-teal-50 hover:bg-teal-100 p-1.5 rounded-lg transition-colors shadow-2xs" title="عرض ملف المواطن المتكامل (في صفحة جديدة)">
                                         <x-heroicon-o-eye class="w-4 h-4" />
                                     </a>
-                                    @if(auth()->user()->can('Update-Client') || auth()->user()->can('bhm.subscriptions.edit') || auth()->user()->can('Read-Subscriptions'))
+                                    @if(auth()->user()->can('Update-Citizen') || auth()->user()->can('Update-Client') || auth()->user()->can('bhm.subscriptions.edit'))
                                     <a href="{{ route('customers.citizens.edit', $cus->id) }}" class="inline-flex items-center justify-center text-orange hover:text-orange-dark bg-orange/10 hover:bg-orange/20 p-1.5 rounded-lg transition-colors" title="تعديل بيانات المواطن">
                                         <x-heroicon-o-pencil-square class="w-4 h-4" />
                                     </a>

@@ -992,9 +992,27 @@
 
                     {{-- Tab 5: Initial Owner & Taxpayer (Optional during creation) --}}
                     <div x-show="tab === 'owner'" class="space-y-6" style="display: none;">
-                        <div class="p-4 bg-orange/5 border border-orange/20 rounded-2xl flex items-center gap-3 text-xs text-orange-900 font-medium">
-                            <x-heroicon-s-information-circle class="w-5 h-5 text-orange shrink-0" />
-                            <span>يمكنك تحديد بيانات المالك الرئيسي أو المكلف الآن لربطه مباشرة بالمبنى، أو تركه فارغاً وإضافته لاحقاً من صفحة تفاصيل المبنى.</span>
+                        <div class="p-4 bg-orange/5 border border-orange/20 rounded-2xl flex items-center justify-between gap-3 text-xs text-orange-900 font-medium">
+                            <div class="flex items-center gap-3">
+                                <x-heroicon-s-information-circle class="w-5 h-5 text-orange shrink-0" />
+                                <span>يمكنك تحديد بيانات المالك الرئيسي أو المكلف الآن لربطه مباشرة بالمبنى، أو تركه فارغاً وإضافته لاحقاً من صفحة تفاصيل المبنى.</span>
+                            </div>
+                            <button type="button" onclick="window.openCitizenModal({
+                                title: 'تسجيل / اختيار مواطن من السجل الموحد للمالك',
+                                onSuccess: function(c) {
+                                    document.getElementById('owner_id_card').value = c.id_no || '';
+                                    const parts = (c.name || '').trim().split(/\s+/);
+                                    document.getElementById('owner_first_name').value = parts[0] || '';
+                                    document.getElementById('owner_second_name').value = parts[1] || '';
+                                    document.getElementById('owner_third_name').value = parts[2] || '';
+                                    document.getElementById('owner_sur_name').value = parts.slice(3).join(' ') || (parts[3] || '');
+                                    const phoneEl = document.getElementById('owner_phone');
+                                    if (phoneEl) phoneEl.value = c.mobile || c.telephone || '';
+                                }
+                            })" class="shrink-0 text-xs text-teal-800 bg-white hover:bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition shadow-2xs cursor-pointer">
+                                <x-heroicon-s-user-plus class="w-4 h-4 text-teal-600" />
+                                <span>اختيار أو إضافة من سجل المواطنين</span>
+                            </button>
                         </div>
 
                         <div class="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/70 space-y-4">

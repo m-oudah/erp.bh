@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Buildings\BhmLicenseForm;
 use App\Models\Buildings\BhmBuildingOwner;
+use App\Models\Buildings\BhmCustomer;
 use Illuminate\Support\Facades\DB;
 
 class BhmLicenseController extends Controller
@@ -46,15 +47,16 @@ class BhmLicenseController extends Controller
             ]);
         }
 
-        $query = DB::table('bhm_clients');
+        $query = BhmCustomer::query();
         $words = array_filter(preg_split('/\s+/', $q));
         $normalized = str_replace(['أ', 'إ', 'آ'], 'ا', $q);
 
         $query->where(function ($sub) use ($q, $normalized, $words) {
-            $sub->where('id_number', $q)
-                ->orWhere('id_number', 'like', "{$q}%")
-                ->orWhere('id_number', 'like', "%{$q}%")
-                ->orWhere('mobile', 'like', "%{$q}%");
+            $sub->where('id_no', $q)
+                ->orWhere('id_no', 'like', "{$q}%")
+                ->orWhere('id_no', 'like', "%{$q}%")
+                ->orWhere('mobile', 'like', "%{$q}%")
+                ->orWhere('telephone', 'like', "%{$q}%");
 
             if (count($words) > 1) {
                 $sub->orWhere(function ($wordSub) use ($words) {
@@ -79,8 +81,9 @@ class BhmLicenseController extends Controller
             'data' => $citizens->map(fn($c) => [
                 'id' => $c->id,
                 'name' => $c->name,
-                'id_number' => $c->id_number,
-                'mobile' => $c->mobile ?? '',
+                'id_number' => $c->id_no,
+                'id_no' => $c->id_no,
+                'mobile' => $c->mobile ?: $c->telephone ?: '',
             ]),
         ]);
     }
@@ -97,11 +100,11 @@ class BhmLicenseController extends Controller
         $clientId = $request->input('client_id');
         $idNumber = trim($request->input('id_number', ''));
 
-        $clientQuery = DB::table('bhm_clients');
+        $clientQuery = BhmCustomer::query();
         if ($clientId) {
             $clientQuery->where('id', $clientId);
         } elseif ($idNumber) {
-            $clientQuery->where('id_number', $idNumber);
+            $clientQuery->where('id_no', $idNumber);
         } else {
             return response()->json([
                 'status' => 'error',
@@ -135,7 +138,7 @@ class BhmLicenseController extends Controller
             'second_name' => $secondName,
             'third_name' => $thirdName,
             'sur_name' => $surName,
-            'id_card' => $client->id_number,
+            'id_card' => $client->id_no,
             'phone_number' => $client->mobile,
         ];
 
@@ -155,7 +158,8 @@ class BhmLicenseController extends Controller
             'message' => 'تم ربط بيانات مقدم الطلب بالمواطن بنجاح.',
             'citizen' => [
                 'name' => $client->name,
-                'id_number' => $client->id_number,
+                'id_number' => $client->id_no,
+                'id_no' => $client->id_no,
                 'mobile' => $client->mobile,
             ],
         ]);

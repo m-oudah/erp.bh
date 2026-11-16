@@ -56,6 +56,11 @@ class BhmTransaction extends Model
         return $this->hasMany(BhmTransactionAuditLog::class, 'transaction_id');
     }
 
+    public function draftTransaction(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(BhmDraftTransaction::class, 'transaction_id');
+    }
+
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {

@@ -2,6 +2,7 @@
 
 namespace App\Models\Correspondence;
 
+use App\Models\HR\Employee;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,9 +17,12 @@ class Department extends Model
     protected $table = 'departments';
 
     protected $fillable = [
+        'parent_id',
         'name',
+        'type',
         'code',
         'manager_id',
+        'manager_title',
         'description',
         'is_active',
         'order',
@@ -28,6 +32,24 @@ class Department extends Model
         'is_active' => 'boolean',
         'order' => 'integer',
     ];
+
+    public const TYPES = [
+        'council' => 'المجلس البلدي / رئاسة البلدية',
+        'directorate' => 'دائرة إدارية رئيسية',
+        'department' => 'قسم',
+        'section' => 'شعبة',
+        'unit' => 'وحدة إدارية / مكتب',
+    ];
+
+    public function parent()
+    {
+        return $this->belongsTo(Department::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Department::class, 'parent_id')->orderBy('order')->orderBy('name');
+    }
 
     public function manager()
     {
@@ -44,9 +66,19 @@ class Department extends Model
         return $this->hasMany(User::class, 'department_id');
     }
 
+    public function hrEmployees()
+    {
+        return $this->hasMany(Employee::class, 'department_id');
+    }
+
     public function memos()
     {
         return $this->hasMany(InternalMemo::class, 'target_department_id');
+    }
+
+    public function getTypeArabicAttribute(): string
+    {
+        return self::TYPES[$this->type] ?? ($this->type ?? 'قسم');
     }
 
     public function getActivitylogOptions(): LogOptions

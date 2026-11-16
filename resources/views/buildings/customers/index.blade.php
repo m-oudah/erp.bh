@@ -1,10 +1,32 @@
 <x-customers-layout>
     <div class="space-y-6">
         
-        <div class="flex items-center justify-between mb-2">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-800">الاشتراكات</h2>
-                <p class="text-gray-500 mt-1 text-sm">إدارة اشتراكات الخدمات (مياه/حرف/أخرى) والبحث فيها</p>
+        {{-- Header with Back Button --}}
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 mb-2">
+            <div class="flex items-center gap-3.5">
+                <a href="{{ route('customers.dashboard') }}"
+                   class="bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 p-2.5 rounded-2xl transition-all shadow-2xs shrink-0 flex items-center justify-center group"
+                   title="الرجوع للقائمة الرئيسية">
+                    <x-heroicon-o-arrow-right class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform text-orange" />
+                </a>
+                <div>
+                    <div class="flex items-center gap-2 mb-0.5">
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-orange/10 text-orange-dark border border-orange/20">
+                            نظام المشتركين
+                        </span>
+                        <span class="text-xs text-gray-400">بلدية بيت حانون</span>
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">سجل الاشتراكات وعقود الخدمات</h2>
+                    <p class="text-xs text-gray-500 mt-0.5 font-medium">استعراض وإدارة اشتراكات المياه، الوحدات المستفيدة، والجباية</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="{{ route('customers.dashboard') }}"
+                   class="inline-flex items-center gap-2 text-xs font-bold text-slate-700 bg-gray-100 hover:bg-gray-200 px-4 py-2.5 rounded-xl transition-all shadow-2xs border border-gray-200/60">
+                    <x-heroicon-s-squares-2x2 class="w-4 h-4 text-orange" />
+                    <span>الرجوع للقائمة الرئيسية</span>
+                </a>
             </div>
         </div>
 

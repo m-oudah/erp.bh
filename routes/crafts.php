@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Buildings\BhmEconomicalController;
 
-Route::middleware(['auth', 'verified'])->prefix('crafts')->name('crafts.')->group(function () {
+Route::middleware(['auth', 'verified', 'module.access:crafts'])->prefix('crafts')->name('crafts.')->group(function () {
     Route::get('/', function () {
         $e = \App\Models\Buildings\BhmEconomical::query();
 

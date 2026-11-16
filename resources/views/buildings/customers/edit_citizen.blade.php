@@ -4,7 +4,7 @@
         {{-- Page Header --}}
         <div class="flex items-start justify-between gap-4 border-b border-gray-100 pb-5">
             <div class="flex items-center gap-4">
-                <a href="{{ route('customers.show', $customer->id) }}"
+                <a href="{{ route('customers.citizens.show', $customer->id) }}"
                    class="bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 p-2.5 rounded-2xl transition-colors shrink-0"
                    title="الرجوع إلى ملف المواطن">
                     <x-heroicon-o-arrow-right class="w-5 h-5" />
@@ -29,7 +29,7 @@
             </div>
             
             <div>
-                <a href="{{ route('customers.show', $customer->id) }}"
+                <a href="{{ route('customers.citizens.show', $customer->id) }}"
                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold rounded-xl text-xs border border-gray-200 transition-colors">
                     <x-heroicon-o-eye class="w-4 h-4 text-gray-500" />
                     عرض الملف

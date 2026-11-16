@@ -6,7 +6,7 @@ use App\Http\Controllers\Transactions\BhmTransactionTypeController;
 use App\Http\Controllers\Transactions\BhmDraftTransactionController;
 use App\Http\Controllers\Transactions\BhmDepartmentResponseController;
 
-Route::middleware(['auth'])->prefix('transactions')->name('transactions.')->group(function () {
+Route::middleware(['auth', 'module.access:transactions'])->prefix('transactions')->name('transactions.')->group(function () {
     
     // Types (Settings)
     Route::resource('types', BhmTransactionTypeController::class)->except(['create', 'show', 'edit']);

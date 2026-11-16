@@ -1,28 +1,41 @@
 <x-transactions-layout>
-    <div class="max-w-6xl mx-auto space-y-4">
+    <div class="w-full space-y-4">
         <form action="{{ route('transactions.store') }}" method="POST" class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden" id="complaint-form-root" enctype="multipart/form-data">
             @csrf
 
-            {{-- Header Banner --}}
-            <div class="bg-gradient-to-r from-teal-800 via-primary to-primary text-white p-6 shadow-sm">
-                <div class="flex items-start justify-between gap-4">
-                    <div class="flex items-start gap-3.5">
-                        <div class="bg-white/15 p-2.5 rounded-2xl shrink-0 backdrop-blur-xs">
-                            <svg class="w-6 h-6 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                        </div>
+            {{-- Header Action Bar --}}
+            <div class="bg-white border-b border-gray-100 p-5 sm:p-6 shadow-2xs">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5">
+                        <a href="{{ route('transactions.index') }}"
+                           class="bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 p-2.5 rounded-2xl transition-all border border-gray-200/60 shadow-2xs shrink-0 flex items-center justify-center group"
+                           title="الرجوع لقائمة المعاملات">
+                            <x-heroicon-o-arrow-right class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform text-secondary" />
+                        </a>
                         <div>
-                            <h2 class="text-xl font-black leading-snug">تسجيل معاملة رسمية جديدة</h2>
-                            <p class="text-xs text-teal-100 mt-1 font-medium">مكتب قلم الجمهور - بلدية بيت حانون</p>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-teal-50 text-teal-800 border border-teal-200">
+                                    مكتب قلم الجمهور
+                                </span>
+                                <span class="text-xs text-gray-400">بلدية بيت حانون</span>
+                            </div>
+                            <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
+                                تسجيل معاملة رسمية جديدة
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-0.5 font-medium">
+                                بوابة المعاملات والشكاوى وخدمة المواطنين الموحدة
+                            </p>
                         </div>
                     </div>
-                    <a href="{{ route('transactions.index') }}" class="hidden sm:inline-flex shrink-0 items-center gap-1.5 text-xs font-bold text-slate-700 bg-white/90 hover:bg-white px-4 py-2 rounded-xl transition-all shadow-sm">
-                        <span>العودة للقائمة</span>
-                        <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
-                        </svg>
-                    </a>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <a href="{{ route('transactions.index') }}"
+                           class="inline-flex items-center gap-2 text-xs font-bold text-slate-700 bg-gray-100 hover:bg-gray-200 px-4 py-2.5 rounded-xl transition-all shadow-2xs border border-gray-200/60">
+                            <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                            </svg>
+                            <span>الرجوع لقائمة المعاملات</span>
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -58,12 +71,12 @@
                             </svg>
                             <span>أولاً: بيانات مقدم الطلب (المواطن)</span>
                         </h3>
-                        <a href="{{ route('customers.citizens.create') }}" target="_blank" class="text-xs text-secondary hover:text-secondary-dark flex items-center gap-1 font-bold cursor-pointer transition-colors">
+                        <button type="button" onclick="window.openCitizenModal({ title: 'تسجيل مواطن جديد في قلم الجمهور', onSuccess: function(c) { document.getElementById('citizen_id_input').value = c.id_no; document.getElementById('search_btn').click(); } })" class="text-xs text-secondary hover:text-secondary-dark flex items-center gap-1 font-bold cursor-pointer transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                             </svg>
                             <span>إضافة مواطن جديد</span>
-                        </a>
+                        </button>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -169,14 +182,123 @@
                         <span>ثالثاً: تفاصيل المعاملة والمستندات</span>
                     </h3>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-800 mb-1.5">نوع المعاملة المطلوب تسجيلها في النظام <span class="text-rose-500">*</span></label>
-                        <select name="transaction_type_id" id="transaction_type_id" required class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-300 bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                    {{-- Searchable Transaction Type Field --}}
+                    <div x-data="searchableTransactionTypeSelect({
+                        items: [
+                            @foreach($transactionTypes as $type)
+                            {
+                                id: '{{ $type->id }}',
+                                name: @json($type->name),
+                                sla: '{{ $type->sla_days }}'
+                            },
+                            @endforeach
+                        ],
+                        selectedId: '{{ old('transaction_type_id', '') }}'
+                    })" class="relative">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-bold text-slate-800">
+                                نوع المعاملة المطلوب تسجيلها في النظام <span class="text-rose-500">*</span>
+                            </label>
+                            <span class="text-[10px] text-slate-400 font-medium">يمكنك البحث بكتابة اسم المعاملة أو الخدمة</span>
+                        </div>
+
+                        {{-- Hidden Select for Form Submission & Native Change Event --}}
+                        <select name="transaction_type_id" id="transaction_type_id" required class="absolute opacity-0 pointer-events-none w-0 h-0" tabindex="-1">
                             <option value="">اختر نوع المعاملة</option>
                             @foreach($transactionTypes as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }} ({{ $type->sla_days }} أيام SLA)</option>
+                                <option value="{{ $type->id }}" {{ old('transaction_type_id') == $type->id ? 'selected' : '' }}>
+                                    {{ $type->name }} ({{ $type->sla_days }} أيام SLA)
+                                </option>
                             @endforeach
                         </select>
+
+                        {{-- Trigger Button --}}
+                        <button type="button"
+                                @click="toggle()"
+                                :class="{'ring-2 ring-primary/20 border-primary': open, 'border-slate-300': !open}"
+                                class="w-full text-right bg-white border rounded-xl px-3.5 py-3 text-xs font-bold flex items-center justify-between gap-2 shadow-2xs hover:border-primary transition-all cursor-pointer">
+                            <div class="flex items-center gap-2 truncate">
+                                <svg class="w-4 h-4 text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <span x-text="selectedLabel || 'ابحث أو اختر نوع المعاملة من القائمة...'" :class="selectedId ? 'text-slate-900 font-black text-sm' : 'text-slate-400 font-medium'"></span>
+                                <template x-if="selectedSla">
+                                    <span class="bg-teal-50 text-teal-800 border border-teal-200 text-[10px] px-2.5 py-0.5 rounded-full font-extrabold mr-1" x-text="selectedSla + ' أيام SLA'"></span>
+                                </template>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0 text-slate-400">
+                                <template x-if="selectedId">
+                                    <span @click.stop="clear()" class="p-1 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-colors" title="إلغاء الاختيار">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </span>
+                                </template>
+                                <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="{'rotate-180 text-primary': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+                        </button>
+
+                        {{-- Dropdown Menu --}}
+                        <div x-show="open"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-98"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-98"
+                             @click.away="open = false"
+                             class="absolute z-50 mt-1.5 w-full bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden"
+                             style="display: none;">
+                            
+                            {{-- Search Input Bar --}}
+                            <div class="p-2.5 border-b border-gray-100 bg-gray-50/80">
+                                <div class="relative">
+                                    <input type="text"
+                                           x-ref="searchInput"
+                                           x-model="search"
+                                           @keydown.escape="open = false"
+                                           placeholder="اكتب للبحث السريع في أنواع المعاملات والشكاوى..."
+                                           class="w-full text-xs font-bold pr-8 pl-3 py-2 bg-white border border-gray-300 rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 placeholder-gray-400" />
+                                    <svg class="w-4 h-4 text-gray-400 absolute right-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
+                                    <template x-if="search">
+                                        <button type="button" @click="search = ''; $refs.searchInput.focus()" class="absolute left-2.5 top-2.5 text-gray-400 hover:text-gray-600">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+
+                            {{-- Options List --}}
+                            <div class="max-h-64 overflow-y-auto p-1.5 space-y-0.5 divide-y divide-gray-50 text-xs">
+                                <template x-for="item in filteredItems" :key="item.id">
+                                    <div @click="select(item)"
+                                         :class="{'bg-teal-50 text-teal-900 font-black border border-teal-200': selectedId == item.id, 'hover:bg-gray-50 text-slate-700': selectedId != item.id}"
+                                         class="px-3 py-2.5 rounded-xl cursor-pointer flex items-center justify-between gap-2 transition-colors">
+                                        <div class="flex items-center gap-2">
+                                            <svg x-show="selectedId == item.id" class="w-4 h-4 text-teal-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                            <span x-text="item.name" class="font-bold"></span>
+                                        </div>
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                                              :class="selectedId == item.id ? 'bg-teal-700 text-white' : 'bg-gray-100 text-gray-600'"
+                                              x-text="item.sla ? item.sla + ' أيام SLA' : '-'"></span>
+                                    </div>
+                                </template>
+
+                                <template x-if="filteredItems.length === 0">
+                                    <div class="py-6 text-center text-xs text-gray-400 font-bold">
+                                        لا توجد أنواع معاملات تطابق: "<span x-text="search" class="text-rose-500"></span>"
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
                     </div>
 
                     <div>
@@ -253,7 +375,101 @@
 
     @push('scripts')
     <script>
+        window.searchableTransactionTypeSelect = function(config) {
+            return {
+                open: false,
+                search: '',
+                selectedId: config.selectedId || '',
+                selectedLabel: '',
+                selectedSla: '',
+                items: config.items || [],
+
+                init() {
+                    if (this.selectedId) {
+                        const found = this.items.find(i => String(i.id) === String(this.selectedId));
+                        if (found) {
+                            this.selectedLabel = found.name;
+                            this.selectedSla = found.sla;
+                        }
+                    }
+                },
+
+                get filteredItems() {
+                    if (!this.search || !this.search.trim()) {
+                        return this.items;
+                    }
+                    const normalize = (str) => {
+                        return (str || '')
+                            .toLowerCase()
+                            .replace(/[أإآ]/g, 'ا')
+                            .replace(/ة/g, 'ه')
+                            .replace(/ى/g, 'ي')
+                            .trim();
+                    };
+                    const term = normalize(this.search);
+                    return this.items.filter(item => {
+                        return normalize(item.name).includes(term) || String(item.sla).includes(term);
+                    });
+                },
+
+                toggle() {
+                    this.open = !this.open;
+                    if (this.open) {
+                        this.$nextTick(() => {
+                            if (this.$refs.searchInput) {
+                                this.$refs.searchInput.focus();
+                            }
+                        });
+                    }
+                },
+
+                select(item) {
+                    this.selectedId = item.id;
+                    this.selectedLabel = item.name;
+                    this.selectedSla = item.sla;
+                    this.open = false;
+                    this.search = '';
+
+                    const selectEl = document.getElementById('transaction_type_id');
+                    if (selectEl) {
+                        selectEl.value = item.id;
+                        selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                },
+
+                clear() {
+                    this.selectedId = '';
+                    this.selectedLabel = '';
+                    this.selectedSla = '';
+                    this.search = '';
+
+                    const selectEl = document.getElementById('transaction_type_id');
+                    if (selectEl) {
+                        selectEl.value = '';
+                        selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+            };
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
+            const complaintForm = document.getElementById('complaint-form-root');
+            if (complaintForm) {
+                complaintForm.addEventListener('submit', function(e) {
+                    const sel = document.getElementById('transaction_type_id');
+                    if (!sel || !sel.value) {
+                        e.preventDefault();
+                        alert('يرجى اختيار نوع المعاملة من القائمة أولاً.');
+                        const triggerBtn = document.querySelector('[x-data*="searchableTransactionTypeSelect"] button');
+                        if (triggerBtn) {
+                            triggerBtn.click();
+                            triggerBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        return false;
+                    }
+                });
+            }
+
             const transactionTypesDepts = {
                 @foreach($transactionTypes as $type)
                     "{{ $type->id }}": @json($type->default_depts ?? []),

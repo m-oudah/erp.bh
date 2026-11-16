@@ -25,10 +25,12 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Archive Module Routes
-    Route::prefix('archive')->name('archive.')->group(function () {
+    Route::prefix('archive')->name('archive.')->middleware('module.access:archive')->group(function () {
         Route::get('/', [\App\Http\Controllers\Archive\ArchiveController::class, 'index'])->name('index');
         
         // Reports Routes
@@ -52,7 +54,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // System Settings Routes
-    Route::prefix('settings')->name('settings.')->group(function () {
+    Route::prefix('settings')->name('settings.')->middleware('module.access:settings')->group(function () {
         Route::get('/', [\App\Http\Controllers\Settings\SystemSettingsController::class, 'index'])->name('index');
 
         // General Settings & Database Backup
@@ -66,6 +68,14 @@ Route::middleware('auth')->group(function () {
 
         // Users Management
         Route::resource('users', \App\Http\Controllers\Settings\UserManagementController::class)->except(['show']);
+
+        // HR & Payroll Settings (إعدادات شئون الموظفين والرواتب)
+        Route::prefix('hr')->name('hr.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Settings\HRSettingsController::class, 'index'])->name('index');
+            Route::post('grades', [\App\Http\Controllers\Settings\HRSettingsController::class, 'store'])->name('grades.store');
+            Route::put('grades/{id}', [\App\Http\Controllers\Settings\HRSettingsController::class, 'update'])->name('grades.update');
+            Route::delete('grades/{id}', [\App\Http\Controllers\Settings\HRSettingsController::class, 'destroy'])->name('grades.destroy');
+        });
 
         // Archive Module Settings
         Route::prefix('archive')->name('archive.')->group(function () {
@@ -97,3 +107,4 @@ require __DIR__.'/customers.php';
 require __DIR__.'/transactions.php';
 require __DIR__.'/correspondence.php';
 require __DIR__.'/portal.php';
+require __DIR__.'/hr.php';

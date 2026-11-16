@@ -442,7 +442,7 @@
                             <p class="text-sm text-gray-500">الأشخاص المسجلين كمالكين لهذا المبنى أو وحداته</p>
                         </div>
                         @can('bhm.buildings.owners.manage')
-                        <button class="text-sm text-white font-bold px-4 py-2 bg-gray-900 hover:bg-black rounded-xl transition-colors inline-flex items-center gap-2 shadow-sm hover:shadow-md">
+                        <button type="button" onclick="window.openCitizenModal({ buildingId: {{ $building->id }}, title: 'إضافة مالك جديد للمبنى ({{ $building->building_number }})', onSuccess: function() { window.location.reload(); } })" class="text-sm text-white font-bold px-4 py-2 bg-gray-900 hover:bg-black rounded-xl transition-colors inline-flex items-center gap-2 shadow-sm hover:shadow-md cursor-pointer">
                             <x-heroicon-o-plus class="w-4 h-4" /> إضافة مالك
                         </button>
                         @endcan
@@ -457,7 +457,7 @@
                                     <th class="px-6 py-4 text-black font-bold">رقم الهوية</th>
                                     <th class="px-6 py-4 text-black font-bold">رقم الهاتف</th>
                                     <th class="px-6 py-4 text-center text-black font-bold">الوحدات المملوكة</th>
-                                    <th class="px-6 py-4 text-center text-black font-bold">إجراءات</th>
+                                    <th class="px-6 py-4 text-center text-black font-bold">ملف المواطن</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white">
@@ -468,7 +468,9 @@
                                             <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">
                                                 {{ mb_substr($owner->full_name, 0, 1) }}
                                             </div>
-                                            <span class="font-bold text-gray-800">{{ $owner->full_name }}</span>
+                                            <a href="{{ route('customers.citizens.index', ['search' => $owner->id_card]) }}" target="_blank" class="font-bold text-gray-800 hover:text-teal-700 hover:underline">
+                                                {{ $owner->full_name }}
+                                            </a>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 font-mono font-medium text-gray-600">{{ $owner->id_card }}</td>
@@ -479,9 +481,10 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-center">
-                                        <button class="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded-lg hover:bg-blue-50 opacity-0 group-hover:opacity-100">
-                                            <x-heroicon-o-eye class="w-5 h-5" />
-                                        </button>
+                                        <a href="{{ route('customers.citizens.index', ['search' => $owner->id_card]) }}" target="_blank" class="text-teal-600 hover:text-teal-800 transition-colors p-1.5 rounded-lg hover:bg-teal-50 inline-flex items-center gap-1 text-xs font-bold" title="عرض ملف المواطن في السجل الموحد">
+                                            <x-heroicon-o-eye class="w-4 h-4" />
+                                            <span>عرض الملف</span>
+                                        </a>
                                     </td>
                                 </tr>
                                 @endforeach
@@ -496,7 +499,7 @@
                         <h4 class="text-lg font-bold text-gray-700 mb-1">لا يوجد ملاك مسجلون</h4>
                         <p class="text-sm text-gray-500 mb-5">لم يتم إضافة أي ملاك لهذا المبنى حتى الآن.</p>
                         @can('bhm.buildings.owners.manage')
-                        <button class="text-sm text-gray-700 font-bold px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-all shadow-sm">
+                        <button type="button" onclick="window.openCitizenModal({ buildingId: {{ $building->id }}, title: 'إضافة مالك جديد للمبنى ({{ $building->building_number }})', onSuccess: function() { window.location.reload(); } })" class="text-sm text-gray-700 font-bold px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-all shadow-sm cursor-pointer">
                             إضافة المالك الأول
                         </button>
                         @endcan

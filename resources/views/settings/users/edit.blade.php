@@ -162,13 +162,23 @@
                                                     </label>
 
                                                     <!-- Subgroup Options -->
-                                                    <div class="space-y-2.5 pr-1 max-h-60 overflow-y-auto">
+                                                    <div class="space-y-2.5 pr-1 max-h-64 overflow-y-auto">
                                                         @foreach($permissions as $perm)
-                                                            <label class="flex items-center gap-2.5 cursor-pointer group text-xs">
+                                                            @php
+                                                                $label = $permissionLabels[$perm->name] ?? null;
+                                                            @endphp
+                                                            <label class="flex items-start gap-2.5 cursor-pointer group text-xs p-1.5 rounded-lg hover:bg-white transition-colors">
                                                                 <input type="checkbox" name="permissions[]" value="{{ $perm->name }}" 
                                                                     {{ $user->hasPermissionTo($perm->name) ? 'checked' : '' }}
-                                                                    class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer mod-{{ md5($mainModule) }} perm-{{ md5($mainModule . $subgroupName) }}">
-                                                                <span class="font-medium text-gray-700 group-hover:text-primary transition-colors font-mono">{{ $perm->name }}</span>
+                                                                    class="w-4 h-4 mt-0.5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer mod-{{ md5($mainModule) }} perm-{{ md5($mainModule . $subgroupName) }}">
+                                                                <div class="flex flex-col">
+                                                                    <span class="font-bold text-gray-800 group-hover:text-primary transition-colors text-xs leading-snug">
+                                                                        {{ $label ?? $perm->name }}
+                                                                    </span>
+                                                                    @if($label)
+                                                                        <span class="text-[10px] text-gray-400 font-mono mt-0.5" dir="ltr">{{ $perm->name }}</span>
+                                                                    @endif
+                                                                </div>
                                                             </label>
                                                         @endforeach
                                                     </div>
