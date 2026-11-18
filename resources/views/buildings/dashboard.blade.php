@@ -157,6 +157,26 @@
                         <span class="text-xs font-extrabold text-sky-900 bg-sky-100/80 px-1.5 py-0.5 rounded-md">{{ number_format($stats['adding_new_floor']) }}</span>
                     </a>
                 </div>
+
+                {{-- Quick Link to Units --}}
+                <a href="{{ route('buildings.units.index') }}"
+                   class="flex items-center justify-between p-4 bg-gradient-to-l from-indigo-50 to-blue-50/50 hover:from-indigo-100 hover:to-blue-100/70 border border-blue-200/80 rounded-2xl transition-all cursor-pointer group shadow-2xs hover:-translate-y-0.5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-2xs">
+                            <x-heroicon-s-squares-plus class="w-5 h-5" />
+                        </div>
+                        <div>
+                            <div class="text-xs font-black text-gray-900 group-hover:text-blue-900">سجل الوحدات العقارية (bhm_units)</div>
+                            <div class="text-[11px] text-gray-500 font-medium">استعلام وبحث وإدارة وتعديل الوحدات واستخداماتها وملاكها</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-black text-blue-800 bg-white px-2.5 py-1 rounded-lg border border-blue-200 shadow-2xs">
+                            {{ number_format($stats['total_units'] ?? 0) }} وحدة
+                        </span>
+                        <x-heroicon-s-chevron-left class="w-4 h-4 text-blue-600 group-hover:-translate-x-1 transition-transform" />
+                    </div>
+                </a>
             </div>
 
             {{-- ==================== LEFT COLUMN: LICENSES (ملخص طلبات التراخيص) ==================== --}}

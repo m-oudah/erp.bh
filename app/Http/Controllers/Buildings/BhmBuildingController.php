@@ -16,6 +16,8 @@ use App\Models\Buildings\BhmBuildingMaterial;
 use App\Models\Buildings\BhmBuildingUse;
 use App\Models\Buildings\BhmAttachment;
 use App\Models\Buildings\BhmBuildFinancial;
+use App\Models\Buildings\BhmBuildingOwner;
+use App\Models\Buildings\BhmCustomer;
 use App\Models\ArchiveFile;
 use App\Models\ArchiveFileType;
 use Illuminate\Support\Facades\DB;
@@ -756,5 +758,332 @@ class BhmBuildingController extends Controller
 
         return redirect()->route('buildings.buildings.show', $building->id)
             ->with('success', 'تم حفظ وتحديث بيانات المبنى بنجاح.');
+    }
+
+    /**
+     * Search citizens in Unified Citizens Registry (bhm_customers) for building owners.
+     */
+    public function searchCitizens(Request $request)
+    {
+        $q = trim($request->input('q', $request->input('id_card', '')));
+
+        if (mb_strlen($q) < 2) {
+            return response()->json([
+                'status' => 'success',
+                'data' => [],
+            ]);
+        }
+
+        $query = BhmCustomer::query();
+        $words = array_filter(preg_split('/\s+/', $q));
+        $normalized = str_replace(['أ', 'إ', 'آ'], 'ا', $q);
+
+        $query->where(function ($sub) use ($q, $normalized, $words) {
+            $sub->where('id_no', $q)
+                ->orWhere('id_no', 'like', "{$q}%")
+                ->orWhere('id_no', 'like', "%{$q}%")
+                ->orWhere('mobile', 'like', "%{$q}%")
+                ->orWhere('telephone', 'like', "%{$q}%");
+
+            if (count($words) > 1) {
+                $sub->orWhere(function ($wordSub) use ($words) {
+                    foreach ($words as $w) {
+                        $normW = str_replace(['أ', 'إ', 'آ'], 'ا', $w);
+                        $wordSub->where(function ($wGroup) use ($w, $normW) {
+                            $wGroup->where('name', 'like', "%{$w}%")
+                                   ->orWhereRaw("REPLACE(REPLACE(REPLACE(name, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') LIKE ?", ["%{$normW}%"]);
+                        });
+                    }
+                });
+            } else {
+                $sub->orWhere('name', 'like', "%{$q}%")
+                    ->orWhereRaw("REPLACE(REPLACE(REPLACE(name, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') LIKE ?", ["%{$normalized}%"]);
+            }
+        });
+
+        $citizens = $query->orderByRaw("CASE WHEN id_no = ? THEN 0 WHEN id_no LIKE ? THEN 1 ELSE 2 END", [$q, "{$q}%"])
+            ->take(20)
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $citizens->map(function ($c) {
+                $nameParts = array_values(array_filter(preg_split('/\s+/', trim($c->name ?? ''))));
+                $firstName = $nameParts[0] ?? '';
+                $secondName = $nameParts[1] ?? '';
+                $thirdName = $nameParts[2] ?? '';
+                $surName = count($nameParts) > 3 ? implode(' ', array_slice($nameParts, 3)) : '';
+
+                return [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'id_card' => $c->id_no,
+                    'id_no' => $c->id_no,
+                    'first_name' => $firstName,
+                    'second_name' => $secondName,
+                    'third_name' => $thirdName,
+                    'sur_name' => $surName,
+                    'mobile' => $c->mobile ?: $c->telephone ?: '',
+                    'telephone' => $c->telephone ?: '',
+                    'address' => $c->address ?: '',
+                    'notes' => $c->notes ?: '',
+                ];
+            }),
+        ]);
+    }
+
+    /**
+     * Get owners list for a building.
+     */
+    public function getOwners($id)
+    {
+        $building = BhmBuilding::findOrFail($id);
+        $owners = $building->owners()->with('units')->orderBy('id', 'desc')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'owners' => $owners->map(fn($o) => [
+                'id' => $o->id,
+                'building_id' => $o->building_id,
+                'id_card' => $o->id_card,
+                'first_name' => $o->first_name,
+                'second_name' => $o->second_name,
+                'third_name' => $o->third_name,
+                'sur_name' => $o->sur_name,
+                'full_name' => $o->full_name,
+                'phone_number' => $o->phone_number,
+                'mokalaf' => (int) $o->mokalaf,
+                'is_approve' => (int) $o->is_approve,
+                'notes' => $o->notes,
+                'units_count' => $o->units->count(),
+                'created_at_human' => $o->created_at ? $o->created_at->format('Y-m-d') : null,
+            ]),
+        ]);
+    }
+
+    /**
+     * Store a new owner for a building and sync with Unified Citizen Registry.
+     */
+    public function storeOwner(Request $request, $id)
+    {
+        if (!auth()->user()->can('Update-Building') && !auth()->user()->can('bhm.buildings.edit')) {
+            return response()->json(['status' => 'error', 'message' => 'غير مصرح لك بإضافة مالك لهذا المبنى.'], 403);
+        }
+
+        $building = BhmBuilding::findOrFail($id);
+
+        $request->validate([
+            'id_card' => 'required|string|max:20',
+            'first_name' => 'nullable|string|max:100',
+            'second_name' => 'nullable|string|max:100',
+            'third_name' => 'nullable|string|max:100',
+            'sur_name' => 'nullable|string|max:100',
+            'phone_number' => 'nullable|string|max:30',
+            'mokalaf' => 'nullable|boolean',
+            'is_approve' => 'nullable|boolean',
+            'notes' => 'nullable|string|max:500',
+        ], [
+            'id_card.required' => 'رقم الهوية الوطنية مطلوب.',
+        ]);
+
+        $idCard = trim($request->input('id_card'));
+
+        // Check if owner already linked to this building
+        $existing = BhmBuildingOwner::where('building_id', $building->id)
+            ->where('id_card', $idCard)
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'هذا المالك مسجل مسبقاً في هذا المبنى (رقم الهوية: ' . $idCard . '). يمكنك تعديل بياناته بدلاً من إضافته مجدداً.',
+            ], 422);
+        }
+
+        $owner = BhmBuildingOwner::create([
+            'building_id' => $building->id,
+            'building_number' => $building->building_number,
+            'id_card' => $idCard,
+            'first_name' => $request->input('first_name'),
+            'second_name' => $request->input('second_name'),
+            'third_name' => $request->input('third_name'),
+            'sur_name' => $request->input('sur_name'),
+            'phone_number' => $request->input('phone_number') ?: '0',
+            'mokalaf' => $request->boolean('mokalaf') ? 1 : 0,
+            'is_approve' => $request->has('is_approve') ? ($request->boolean('is_approve') ? 1 : 0) : 1,
+            'notes' => $request->input('notes'),
+        ]);
+
+        // Sync with BhmCustomer (Unified Citizens Registry)
+        $fullName = trim(collect([
+            $owner->first_name,
+            $owner->second_name,
+            $owner->third_name,
+            $owner->sur_name,
+        ])->filter()->implode(' '));
+
+        if ($owner->id_card) {
+            BhmCustomer::updateOrCreate(
+                ['id_no' => $owner->id_card],
+                [
+                    'name' => $fullName ?: 'مالك عقار',
+                    'mobile' => $owner->phone_number ?: '',
+                ]
+            );
+        }
+
+        $ownerData = [
+            'id' => $owner->id,
+            'building_id' => $owner->building_id,
+            'id_card' => $owner->id_card,
+            'first_name' => $owner->first_name,
+            'second_name' => $owner->second_name,
+            'third_name' => $owner->third_name,
+            'sur_name' => $owner->sur_name,
+            'full_name' => $owner->full_name,
+            'phone_number' => $owner->phone_number,
+            'mokalaf' => (int) $owner->mokalaf,
+            'is_approve' => (int) $owner->is_approve,
+            'notes' => $owner->notes,
+            'units_count' => 0,
+            'created_at_human' => $owner->created_at ? $owner->created_at->format('Y-m-d') : null,
+        ];
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'تمت إضافة المالك إلى المبنى وتحديث سجل المواطنين الموحد بنجاح.',
+                'owner' => $ownerData,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'تمت إضافة المالك بنجاح.');
+    }
+
+    /**
+     * Update an owner's data and sync with Unified Citizen Registry.
+     */
+    public function updateOwner(Request $request, $id, $ownerId)
+    {
+        if (!auth()->user()->can('Update-Building') && !auth()->user()->can('bhm.buildings.edit')) {
+            return response()->json(['status' => 'error', 'message' => 'غير مصرح لك بتعديل بيانات مالك هذا المبنى.'], 403);
+        }
+
+        $building = BhmBuilding::findOrFail($id);
+        $owner = BhmBuildingOwner::where('building_id', $building->id)->findOrFail($ownerId);
+
+        $request->validate([
+            'id_card' => 'required|string|max:20',
+            'first_name' => 'nullable|string|max:100',
+            'second_name' => 'nullable|string|max:100',
+            'third_name' => 'nullable|string|max:100',
+            'sur_name' => 'nullable|string|max:100',
+            'phone_number' => 'nullable|string|max:30',
+            'mokalaf' => 'nullable|boolean',
+            'is_approve' => 'nullable|boolean',
+            'notes' => 'nullable|string|max:500',
+        ], [
+            'id_card.required' => 'رقم الهوية الوطنية مطلوب.',
+        ]);
+
+        $idCard = trim($request->input('id_card'));
+
+        // Check if ID card conflicts with another owner in the same building
+        $conflict = BhmBuildingOwner::where('building_id', $building->id)
+            ->where('id_card', $idCard)
+            ->where('id', '!=', $owner->id)
+            ->first();
+
+        if ($conflict) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'رقم الهوية هذا مسجل مسبقاً لمالك آخر في هذا المبنى.',
+            ], 422);
+        }
+
+        $owner->update([
+            'id_card' => $idCard,
+            'first_name' => $request->input('first_name'),
+            'second_name' => $request->input('second_name'),
+            'third_name' => $request->input('third_name'),
+            'sur_name' => $request->input('sur_name'),
+            'phone_number' => $request->input('phone_number') ?: '0',
+            'mokalaf' => $request->boolean('mokalaf') ? 1 : 0,
+            'is_approve' => $request->has('is_approve') ? ($request->boolean('is_approve') ? 1 : 0) : $owner->is_approve,
+            'notes' => $request->input('notes'),
+        ]);
+
+        // Sync with BhmCustomer
+        $fullName = trim(collect([
+            $owner->first_name,
+            $owner->second_name,
+            $owner->third_name,
+            $owner->sur_name,
+        ])->filter()->implode(' '));
+
+        if ($owner->id_card) {
+            BhmCustomer::updateOrCreate(
+                ['id_no' => $owner->id_card],
+                [
+                    'name' => $fullName ?: 'مالك عقار',
+                    'mobile' => $owner->phone_number ?: '',
+                ]
+            );
+        }
+
+        $ownerData = [
+            'id' => $owner->id,
+            'building_id' => $owner->building_id,
+            'id_card' => $owner->id_card,
+            'first_name' => $owner->first_name,
+            'second_name' => $owner->second_name,
+            'third_name' => $owner->third_name,
+            'sur_name' => $owner->sur_name,
+            'full_name' => $owner->full_name,
+            'phone_number' => $owner->phone_number,
+            'mokalaf' => (int) $owner->mokalaf,
+            'is_approve' => (int) $owner->is_approve,
+            'notes' => $owner->notes,
+            'units_count' => $owner->units()->count(),
+            'created_at_human' => $owner->created_at ? $owner->created_at->format('Y-m-d') : null,
+        ];
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'تم تحديث بيانات المالك وتحديث سجل المواطنين الموحد بنجاح.',
+                'owner' => $ownerData,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'تم تحديث بيانات المالك بنجاح.');
+    }
+
+    /**
+     * Delete an owner from a building.
+     */
+    public function destroyOwner(Request $request, $id, $ownerId)
+    {
+        if (!auth()->user()->can('Update-Building') && !auth()->user()->can('bhm.buildings.edit')) {
+            return response()->json(['status' => 'error', 'message' => 'غير مصرح لك بحذف مالك من هذا المبنى.'], 403);
+        }
+
+        $building = BhmBuilding::findOrFail($id);
+        $owner = BhmBuildingOwner::where('building_id', $building->id)->findOrFail($ownerId);
+
+        // Detach any units connected to this owner
+        $owner->units()->detach();
+
+        $ownerName = $owner->full_name ?: ('هوية ' . $owner->id_card);
+        $owner->delete();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => "تم حذف المالك ({$ownerName}) من سجل ملاك المبنى بنجاح.",
+            ]);
+        }
+
+        return redirect()->back()->with('success', "تم حذف المالك ({$ownerName}) بنجاح.");
     }
 }

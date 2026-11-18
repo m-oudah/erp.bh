@@ -29,6 +29,7 @@ Route::middleware(['auth', 'module.access:hr'])->prefix('hr')->name('hr.')->grou
     Route::put('payroll/{id}/items/{itemId}', [PayrollController::class, 'updateItem'])->name('payroll.items.update');
     Route::get('payroll/{id}/slip/{itemId}', [PayrollController::class, 'slip'])->name('payroll.slip');
     Route::get('payroll/{id}/print', [PayrollController::class, 'printFull'])->name('payroll.print');
+    Route::get('payroll/{id}/export', [PayrollController::class, 'exportExcel'])->name('payroll.export');
     Route::resource('payroll', PayrollController::class)->except(['edit', 'update']);
 });
 

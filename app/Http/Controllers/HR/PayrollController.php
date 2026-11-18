@@ -181,7 +181,7 @@ class PayrollController extends Controller
             $query->where('contract_type', $request->contract_type);
         }
 
-        $items = $query->orderBy('department_name')->orderBy('employee_name')->get();
+        $items = $query->orderBy('department_name')->orderBy('employee_name')->paginate(25)->withQueryString();
 
         // Get unique departments and contract types for filter options
         $departmentsList = $payroll->items()->select('department_name')->distinct()->pluck('department_name');
@@ -228,10 +228,12 @@ class PayrollController extends Controller
 
     public function approve($id)
     {
+        abort_unless(auth()->user()->hasRole('مدير النظام') || auth()->user()->can('Approve-Payroll'), 403, 'ليس لديك صلاحية اعتماد كشف الرواتب.');
+
         $payroll = Payroll::findOrFail($id);
 
         if ($payroll->status !== 'draft') {
-            return back()->with('error', 'المسير معتمد بالفعل مسبقاً.');
+            return back()->with('error', 'كشف الرواتب معتمد بالفعل مسبقاً.');
         }
 
         $payroll->update([
@@ -241,7 +243,7 @@ class PayrollController extends Controller
         ]);
 
         return redirect()->route('hr.payroll.show', $payroll->id)
-            ->with('success', "تم اعتماد مسير رواتب ({$payroll->title}) رسمياً.");
+            ->with('success', "تم اعتماد كشف الرواتب ({$payroll->title}) رسمياً.");
     }
 
     public function markAsPaid($id)
@@ -263,7 +265,7 @@ class PayrollController extends Controller
     public function slip($payrollId, $itemId)
     {
         $payroll = Payroll::findOrFail($payrollId);
-        $item = PayrollItem::with('employee')->where('payroll_id', $payroll->id)->findOrFail($itemId);
+        $item = PayrollItem::with(['employee.department.parent', 'employee.grade'])->where('payroll_id', $payroll->id)->findOrFail($itemId);
 
         return view('hr.payroll.slip', compact('payroll', 'item'));
     }
@@ -274,6 +276,174 @@ class PayrollController extends Controller
         $items = $payroll->items()->orderBy('department_name')->orderBy('employee_name')->get();
 
         return view('hr.payroll.print', compact('payroll', 'items'));
+    }
+
+    public function exportExcel(Request $request, $id)
+    {
+        $payroll = Payroll::with(['items.employee', 'creator', 'approver'])->findOrFail($id);
+        $items = $payroll->items()->orderBy('department_name')->orderBy('employee_name')->get();
+
+        $format = $request->query('format', 'xls');
+
+        if ($format === 'csv') {
+            $filename = "payroll_{$payroll->year}_{$payroll->month}.csv";
+
+            $headers = [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0',
+            ];
+
+            $callback = function () use ($items, $payroll) {
+                $handle = fopen('php://output', 'w');
+                // UTF-8 BOM for Excel
+                fputs($handle, "\xEF\xBB\xBF");
+
+                // Header info
+                fputcsv($handle, ["بلدية بيت حانون - الدائرة المالية - قسم الرواتب"]);
+                fputcsv($handle, [$payroll->title, "رقم المسير: " . $payroll->payroll_number, "تاريخ التصدير: " . date('Y-m-d H:i')]);
+                fputcsv($handle, []);
+
+                // Columns
+                fputcsv($handle, [
+                    '#',
+                    'الرقم الوظيفي',
+                    'اسم الموظف',
+                    'رقم الهوية',
+                    'المسمى الوظيفي',
+                    'الدائرة / القسم',
+                    'نوع العقد',
+                    'الدرجة',
+                    'اسم البنك',
+                    'رقم الحساب',
+                    'الأساسي (₪)',
+                    'علاوة طبيعة العمل',
+                    'علاوة الزوجة',
+                    'علاوة الأولاد',
+                    'علاوة المؤهل',
+                    'علاوة المنصب',
+                    'غلاء المعيشة',
+                    'علاوة المخاطرة',
+                    'العمل الإضافي',
+                    'المكافآت',
+                    'علاوات أخرى',
+                    'إجمالي القائم (₪)',
+                    'خصم التقاعد',
+                    'التأمين الصحي',
+                    'أقساط وسلف',
+                    'خصومات أخرى',
+                    'إجمالي الخصم (₪)',
+                    'صافي الراتب (₪)',
+                    'ملاحظات',
+                ]);
+
+                $sumBase = $sumNature = $sumSpouse = $sumChildren = $sumQual = $sumPos = $sumCost = $sumRisk = 0;
+                $sumOvertime = $sumBonus = $sumOtherAllow = $sumGross = $sumPension = $sumHealth = $sumLoan = 0;
+                $sumOtherDeduct = $sumTotalDeduct = $sumNet = 0;
+
+                foreach ($items as $idx => $item) {
+                    $sumBase += (float)$item->base_salary;
+                    $sumNature += (float)$item->nature_of_work_allowance;
+                    $sumSpouse += (float)$item->spouse_allowance;
+                    $sumChildren += (float)$item->children_allowance;
+                    $sumQual += (float)$item->qualification_allowance;
+                    $sumPos += (float)$item->position_allowance;
+                    $sumCost += (float)$item->cost_of_living_allowance;
+                    $sumRisk += (float)$item->risk_allowance;
+                    $sumOvertime += (float)$item->overtime_allowance;
+                    $sumBonus += (float)$item->bonus_allowance;
+                    $sumOtherAllow += (float)$item->other_allowances;
+                    $sumGross += (float)$item->gross_salary;
+                    $sumPension += (float)$item->pension_deduction;
+                    $sumHealth += (float)$item->health_insurance_deduction;
+                    $sumLoan += (float)$item->loan_deduction;
+                    $sumOtherDeduct += (float)$item->other_deductions;
+                    $sumTotalDeduct += (float)$item->total_deductions;
+                    $sumNet += (float)$item->net_salary;
+
+                    fputcsv($handle, [
+                        $idx + 1,
+                        $item->employee_number,
+                        $item->employee_name,
+                        $item->employee?->national_id ?? '',
+                        $item->job_title,
+                        $item->department_name,
+                        $item->contract_type,
+                        $item->grade_name,
+                        $item->bank_name,
+                        $item->bank_account_number,
+                        number_format($item->base_salary, 2, '.', ''),
+                        number_format($item->nature_of_work_allowance, 2, '.', ''),
+                        number_format($item->spouse_allowance, 2, '.', ''),
+                        number_format($item->children_allowance, 2, '.', ''),
+                        number_format($item->qualification_allowance, 2, '.', ''),
+                        number_format($item->position_allowance, 2, '.', ''),
+                        number_format($item->cost_of_living_allowance, 2, '.', ''),
+                        number_format($item->risk_allowance, 2, '.', ''),
+                        number_format($item->overtime_allowance, 2, '.', ''),
+                        number_format($item->bonus_allowance, 2, '.', ''),
+                        number_format($item->other_allowances, 2, '.', ''),
+                        number_format($item->gross_salary, 2, '.', ''),
+                        number_format($item->pension_deduction, 2, '.', ''),
+                        number_format($item->health_insurance_deduction, 2, '.', ''),
+                        number_format($item->loan_deduction, 2, '.', ''),
+                        number_format($item->other_deductions, 2, '.', ''),
+                        number_format($item->total_deductions, 2, '.', ''),
+                        number_format($item->net_salary, 2, '.', ''),
+                        $item->notes ?? '',
+                    ]);
+                }
+
+                // Summary Row
+                fputcsv($handle, [
+                    'المجموع العام',
+                    '',
+                    count($items) . ' موظف',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    number_format($sumBase, 2, '.', ''),
+                    number_format($sumNature, 2, '.', ''),
+                    number_format($sumSpouse, 2, '.', ''),
+                    number_format($sumChildren, 2, '.', ''),
+                    number_format($sumQual, 2, '.', ''),
+                    number_format($sumPos, 2, '.', ''),
+                    number_format($sumCost, 2, '.', ''),
+                    number_format($sumRisk, 2, '.', ''),
+                    number_format($sumOvertime, 2, '.', ''),
+                    number_format($sumBonus, 2, '.', ''),
+                    number_format($sumOtherAllow, 2, '.', ''),
+                    number_format($sumGross, 2, '.', ''),
+                    number_format($sumPension, 2, '.', ''),
+                    number_format($sumHealth, 2, '.', ''),
+                    number_format($sumLoan, 2, '.', ''),
+                    number_format($sumOtherDeduct, 2, '.', ''),
+                    number_format($sumTotalDeduct, 2, '.', ''),
+                    number_format($sumNet, 2, '.', ''),
+                    '',
+                ]);
+
+                fclose($handle);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        }
+
+        // Default: formatted .xls file
+        $asciiFilename = "payroll_{$payroll->year}_{$payroll->month}.xls";
+        $encodedFilename = rawurlencode("payroll_{$payroll->year}_{$payroll->month}_{$payroll->title}.xls");
+
+        return response()->view('hr.payroll.export-excel', compact('payroll', 'items'))
+            ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
+            ->header('Content-Disposition', "attachment; filename=\"{$asciiFilename}\"; filename*=UTF-8''{$encodedFilename}")
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     public function destroy($id)

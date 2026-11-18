@@ -50,6 +50,7 @@ class BhmDashboardController extends Controller
             'historical'               => $historicalBuildings,
             'abandoned'                => $abandonedBuildings,
             'adding_new_floor'         => $addingNewFloor,
+            'total_units'              => \App\Models\Buildings\BhmUnit::count(),
             // Licenses
             'total_licenses'           => $totalLicenses,
             'approved_licenses'        => $approvedLicenses,

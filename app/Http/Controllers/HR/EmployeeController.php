@@ -50,7 +50,7 @@ class EmployeeController extends Controller
             $query->where('grade_id', $request->grade_id);
         }
 
-        $employees = $query->latest('id')->paginate(15)->withQueryString();
+        $employees = $query->orderByRaw("CAST(SUBSTRING(employee_number, 5) AS UNSIGNED) ASC, id ASC")->paginate(20)->withQueryString();
 
         $departments = Department::orderBy('name')->get();
         $grades = Grade::where('is_active', true)->orderBy('order')->get();

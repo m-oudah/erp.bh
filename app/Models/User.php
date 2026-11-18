@@ -187,6 +187,9 @@ class User extends Authenticatable
                 'HR',
                 'Employees',
                 'Read-Employees',
+                'Approve-Payroll',
+                'Print-Payroll',
+                'Manage-Payroll',
             ]),
             'settings' => $this->hasAnyPermission([
                 'Module-Settings',

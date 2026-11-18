@@ -61,24 +61,57 @@
 
             {{-- Workflow Buttons --}}
             <div class="flex items-center gap-2 flex-wrap self-end md:self-center">
+                {{-- Export to Excel (Split Button with formats) --}}
+                <div class="relative inline-flex rounded-xl shadow-xs" x-data="{ exportOpen: false }">
+                    <a href="{{ route('hr.payroll.export', $payroll->id) }}"
+                       class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-r-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <svg class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>تصدير إلى إكسل (Excel)</span>
+                    </a>
+                    <button type="button" @click="exportOpen = !exportOpen"
+                            class="px-2 py-2 bg-emerald-800 hover:bg-emerald-900 text-white rounded-l-xl text-xs transition-colors border-r border-emerald-600/70 cursor-pointer"
+                            title="خيارات التنسيق">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="exportOpen" @click.away="exportOpen = false" x-transition
+                         class="absolute left-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-30 text-xs">
+                        <a href="{{ route('hr.payroll.export', [$payroll->id, 'format' => 'xls']) }}"
+                           class="flex items-center gap-2 px-3.5 py-2 hover:bg-slate-50 text-slate-800 font-bold">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                            <span>ملف إكسل منسق (.xls)</span>
+                        </a>
+                        <a href="{{ route('hr.payroll.export', [$payroll->id, 'format' => 'csv']) }}"
+                           class="flex items-center gap-2 px-3.5 py-2 hover:bg-slate-50 text-slate-800 font-bold">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                            <span>ملف بيانات CSV (.csv)</span>
+                        </a>
+                    </div>
+                </div>
+
                 {{-- Print Full Sheet --}}
                 <a href="{{ route('hr.payroll.print', $payroll->id) }}" target="_blank"
                    class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs">
                     <x-heroicon-s-printer class="w-4 h-4 text-amber-400" />
-                    <span>طباعة كشف المسير الكامل</span>
+                    <span>طباعة كشف الرواتب</span>
                 </a>
 
                 {{-- Approve (if draft) --}}
                 @if($payroll->status === 'draft')
-                    <form method="POST" action="{{ route('hr.payroll.approve', $payroll->id) }}"
-                          onsubmit="return confirm('هل أنت متأكد من اعتماد مسير الرواتب نهائياً؟ بعد الاعتماد لا يمكن تعديل البنود إلا بصلاحيات خاصة.')">
-                        @csrf
-                        <button type="submit"
-                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs">
-                            <x-heroicon-s-check-badge class="w-4 h-4 text-emerald-200" />
-                            <span>اعتماد المسير رسمياً</span>
-                        </button>
-                    </form>
+                    @if(auth()->user()->hasRole('مدير النظام') || auth()->user()->can('Approve-Payroll'))
+                        <form method="POST" action="{{ route('hr.payroll.approve', $payroll->id) }}"
+                              onsubmit="return confirm('هل أنت متأكد من اعتماد كشف الرواتب نهائياً؟ بعد الاعتماد لا يمكن تعديل البنود إلا بصلاحيات خاصة.')">
+                            @csrf
+                            <button type="submit"
+                                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer">
+                                <x-heroicon-s-check-badge class="w-4 h-4 text-emerald-200" />
+                                <span>اعتماد كشف الرواتب</span>
+                            </button>
+                        </form>
+                    @endif
                 @endif
 
                 {{-- Mark as Paid (if approved) --}}
@@ -201,7 +234,7 @@
                     <tbody class="divide-y divide-slate-100 font-medium">
                         @forelse($items as $index => $item)
                             <tr class="hover:bg-slate-50/80 transition-colors {{ $item->is_manually_adjusted ? 'bg-amber-50/30' : '' }}">
-                                <td class="py-2.5 px-3 font-mono text-tertiary">{{ $index + 1 }}</td>
+                                <td class="py-2.5 px-3 font-mono text-tertiary">{{ $items->firstItem() + $index }}</td>
                                 <td class="py-2.5 px-3">
                                     <div class="font-extrabold text-slate-900">{{ $item->employee_name }}</div>
                                     <div class="text-[10px] text-tertiary font-mono">{{ $item->employee_number }}</div>
@@ -283,6 +316,18 @@
                     </tfoot>
                 </table>
             </div>
+
+            {{-- Pagination Links --}}
+            @if($items->hasPages())
+                <div class="px-6 py-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
+                    <div class="text-xs text-slate-500 font-bold">
+                        عرض <span class="font-extrabold text-slate-800">{{ $items->firstItem() }}</span> إلى <span class="font-extrabold text-slate-800">{{ $items->lastItem() }}</span> من إجمالي <span class="font-extrabold text-slate-800">{{ $items->total() }}</span> موظف في الكشف
+                    </div>
+                    <div>
+                        {{ $items->links() }}
+                    </div>
+                </div>
+            @endif
         </div>
 
         {{-- Edit Item Modal (for manual adjustments in draft mode) --}}

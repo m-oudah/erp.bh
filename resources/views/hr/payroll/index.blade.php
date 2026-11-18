@@ -125,8 +125,15 @@
                                             <span>عرض الكشف</span>
                                         </a>
 
+                                        <a href="{{ route('hr.payroll.export', $pr->id) }}"
+                                           class="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg transition-colors" title="تصدير كشف الرواتب لإكسل">
+                                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            </svg>
+                                        </a>
+
                                         <a href="{{ route('hr.payroll.print', $pr->id) }}" target="_blank"
-                                           class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors" title="طباعة كشف المسير">
+                                           class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors" title="طباعة كشف الرواتب">
                                             <x-heroicon-s-printer class="w-4 h-4" />
                                         </a>
 

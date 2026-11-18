@@ -94,6 +94,10 @@ class Employee extends Model
         'active' => 'على رأس عمله',
         'suspended' => 'موقوف مؤقتاً',
         'terminated' => 'منتهية خدماته / مستقيل',
+        'retired' => 'متقاعد',
+        'martyr' => 'شهيد',
+        'prisoner' => 'أسير لدى الاحتلال',
+        'abroad' => 'مسافر خارج الوطن',
     ];
 
     public const QUALIFICATIONS = [

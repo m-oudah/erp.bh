@@ -163,6 +163,325 @@
                 Alpine.data('buildingEditor', buildingEditor);
             });
         }
+
+        function buildingOwnersAndTabs(buildingId, initialOwners) {
+            return {
+                tab: 'basic',
+                owners: initialOwners || [],
+                
+                // Modals
+                showOwnerModal: false,
+                isEditingOwner: false,
+                editingOwnerId: null,
+                showDeleteOwnerModal: false,
+                ownerToDelete: null,
+
+                // Owner Form Data
+                ownerForm: {
+                    id_card: '',
+                    first_name: '',
+                    second_name: '',
+                    third_name: '',
+                    sur_name: '',
+                    phone_number: '',
+                    mokalaf: 0,
+                    is_approve: 1,
+                    notes: ''
+                },
+
+                // Citizen Search & Autocomplete
+                isSearchingCitizen: false,
+                citizenSearchFeedback: null,
+                citizenSearchResults: [],
+                showCitizenDropdown: false,
+
+                // Action States
+                isSavingOwner: false,
+                isDeletingOwner: false,
+                feedbackMessage: '',
+                feedbackType: 'success',
+                formErrors: {},
+
+                openAddOwnerModal() {
+                    this.isEditingOwner = false;
+                    this.editingOwnerId = null;
+                    this.ownerForm = {
+                        id_card: '',
+                        first_name: '',
+                        second_name: '',
+                        third_name: '',
+                        sur_name: '',
+                        phone_number: '',
+                        mokalaf: 0,
+                        is_approve: 1,
+                        notes: ''
+                    };
+                    this.citizenSearchFeedback = null;
+                    this.citizenSearchResults = [];
+                    this.showCitizenDropdown = false;
+                    this.formErrors = {};
+                    this.showOwnerModal = true;
+                    document.body.style.overflow = 'hidden';
+                    this.$nextTick(() => {
+                        if (this.$refs.ownerIdCardInput) {
+                            this.$refs.ownerIdCardInput.focus();
+                        }
+                    });
+                },
+
+                openEditOwnerModal(owner) {
+                    this.isEditingOwner = true;
+                    this.editingOwnerId = owner.id;
+                    this.ownerForm = {
+                        id_card: owner.id_card || '',
+                        first_name: owner.first_name || '',
+                        second_name: owner.second_name || '',
+                        third_name: owner.third_name || '',
+                        sur_name: owner.sur_name || '',
+                        phone_number: (owner.phone_number && owner.phone_number !== '0') ? owner.phone_number : '',
+                        mokalaf: owner.mokalaf ? 1 : 0,
+                        is_approve: owner.is_approve ? 1 : 0,
+                        notes: owner.notes || ''
+                    };
+                    this.citizenSearchFeedback = null;
+                    this.citizenSearchResults = [];
+                    this.showCitizenDropdown = false;
+                    this.formErrors = {};
+                    this.showOwnerModal = true;
+                    document.body.style.overflow = 'hidden';
+                },
+
+                closeOwnerModal() {
+                    this.showOwnerModal = false;
+                    this.citizenSearchFeedback = null;
+                    this.citizenSearchResults = [];
+                    this.showCitizenDropdown = false;
+                    this.formErrors = {};
+                    document.body.style.overflow = '';
+                },
+
+                openUnifiedCitizenPicker() {
+                    if (typeof window.openCitizenModal === 'function') {
+                        window.openCitizenModal({
+                            title: 'اختيار مواطن من السجل الموحد لربطه بالمبنى',
+                            buildingId: buildingId,
+                            onSuccess: (c) => {
+                                this.openAddOwnerModal();
+                                this.populateFromCitizen(c);
+                            }
+                        });
+                    } else {
+                        this.openAddOwnerModal();
+                    }
+                },
+
+                populateFromCitizen(c) {
+                    if (!c) return;
+                    this.ownerForm.id_card = c.id_no || c.id_card || '';
+                    if (c.first_name || c.second_name) {
+                        this.ownerForm.first_name = c.first_name || '';
+                        this.ownerForm.second_name = c.second_name || '';
+                        this.ownerForm.third_name = c.third_name || '';
+                        this.ownerForm.sur_name = c.sur_name || '';
+                    } else if (c.name) {
+                        const parts = (c.name || '').trim().split(/\s+/);
+                        this.ownerForm.first_name = parts[0] || '';
+                        this.ownerForm.second_name = parts[1] || '';
+                        this.ownerForm.third_name = parts[2] || '';
+                        this.ownerForm.sur_name = parts.slice(3).join(' ') || (parts[3] || '');
+                    }
+                    if (c.mobile || c.telephone) {
+                        this.ownerForm.phone_number = c.mobile || c.telephone || '';
+                    }
+                    this.citizenSearchFeedback = {
+                        type: 'success',
+                        message: `تم جلب بيانات المواطن بنجاح: "${c.name || (this.ownerForm.first_name + ' ' + this.ownerForm.sur_name)}".`
+                    };
+                    this.showCitizenDropdown = false;
+                },
+
+                citizenSearchTimeout: null,
+                onIdCardInput(val) {
+                    this.ownerForm.id_card = (val || '').replace(/[^0-9]/g, '').substring(0, 9);
+                    clearTimeout(this.citizenSearchTimeout);
+                    const cleanVal = this.ownerForm.id_card.trim();
+                    if (cleanVal.length >= 8) {
+                        this.citizenSearchTimeout = setTimeout(() => {
+                            this.searchCitizen(cleanVal);
+                        }, 350);
+                    } else {
+                        this.citizenSearchFeedback = null;
+                        this.citizenSearchResults = [];
+                        this.showCitizenDropdown = false;
+                    }
+                },
+
+                async searchCitizen(queryVal) {
+                    const q = (queryVal || this.ownerForm.id_card || '').trim();
+                    if (q.length < 2) return;
+
+                    this.isSearchingCitizen = true;
+                    this.citizenSearchFeedback = null;
+
+                    try {
+                        const searchUrl = '{{ route('buildings.buildings.search-citizens') }}';
+                        const res = await fetch(`${searchUrl}?q=${encodeURIComponent(q)}`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        const json = await res.json();
+
+                        if (json.status === 'success' && json.data && json.data.length > 0) {
+                            this.citizenSearchResults = json.data;
+                            const exact = json.data.find(c => String(c.id_card).trim() === q);
+                            if (exact) {
+                                this.populateFromCitizen(exact);
+                            } else if (json.data.length === 1) {
+                                this.populateFromCitizen(json.data[0]);
+                            } else {
+                                this.showCitizenDropdown = true;
+                                this.citizenSearchFeedback = {
+                                    type: 'info',
+                                    message: `تم العثور على ${json.data.length} مواطن مطابق في السجل. يمكنك الاختيار أدناه.`
+                                };
+                            }
+                        } else {
+                            this.citizenSearchResults = [];
+                            this.showCitizenDropdown = false;
+                            this.citizenSearchFeedback = {
+                                type: 'info',
+                                message: 'رقم الهوية غير مسجل مسبقاً في سجل المواطنين. يمكنك كتابة البيانات وسيتم تسجيله وتحديث السجل تلقائياً.'
+                            };
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    } finally {
+                        this.isSearchingCitizen = false;
+                    }
+                },
+
+                async saveOwner() {
+                    this.formErrors = {};
+                    if (!this.ownerForm.id_card || this.ownerForm.id_card.trim().length < 7) {
+                        this.formErrors.id_card = ['يرجى إدخال رقم هوية صحيح مكون من 7 إلى 9 أرقام.'];
+                        return;
+                    }
+
+                    this.isSavingOwner = true;
+
+                    const url = this.isEditingOwner
+                        ? `{{ url('/buildings/buildings') }}/${buildingId}/owners/${this.editingOwnerId}`
+                        : `{{ url('/buildings/buildings') }}/${buildingId}/owners`;
+
+                    const method = this.isEditingOwner ? 'PUT' : 'POST';
+
+                    try {
+                        const res = await fetch(url, {
+                            method: method,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify(this.ownerForm)
+                        });
+
+                        const data = await res.json();
+
+                        if (res.ok && data.status === 'success') {
+                            if (this.isEditingOwner) {
+                                const idx = this.owners.findIndex(o => o.id === this.editingOwnerId);
+                                if (idx !== -1) {
+                                    this.owners[idx] = data.owner;
+                                }
+                            } else {
+                                this.owners.unshift(data.owner);
+                            }
+
+                            this.showFeedback('success', data.message);
+                            this.closeOwnerModal();
+                        } else {
+                            if (data.errors) {
+                                this.formErrors = data.errors;
+                            }
+                            this.citizenSearchFeedback = {
+                                type: 'error',
+                                message: data.message || 'حدث خطأ أثناء حفظ بيانات المالك.'
+                            };
+                        }
+                    } catch (err) {
+                        this.citizenSearchFeedback = {
+                            type: 'error',
+                            message: 'فشل الاتصال بالخادم، يرجى المحاولة لاحقاً.'
+                        };
+                    } finally {
+                        this.isSavingOwner = false;
+                    }
+                },
+
+                confirmDeleteOwner(owner) {
+                    this.ownerToDelete = owner;
+                    this.showDeleteOwnerModal = true;
+                    document.body.style.overflow = 'hidden';
+                },
+
+                closeDeleteOwnerModal() {
+                    this.showDeleteOwnerModal = false;
+                    this.ownerToDelete = null;
+                    document.body.style.overflow = '';
+                },
+
+                async deleteOwner() {
+                    if (!this.ownerToDelete) return;
+                    this.isDeletingOwner = true;
+
+                    try {
+                        const url = `{{ url('/buildings/buildings') }}/${buildingId}/owners/${this.ownerToDelete.id}`;
+                        const res = await fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+
+                        const data = await res.json();
+
+                        if (res.ok && data.status === 'success') {
+                            this.owners = this.owners.filter(o => o.id !== this.ownerToDelete.id);
+                            this.showFeedback('success', data.message);
+                            this.closeDeleteOwnerModal();
+                        } else {
+                            alert(data.message || 'حدث خطأ أثناء حذف المالك.');
+                        }
+                    } catch (err) {
+                        alert('فشل الاتصال بالخادم، يرجى المحاولة لاحقاً.');
+                    } finally {
+                        this.isDeletingOwner = false;
+                    }
+                },
+
+                showFeedback(type, message) {
+                    this.feedbackType = type;
+                    this.feedbackMessage = message;
+                    setTimeout(() => {
+                        this.feedbackMessage = '';
+                    }, 6000);
+                }
+            };
+        }
+        window.buildingOwnersAndTabs = buildingOwnersAndTabs;
+        if (window.Alpine) {
+            window.Alpine.data('buildingOwnersAndTabs', buildingOwnersAndTabs);
+        } else {
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('buildingOwnersAndTabs', buildingOwnersAndTabs);
+            });
+        }
     </script>
 
     <div x-data="buildingEditor({{ $building->id }}, {{ json_encode(old('file_number', $building->file_number ?? '')) }}, {{ json_encode($archiveFileData ?? null) }})" class="space-y-6 max-w-7xl mx-auto pb-16">
@@ -595,8 +914,29 @@
 
             </div>
 
+            @php
+                $initialOwners = $building->owners->map(function ($o) {
+                    return [
+                        'id' => (int) $o->id,
+                        'building_id' => (int) $o->building_id,
+                        'id_card' => (string) ($o->id_card ?? ''),
+                        'first_name' => (string) ($o->first_name ?? ''),
+                        'second_name' => (string) ($o->second_name ?? ''),
+                        'third_name' => (string) ($o->third_name ?? ''),
+                        'sur_name' => (string) ($o->sur_name ?? ''),
+                        'full_name' => (string) $o->full_name,
+                        'phone_number' => (string) ($o->phone_number ?? ''),
+                        'mokalaf' => (int) $o->mokalaf,
+                        'is_approve' => (int) $o->is_approve,
+                        'notes' => (string) ($o->notes ?? ''),
+                        'units_count' => (int) $o->units->count(),
+                        'created_at_human' => $o->created_at ? $o->created_at->format('Y-m-d') : null,
+                    ];
+                })->values();
+            @endphp
+
             {{-- Main Tabs Section --}}
-            <div x-data="{ tab: 'basic' }" class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+            <div x-data="buildingOwnersAndTabs({{ $building->id }}, {{ \Illuminate\Support\Js::from($initialOwners) }})" class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
 
                 {{-- Tabs Header --}}
                 <div id="building-edit-tabs-header" class="flex overflow-x-auto border-b border-gray-100 bg-gray-50/80 px-2 pt-2">
@@ -625,11 +965,24 @@
                         <x-heroicon-s-banknotes class="w-4 h-4" x-bind:class="{'text-orange': tab === 'financial'}" />
                         البيانات المالية
                     </button>
+                    <button type="button" @click="tab = 'owners'"
+                            :class="{'text-orange-dark border-orange bg-white shadow-sm font-extrabold': tab === 'owners', 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 border-transparent font-bold': tab !== 'owners'}"
+                            class="px-5 py-3.5 text-xs transition-all whitespace-nowrap flex items-center gap-2 border-b-2 rounded-t-xl mb-[-2px]">
+                        <x-heroicon-s-users class="w-4 h-4" x-bind:class="{'text-orange': tab === 'owners'}" />
+                        سجل الملاك
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black transition-colors"
+                              :class="tab === 'owners' ? 'bg-orange/15 text-orange-dark' : 'bg-gray-200 text-gray-700'"
+                              x-text="owners.length"></span>
+                    </button>
                     <button type="button" @click="tab = 'structure'"
                             :class="{'text-orange-dark border-orange bg-white shadow-sm font-extrabold': tab === 'structure', 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 border-transparent font-bold': tab !== 'structure'}"
                             class="px-5 py-3.5 text-xs transition-all whitespace-nowrap flex items-center gap-2 border-b-2 rounded-t-xl mb-[-2px]">
                         <x-heroicon-s-squares-plus class="w-4 h-4" x-bind:class="{'text-orange': tab === 'structure'}" />
-                        الملاك والهيكلية (معلومات)
+                        هيكلية المبنى (الطوابق والوحدات)
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                              :class="tab === 'structure' ? 'bg-orange/15 text-orange-dark' : 'bg-gray-200 text-gray-700'">
+                            {{ $building->floors->count() }} طابق • {{ $building->units->count() }} وحدة
+                        </span>
                     </button>
                 </div>
 
@@ -1026,61 +1379,634 @@
                         </div>
                     </div>
 
-                    {{-- Tab 5: Owners & Structure Info --}}
+                    {{-- Tab 5: سجل الملاك (إدارة كاملة، تعديل، حذف، وبحث في سجل المواطنين الموحد) --}}
+                    <div x-show="tab === 'owners'" class="space-y-6" style="display: none;">
+                        
+                        {{-- رأس التاب والإجراءات السريعة --}}
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-gradient-to-l from-orange/10 via-amber-50/50 to-white border border-orange/20 rounded-2xl shadow-2xs">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-2xl bg-orange/15 text-orange-dark flex items-center justify-center shrink-0 shadow-inner">
+                                    <x-heroicon-s-users class="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-black text-gray-900 flex items-center gap-2">
+                                        <span>سجل ملاك المبنى والمكلفين</span>
+                                        <span class="bg-white text-orange-dark px-2 py-0.5 rounded-md text-[11px] font-bold border border-orange/20 shadow-2xs" x-text="owners.length + ' مالك مسجل'"></span>
+                                    </h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">
+                                        يمكنك إضافة وتعديل وحذف سجلات الملاك برقم الهوية، مع ربط واسترجاع البيانات آلياً من <strong>سجل المواطنين الموحد</strong>.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+                                {{-- زر فتح سجل المواطنين الموحد --}}
+                                <button type="button"
+                                        @click="openUnifiedCitizenPicker()"
+                                        class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold transition shadow-2xs cursor-pointer">
+                                    <x-heroicon-s-user-plus class="w-4 h-4 text-teal-600" />
+                                    <span>البحث في سجل المواطنين</span>
+                                </button>
+
+                                {{-- زر إضافة مالك جديد --}}
+                                <button type="button"
+                                        @click="openAddOwnerModal()"
+                                        class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange to-orange-dark hover:from-orange-dark hover:to-orange text-white text-xs font-black transition shadow-md shadow-orange/25 hover:shadow-orange/40 cursor-pointer">
+                                    <x-heroicon-s-plus class="w-4 h-4" />
+                                    <span>إضافة مالك جديد</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- رسالة تنبيه تفاعلية (نجاح / خطأ) --}}
+                        <div x-show="feedbackMessage"
+                             x-transition
+                             :class="feedbackType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'"
+                             class="p-4 rounded-2xl border text-xs font-bold flex items-center justify-between gap-3 shadow-2xs">
+                            <div class="flex items-center gap-2">
+                                <template x-if="feedbackType === 'success'">
+                                    <x-heroicon-s-check-circle class="w-5 h-5 text-emerald-600 shrink-0" />
+                                </template>
+                                <template x-if="feedbackType === 'error'">
+                                    <x-heroicon-s-x-circle class="w-5 h-5 text-red-600 shrink-0" />
+                                </template>
+                                <span x-text="feedbackMessage"></span>
+                            </div>
+                            <button type="button" @click="feedbackMessage = ''" class="text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
+                                <x-heroicon-s-x-mark class="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {{-- قائمة / جدول الملاك --}}
+                        <div class="border border-gray-200/80 rounded-2xl overflow-hidden bg-white shadow-xs">
+                            {{-- حالة عدم وجود ملاك --}}
+                            <template x-if="owners.length === 0">
+                                <div class="p-12 text-center space-y-3">
+                                    <div class="w-16 h-16 rounded-3xl bg-gray-100 text-gray-400 flex items-center justify-center mx-auto shadow-inner">
+                                        <x-heroicon-o-users class="w-8 h-8" />
+                                    </div>
+                                    <div class="text-sm font-black text-gray-800">لا يوجد ملاك مسجلون لهذا المبنى حالياً</div>
+                                    <p class="text-xs text-gray-500 max-w-md mx-auto">
+                                        يمكنك تسجيل المالك الرئيسي أو إضافة ملاك شركاء بالبحث برقم الهوية من سجل المواطنين الموحد.
+                                    </p>
+                                    <div class="pt-2">
+                                        <button type="button"
+                                                @click="openAddOwnerModal()"
+                                                class="inline-flex items-center gap-1.5 px-4 py-2 bg-orange text-white rounded-xl text-xs font-bold hover:bg-orange-dark transition shadow-sm cursor-pointer">
+                                            <x-heroicon-s-plus class="w-4 h-4" />
+                                            <span>تسجيل المالك الآن</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+
+                            {{-- جدول الملاك المسجلين --}}
+                            <template x-if="owners.length > 0">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-right text-xs">
+                                        <thead class="bg-gray-50/90 text-gray-600 font-extrabold border-b border-gray-200/80">
+                                            <tr>
+                                                <th class="px-4 py-3.5">المالك / المكلف</th>
+                                                <th class="px-4 py-3.5">رقم الهوية الوطنية</th>
+                                                <th class="px-4 py-3.5">رقم الهاتف / الاتصال</th>
+                                                <th class="px-4 py-3.5 text-center">الصفة والاعتماد</th>
+                                                <th class="px-4 py-3.5 text-center">الوحدات التابعة</th>
+                                                <th class="px-4 py-3.5">ملاحظات</th>
+                                                <th class="px-4 py-3.5 text-center">الإجراءات</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-100 bg-white">
+                                            <template x-for="(owner, index) in owners" :key="owner.id">
+                                                <tr class="hover:bg-gray-50/60 transition-colors">
+                                                    {{-- اسم المالك --}}
+                                                    <td class="px-4 py-3.5">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange/20 to-amber-100 text-orange-dark flex items-center justify-center font-black text-xs shrink-0 shadow-2xs border border-orange/20"
+                                                                 x-text="(owner.first_name ? owner.first_name.charAt(0) : (owner.full_name ? owner.full_name.charAt(0) : 'م'))">
+                                                            </div>
+                                                            <div>
+                                                                <div class="font-black text-gray-900 text-xs" x-text="owner.full_name || 'بدون اسم'"></div>
+                                                                <div class="text-[10px] text-gray-400 font-mono mt-0.5" x-text="'سجل #' + owner.id"></div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+
+                                                    {{-- رقم الهوية الوطنية --}}
+                                                    <td class="px-4 py-3.5 whitespace-nowrap">
+                                                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 border border-gray-200/80 font-mono font-bold text-gray-800 text-[11px]" dir="ltr">
+                                                            <x-heroicon-s-identification class="w-3.5 h-3.5 text-gray-500" />
+                                                            <span x-text="owner.id_card || 'غير مسجل'"></span>
+                                                        </div>
+                                                    </td>
+
+                                                    {{-- رقم الهاتف --}}
+                                                    <td class="px-4 py-3.5 whitespace-nowrap">
+                                                        <template x-if="owner.phone_number && owner.phone_number !== '0'">
+                                                            <a :href="'tel:' + owner.phone_number"
+                                                               class="inline-flex items-center gap-1 text-gray-700 hover:text-orange font-mono font-semibold text-[11px]" dir="ltr">
+                                                                <x-heroicon-s-phone class="w-3.5 h-3.5 text-gray-400" />
+                                                                <span x-text="owner.phone_number"></span>
+                                                            </a>
+                                                        </template>
+                                                        <template x-if="!owner.phone_number || owner.phone_number === '0'">
+                                                            <span class="text-gray-400 text-[11px]">—</span>
+                                                        </template>
+                                                    </td>
+
+                                                    {{-- الصفة والاعتماد --}}
+                                                    <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                                                        <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                                            <template x-if="owner.mokalaf">
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200">
+                                                                    مكلف رئيسي
+                                                                </span>
+                                                            </template>
+                                                            <template x-if="!owner.mokalaf">
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-600">
+                                                                    مالك
+                                                                </span>
+                                                            </template>
+
+                                                            <template x-if="owner.is_approve">
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                    معتمد
+                                                                </span>
+                                                            </template>
+                                                            <template x-if="!owner.is_approve">
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                                    قيد الاعتماد
+                                                                </span>
+                                                            </template>
+                                                        </div>
+                                                    </td>
+
+                                                    {{-- الوحدات التابعة --}}
+                                                    <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                                            <x-heroicon-s-home class="w-3 h-3 text-slate-500" />
+                                                            <span x-text="owner.units_count + ' وحدة'"></span>
+                                                        </span>
+                                                    </td>
+
+                                                    {{-- ملاحظات --}}
+                                                    <td class="px-4 py-3.5 text-gray-600 max-w-[180px] truncate" :title="owner.notes">
+                                                        <span x-text="owner.notes || '—'"></span>
+                                                    </td>
+
+                                                    {{-- أزرار الإجراءات --}}
+                                                    <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                                                        <div class="inline-flex items-center gap-1.5">
+                                                            <button type="button"
+                                                                    @click="openEditOwnerModal(owner)"
+                                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-orange/10 hover:bg-orange/20 text-orange-dark text-[11px] font-bold transition cursor-pointer"
+                                                                    title="تعديل بيانات المالك ورقم الهوية">
+                                                                <x-heroicon-s-pencil-square class="w-3.5 h-3.5" />
+                                                                <span>تعديل</span>
+                                                            </button>
+
+                                                            <button type="button"
+                                                                    @click="confirmDeleteOwner(owner)"
+                                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-[11px] font-bold transition cursor-pointer"
+                                                                    title="حذف المالك من هذا المبنى">
+                                                                <x-heroicon-s-trash class="w-3.5 h-3.5" />
+                                                                <span>حذف</span>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- Tab 6: هيكلية المبنى (الطوابق والوحدات الإنشائية) --}}
                     <div x-show="tab === 'structure'" class="space-y-6" style="display: none;">
-                        <div class="p-4 bg-blue-50/70 border border-blue-100 rounded-2xl flex items-center gap-3 text-xs text-blue-900 font-medium">
-                            <x-heroicon-s-information-circle class="w-5 h-5 text-blue-600 shrink-0" />
-                            <span>الملاك، الطوابق، والوحدات مسجلة ككيانات فرعية مستقلة مرتبطة بهذا المبنى. يُعرض هنا ملخص للمعلومات الحالية.</span>
+                        <div class="p-4 bg-emerald-50/70 border border-emerald-100 rounded-2xl flex items-center justify-between gap-3 text-xs text-emerald-950 font-medium">
+                            <div class="flex items-center gap-3">
+                                <x-heroicon-s-information-circle class="w-5 h-5 text-emerald-600 shrink-0" />
+                                <span>تعرض هذه الصفحة الهيكلية الإنشائية المعتمدة للمبنى (الطوابق والوحدات العقارية المسجلة وتوزيعها).</span>
+                            </div>
+                            <a href="{{ route('buildings.buildings.show', $building->id) }}"
+                               class="shrink-0 text-xs font-bold text-emerald-800 bg-white hover:bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl transition shadow-2xs">
+                                عرض التفاصيل الكاملة بالملف
+                            </a>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {{-- الملاك --}}
-                            <div class="bg-gray-50/60 rounded-2xl p-5 border border-gray-200/60">
-                                <h4 class="font-extrabold text-gray-800 text-xs mb-3 flex items-center justify-between">
-                                    <span class="flex items-center gap-1.5">
-                                        <x-heroicon-s-users class="w-4 h-4 text-orange" />
-                                        الملاك المسجلون
-                                    </span>
-                                    <span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-[10px]">{{ $building->owners->count() }}</span>
+                            {{-- إحصائيات الهيكلية --}}
+                            <div class="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/70 space-y-4">
+                                <h4 class="font-extrabold text-gray-800 text-xs flex items-center gap-2">
+                                    <x-heroicon-s-chart-bar class="w-4 h-4 text-emerald-600" />
+                                    ملخص الوحدات والطوابق
                                 </h4>
-                                @if($building->owners->count() > 0)
-                                <div class="space-y-2">
-                                    @foreach($building->owners as $owner)
-                                    <div class="p-2.5 bg-white rounded-xl border border-gray-100 flex items-center justify-between text-xs">
-                                        <div class="font-bold text-gray-800">{{ $owner->full_name }}</div>
-                                        <div class="text-[11px] font-mono text-gray-500">{{ $owner->id_card }}</div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="p-4 bg-white rounded-xl border border-gray-100 shadow-2xs">
+                                        <div class="text-[11px] font-bold text-gray-500">إجمالي الطوابق</div>
+                                        <div class="text-xl font-black text-gray-900 mt-1">{{ $building->floors->count() }}</div>
                                     </div>
-                                    @endforeach
+                                    <div class="p-4 bg-white rounded-xl border border-gray-100 shadow-2xs">
+                                        <div class="text-[11px] font-bold text-gray-500">إجمالي الوحدات</div>
+                                        <div class="text-xl font-black text-gray-900 mt-1">{{ $building->units->count() }}</div>
+                                    </div>
                                 </div>
-                                @else
-                                <div class="text-xs text-gray-400 py-3 text-center">لا يوجد ملاك مسجلون حالياً</div>
-                                @endif
                             </div>
 
-                            {{-- الطوابق والوحدات --}}
-                            <div class="bg-gray-50/60 rounded-2xl p-5 border border-gray-200/60">
-                                <h4 class="font-extrabold text-gray-800 text-xs mb-3 flex items-center justify-between">
+                            {{-- قائمة الطوابق --}}
+                            <div class="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/70 space-y-3">
+                                <h4 class="font-extrabold text-gray-800 text-xs flex items-center justify-between">
                                     <span class="flex items-center gap-1.5">
                                         <x-heroicon-s-home class="w-4 h-4 text-emerald-600" />
-                                        الهيكلية الإنشائية
+                                        الطوابق المسجلة
                                     </span>
-                                    <span class="text-[10px] text-gray-500">
-                                        {{ $building->floors->count() }} طابق • {{ $building->units->count() }} وحدة
-                                    </span>
+                                    <span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-[10px] font-bold">{{ $building->floors->count() }}</span>
                                 </h4>
-                                <div class="space-y-2">
+                                <div class="space-y-2 max-h-64 overflow-y-auto">
                                     @forelse($building->floors as $floor)
-                                    <div class="p-2.5 bg-white rounded-xl border border-gray-100 flex items-center justify-between text-xs">
+                                    <div class="p-3 bg-white rounded-xl border border-gray-100 flex items-center justify-between text-xs shadow-2xs">
                                         <div class="font-bold text-gray-800">{{ $floor->floor_name }}</div>
-                                        <div class="text-gray-500 text-[11px]">المساحة: {{ $floor->area ?? 0 }} م²</div>
+                                        <div class="text-gray-500 text-[11px] font-semibold">المساحة: {{ $floor->area ?? 0 }} م²</div>
                                     </div>
                                     @empty
-                                    <div class="text-xs text-gray-400 py-3 text-center">لا توجد طوابق مسجلة حالياً</div>
+                                    <div class="text-xs text-gray-400 py-6 text-center">لا توجد طوابق مسجلة حالياً</div>
                                     @endforelse
                                 </div>
                             </div>
                         </div>
+
+                        {{-- الوحدات العقارية --}}
+                        <div class="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/70 space-y-3">
+                            <h4 class="font-extrabold text-gray-800 text-xs flex items-center justify-between">
+                                <span class="flex items-center gap-1.5">
+                                    <x-heroicon-s-building-office class="w-4 h-4 text-blue-600" />
+                                    الوحدات العقارية في المبنى
+                                </span>
+                                <span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-[10px] font-bold">{{ $building->units->count() }}</span>
+                            </h4>
+                            <div class="space-y-2 max-h-72 overflow-y-auto">
+                                @forelse($building->units as $unit)
+                                <div class="p-3 bg-white rounded-xl border border-gray-100 flex items-center justify-between text-xs shadow-2xs">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-[11px]">
+                                            #{{ $unit->unit_number ?? $unit->id }}
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-gray-900">{{ $unit->unit_name ?: ('وحدة رقم ' . ($unit->unit_number ?? $unit->id)) }}</div>
+                                            <div class="text-[11px] text-gray-400 mt-0.5">
+                                                <span>{{ $unit->unit_type ?: 'سكني' }}</span>
+                                                @if($unit->floor)
+                                                    <span> • {{ $unit->floor->floor_name }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        @if($unit->buildingOwner)
+                                            <span class="text-[11px] font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded-md">{{ $unit->buildingOwner->full_name }}</span>
+                                        @else
+                                            <span class="text-[10px] text-gray-400">غير مربوطة بمالك</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                @empty
+                                <div class="text-xs text-gray-400 py-6 text-center">لا توجد وحدات مسجلة حالياً</div>
+                                @endforelse
+                            </div>
+                        </div>
+
                     </div>
+
+                </div>
+
+                {{-- نافذة إضافة / تعديل مالك المبنى بالبحث في سجل المواطنين الموحد --}}
+                <template x-teleport="body">
+                    <div x-show="showOwnerModal"
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100"
+                         x-transition:leave="transition ease-in duration-200"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0"
+                         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs overflow-y-auto"
+                         style="display: none;"
+                         @keydown.escape.window="closeOwnerModal()">
+
+                        <div class="fixed inset-0" @click="closeOwnerModal()" aria-hidden="true"></div>
+
+                        <div @click.stop
+                             x-show="showOwnerModal"
+                             x-transition:enter="transition ease-out duration-300"
+                             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                             x-transition:leave="transition ease-in duration-200"
+                             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                             class="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full max-w-2xl overflow-hidden relative transition-all my-auto z-10 flex flex-col max-h-[92vh]">
+
+                            {{-- رأس النافذة --}}
+                            <div class="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/70">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-2xl bg-orange/10 text-orange-dark flex items-center justify-center shrink-0 shadow-inner">
+                                        <template x-if="isEditingOwner">
+                                            <x-heroicon-s-pencil-square class="w-5 h-5 text-orange" />
+                                        </template>
+                                        <template x-if="!isEditingOwner">
+                                            <x-heroicon-s-user-plus class="w-5 h-5 text-orange" />
+                                        </template>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-base font-black text-gray-900" x-text="isEditingOwner ? 'تعديل بيانات مالك المبنى' : 'إضافة مالك جديد للمبنى'"></h3>
+                                        <p class="text-xs text-gray-500 mt-0.5">البحث برقم الهوية في <strong>سجل المواطنين الموحد</strong> وجلب البيانات آلياً</p>
+                                    </div>
+                                </div>
+                                <button type="button" @click="closeOwnerModal()" class="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
+                                    <x-heroicon-o-x-mark class="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {{-- جسم النافذة --}}
+                            <div class="p-6 space-y-4 overflow-y-auto flex-1">
+
+                                {{-- شريط التنبيه عند البحث أو الخطأ --}}
+                                <template x-if="citizenSearchFeedback">
+                                    <div :class="{
+                                            'bg-emerald-50 border-emerald-200 text-emerald-800': citizenSearchFeedback.type === 'success',
+                                            'bg-blue-50 border-blue-200 text-blue-800': citizenSearchFeedback.type === 'info',
+                                            'bg-red-50 border-red-200 text-red-800': citizenSearchFeedback.type === 'error'
+                                         }"
+                                         class="p-3.5 rounded-2xl border text-xs font-bold flex items-center gap-2.5 animate-in fade-in duration-150">
+                                        <template x-if="citizenSearchFeedback.type === 'success'">
+                                            <x-heroicon-s-check-circle class="w-4 h-4 text-emerald-600 shrink-0" />
+                                        </template>
+                                        <template x-if="citizenSearchFeedback.type === 'info'">
+                                            <x-heroicon-s-information-circle class="w-4 h-4 text-blue-600 shrink-0" />
+                                        </template>
+                                        <template x-if="citizenSearchFeedback.type === 'error'">
+                                            <x-heroicon-s-exclamation-triangle class="w-4 h-4 text-red-600 shrink-0" />
+                                        </template>
+                                        <span x-text="citizenSearchFeedback.message"></span>
+                                    </div>
+                                </template>
+
+                                {{-- حقل رقم الهوية الوطنية مع البحث الفوري بالسجل الموحد --}}
+                                <div class="bg-gradient-to-r from-orange/5 via-amber-50/30 to-teal-50/30 p-4 rounded-2xl border border-orange/15 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <label for="modal_owner_id_card" class="block text-xs font-black text-gray-800">
+                                            رقم الهوية الوطنية <span class="text-rose-500">*</span>
+                                        </label>
+                                        <button type="button"
+                                                @click="openUnifiedCitizenPicker()"
+                                                class="text-[11px] font-bold text-teal-700 hover:text-teal-900 flex items-center gap-1 cursor-pointer">
+                                            <x-heroicon-s-magnifying-glass class="w-3.5 h-3.5 text-teal-600" />
+                                            <span>استعراض سجل المواطنين الموحد</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="relative">
+                                        <input type="text"
+                                               id="modal_owner_id_card"
+                                               x-ref="ownerIdCardInput"
+                                               x-model="ownerForm.id_card"
+                                               @input="onIdCardInput($event.target.value)"
+                                               maxlength="9"
+                                               placeholder="مثال: 908980817 (اكتب رقم الهوية لجلب البيانات)"
+                                               class="w-full pl-24 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl text-xs font-mono font-black text-gray-800 placeholder:text-gray-400 focus:border-orange focus:ring-2 focus:ring-orange/20 transition-all outline-none"
+                                               dir="ltr">
+
+                                        <div class="absolute inset-y-0 left-0 pl-2 flex items-center gap-1.5">
+                                            <template x-if="isSearchingCitizen">
+                                                <svg class="animate-spin w-4 h-4 text-orange" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                            </template>
+                                            <button type="button"
+                                                    @click="searchCitizen()"
+                                                    :disabled="isSearchingCitizen || !ownerForm.id_card"
+                                                    class="px-2.5 py-1 bg-orange/10 hover:bg-orange/20 text-orange-dark text-[11px] font-bold rounded-lg transition-colors border border-orange/20 cursor-pointer disabled:opacity-40">
+                                                بحث فوري
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <template x-if="formErrors.id_card">
+                                        <p class="text-rose-600 text-[11px] font-bold" x-text="Array.isArray(formErrors.id_card) ? formErrors.id_card[0] : formErrors.id_card"></p>
+                                    </template>
+                                    <p class="text-[10px] text-gray-500">
+                                        يتم التحقق تلقائياً من رقم الهوية في سجل المواطنين الموحد وتعبئة الاسم وبيانات الاتصال.
+                                    </p>
+
+                                    {{-- قائمة منسدلة بالنتائج المتعددة إن وجدت --}}
+                                    <template x-if="showCitizenDropdown && citizenSearchResults.length > 0">
+                                        <div class="mt-2 border border-gray-200 rounded-xl bg-white shadow-lg overflow-hidden divide-y divide-gray-100 max-h-40 overflow-y-auto">
+                                            <template x-for="c in citizenSearchResults" :key="c.id">
+                                                <div @click="populateFromCitizen(c)"
+                                                     class="p-2.5 hover:bg-orange/10 cursor-pointer flex items-center justify-between text-xs transition-colors">
+                                                    <div>
+                                                        <div class="font-bold text-gray-900" x-text="c.name"></div>
+                                                        <div class="text-[10px] text-gray-400 font-mono" x-text="'هوية: ' + c.id_card + (c.mobile ? ' • هاتف: ' + c.mobile : '')"></div>
+                                                    </div>
+                                                    <span class="text-[10px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded font-bold border border-teal-100">اختيار</span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                {{-- حقول الاسم الأربعة --}}
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div>
+                                        <label for="modal_owner_first_name" class="block text-xs font-bold text-gray-700 mb-1">الاسم الأول</label>
+                                        <input type="text"
+                                               id="modal_owner_first_name"
+                                               x-model="ownerForm.first_name"
+                                               placeholder="الاسم الأول"
+                                               class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:border-orange focus:ring-1 focus:ring-orange/20 transition-all outline-none">
+                                    </div>
+
+                                    <div>
+                                        <label for="modal_owner_second_name" class="block text-xs font-bold text-gray-700 mb-1">اسم الأب</label>
+                                        <input type="text"
+                                               id="modal_owner_second_name"
+                                               x-model="ownerForm.second_name"
+                                               placeholder="اسم الأب"
+                                               class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:border-orange focus:ring-1 focus:ring-orange/20 transition-all outline-none">
+                                    </div>
+
+                                    <div>
+                                        <label for="modal_owner_third_name" class="block text-xs font-bold text-gray-700 mb-1">اسم الجد</label>
+                                        <input type="text"
+                                               id="modal_owner_third_name"
+                                               x-model="ownerForm.third_name"
+                                               placeholder="اسم الجد"
+                                               class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:border-orange focus:ring-1 focus:ring-orange/20 transition-all outline-none">
+                                    </div>
+
+                                    <div>
+                                        <label for="modal_owner_sur_name" class="block text-xs font-bold text-gray-700 mb-1">العائلة / اللقب</label>
+                                        <input type="text"
+                                               id="modal_owner_sur_name"
+                                               x-model="ownerForm.sur_name"
+                                               placeholder="اسم العائلة"
+                                               class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:border-orange focus:ring-1 focus:ring-orange/20 transition-all outline-none">
+                                    </div>
+                                </div>
+
+                                {{-- رقم الهاتف --}}
+                                <div>
+                                    <label for="modal_owner_phone" class="block text-xs font-bold text-gray-700 mb-1">رقم الهاتف / الجوال</label>
+                                    <input type="text"
+                                           id="modal_owner_phone"
+                                           x-model="ownerForm.phone_number"
+                                           placeholder="مثال: 0599123456"
+                                           class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-mono font-bold text-gray-800 focus:border-orange focus:ring-1 focus:ring-orange/20 transition-all outline-none"
+                                           dir="ltr">
+                                </div>
+
+                                {{-- الصفة والاعتماد --}}
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                                    <label class="p-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-gray-100/70 transition-colors">
+                                        <input type="checkbox"
+                                               x-model="ownerForm.mokalaf"
+                                               class="w-4 h-4 text-orange rounded border-gray-300 focus:ring-orange">
+                                        <div>
+                                            <div class="text-xs font-bold text-gray-800">مكلف رئيسي بالرسوم</div>
+                                            <div class="text-[10px] text-gray-400">تحديد هذا المالك كمكلف رئيسي للمبنى</div>
+                                        </div>
+                                    </label>
+
+                                    <label class="p-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-gray-100/70 transition-colors">
+                                        <input type="checkbox"
+                                               x-model="ownerForm.is_approve"
+                                               class="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500">
+                                        <div>
+                                            <div class="text-xs font-bold text-gray-800">اعتماد المالك</div>
+                                            <div class="text-[10px] text-gray-400">اعتماد ملكية المواطن في سجل هذا المبنى</div>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                {{-- ملاحظات إضافية --}}
+                                <div>
+                                    <label for="modal_owner_notes" class="block text-xs font-bold text-gray-700 mb-1">ملاحظات حول المالك أو نسبة الملكية</label>
+                                    <textarea id="modal_owner_notes"
+                                              x-model="ownerForm.notes"
+                                              rows="2"
+                                              placeholder="حصة الملكية (مثال: 50%)، رقم الوحدة، أو أي تفاصيل إدارية أخرى..."
+                                              class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs text-gray-800 focus:border-orange focus:ring-1 focus:ring-orange/20 transition-all outline-none resize-none"></textarea>
+                                </div>
+
+                            </div>
+
+                            {{-- أسفل النافذة --}}
+                            <div class="p-4 border-t border-gray-100 bg-gray-50/70 flex items-center justify-between gap-3">
+                                <button type="button"
+                                        @click="closeOwnerModal()"
+                                        class="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-xl text-xs font-bold border border-gray-200 transition cursor-pointer">
+                                    إلغاء
+                                </button>
+
+                                <button type="button"
+                                        @click="saveOwner()"
+                                        :disabled="isSavingOwner"
+                                        class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-orange to-orange-dark hover:from-orange-dark hover:to-orange text-white text-xs font-black rounded-xl shadow-md shadow-orange/25 transition disabled:opacity-50 cursor-pointer">
+                                    <template x-if="!isSavingOwner">
+                                        <span class="flex items-center gap-1.5">
+                                            <x-heroicon-s-check class="w-4 h-4" />
+                                            <span x-text="isEditingOwner ? 'تحديث بيانات المالك' : 'حفظ وإضافة المالك'"></span>
+                                        </span>
+                                    </template>
+                                    <template x-if="isSavingOwner">
+                                        <span class="flex items-center gap-1.5">
+                                            <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                            <span>جاري الحفظ والمزامنة...</span>
+                                        </span>
+                                    </template>
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </template>
+
+                {{-- نافذة تأكيد حذف المالك --}}
+                <template x-teleport="body">
+                    <div x-show="showDeleteOwnerModal"
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100"
+                         x-transition:leave="transition ease-in duration-200"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0"
+                         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs"
+                         style="display: none;"
+                         @keydown.escape.window="closeDeleteOwnerModal()">
+
+                        <div class="fixed inset-0" @click="closeDeleteOwnerModal()" aria-hidden="true"></div>
+
+                        <div @click.stop
+                             x-show="showDeleteOwnerModal"
+                             x-transition:enter="transition ease-out duration-300"
+                             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                             x-transition:leave="transition ease-in duration-200"
+                             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                             class="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full max-w-md overflow-hidden relative transition-all my-auto z-10 p-6 space-y-4 text-right">
+
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100">
+                                    <x-heroicon-s-exclamation-triangle class="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-black text-gray-900">تأكيد حذف المالك من المبنى</h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">يرجى التأكيد للمتابعة في عملية الحذف</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3.5 bg-gray-50 rounded-2xl border border-gray-200/80 text-xs text-gray-700 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-500 font-bold">اسم المالك:</span>
+                                    <span class="font-black text-gray-900" x-text="ownerToDelete ? ownerToDelete.full_name : ''"></span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-500 font-bold">رقم الهوية:</span>
+                                    <span class="font-mono font-black text-gray-900" x-text="ownerToDelete ? ownerToDelete.id_card : ''"></span>
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-rose-700 font-bold bg-rose-50/70 p-3 rounded-xl border border-rose-100">
+                                تنبيه: سيتم فك ارتباط المالك بوحدات هذا المبنى وإزالته من سجل ملاك العقار، ولن يتم حذف ملف المواطن العام من سجل المواطنين الموحد.
+                            </p>
+
+                            <div class="flex items-center justify-end gap-3 pt-2">
+                                <button type="button"
+                                        @click="closeDeleteOwnerModal()"
+                                        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                                    إلغاء
+                                </button>
+
+                                <button type="button"
+                                        @click="deleteOwner()"
+                                        :disabled="isDeletingOwner"
+                                        class="inline-flex items-center gap-1.5 px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition shadow-md shadow-rose-600/20 disabled:opacity-50 cursor-pointer">
+                                    <template x-if="!isDeletingOwner">
+                                        <span class="flex items-center gap-1">
+                                            <x-heroicon-s-trash class="w-4 h-4" />
+                                            <span>نعم، حذف المالك</span>
+                                        </span>
+                                    </template>
+                                    <template x-if="isDeletingOwner">
+                                        <span class="flex items-center gap-1">
+                                            <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                            <span>جاري الحذف...</span>
+                                        </span>
+                                    </template>
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </template>
 
                 </div>
 

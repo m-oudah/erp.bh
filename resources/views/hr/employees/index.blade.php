@@ -24,7 +24,7 @@
             </div>
 
             {{-- Filter Form --}}
-            <form method="GET" action="{{ route('hr.employees.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-3 border-t border-slate-100">
+            <form method="GET" action="{{ route('hr.employees.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 pt-3 border-t border-slate-100">
                 {{-- Search query --}}
                 <div class="lg:col-span-2 relative">
                     <input type="text" name="search" value="{{ request('search') }}"
@@ -33,6 +33,18 @@
                     <div class="absolute left-3 top-2.5 text-slate-400">
                         <x-heroicon-s-magnifying-glass class="w-4 h-4" />
                     </div>
+                </div>
+
+                {{-- Status Filter --}}
+                <div>
+                    <select name="status" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 font-bold">
+                        <option value="">جميع الحالات (النشطين، المتقاعدين...)</option>
+                        @foreach(\App\Models\HR\Employee::STATUSES as $key => $label)
+                            <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 {{-- Contract Type Filter --}}
@@ -61,7 +73,7 @@
 
                 {{-- Actions --}}
                 <div class="flex items-center gap-2">
-                    <button type="submit" class="flex-1 py-2 px-3 bg-secondary hover:bg-secondary-dark text-white rounded-xl text-xs font-bold transition-colors">
+                    <button type="submit" class="flex-1 py-2 px-3 bg-secondary hover:bg-secondary-dark text-white rounded-xl text-xs font-bold transition-colors cursor-pointer">
                         تصفية
                     </button>
                     @if(request()->hasAny(['search', 'contract_type', 'department_id', 'status', 'grade_id']))
@@ -142,6 +154,26 @@
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                             <span>على رأس عمله</span>
                                         </span>
+                                    @elseif($emp->status === 'martyr')
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-300">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
+                                            <span>شهيد</span>
+                                        </span>
+                                    @elseif($emp->status === 'retired')
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                            <span>متقاعد</span>
+                                        </span>
+                                    @elseif($emp->status === 'prisoner')
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                                            <span>أسير</span>
+                                        </span>
+                                    @elseif($emp->status === 'abroad')
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded-md border border-cyan-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                                            <span>مسافر خارج الوطن</span>
+                                        </span>
                                     @elseif($emp->status === 'suspended')
                                         <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600">
                                             <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
@@ -150,7 +182,7 @@
                                     @else
                                         <span class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600">
                                             <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                                            <span>منتهية</span>
+                                            <span>{{ $emp->status_arabic }}</span>
                                         </span>
                                     @endif
                                 </td>

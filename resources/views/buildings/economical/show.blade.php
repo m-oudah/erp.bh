@@ -137,52 +137,81 @@
                         </div>
 
                         <!-- Group 2 -->
-                        <div>
-                            <h3 class="text-sm font-bold text-black border-b border-gray-100 pb-2 mb-4 flex items-center gap-2">
-                                <x-heroicon-s-map-pin class="w-4 h-4 text-gray-400" />
-                                موقع النشاط
-                            </h3>
-                            <div class="space-y-3">
-                                @if($economical->building)
-                                <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span class="text-sm text-black font-semibold">مبنى رقم:</span>
-                                    <a href="{{ route('buildings.buildings.show', $economical->building_id) }}" class="text-sm font-bold text-blue-600 hover:underline">{{ $economical->building->building_number ?? $economical->building_id }}</a>
+                        <div class="bg-gray-50/50 rounded-2xl p-4 border border-gray-100 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between border-b border-gray-200/80 pb-2 mb-4">
+                                    <h3 class="text-sm font-bold text-black flex items-center gap-2">
+                                        <x-heroicon-s-map-pin class="w-4 h-4 text-orange" />
+                                        موقع النشاط
+                                    </h3>
+                                    @if($economical->building || $economical->building_id)
+                                    <a href="{{ route('buildings.buildings.show', $economical->building_id) }}" 
+                                       class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border border-blue-200 rounded-xl text-xs font-bold transition-all shadow-2xs">
+                                        <x-heroicon-s-building-office class="w-3.5 h-3.5 text-blue-600" />
+                                        <span>صفحة المبنى</span>
+                                        <x-heroicon-s-arrow-top-right-on-square class="w-3 h-3 text-blue-500" />
+                                    </a>
+                                    @endif
                                 </div>
-                                <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span class="text-sm text-black font-semibold">الحي:</span>
-                                    <span class="text-sm font-semibold text-black">{{ $economical->building->zone->name ?? '-' }}</span>
-                                </div>
-                                <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span class="text-sm text-black font-semibold">الشارع:</span>
-                                    <span class="text-sm font-semibold text-black">{{ $economical->building->street->name ?? '-' }}</span>
-                                </div>
-                                @elseif($economical->building_number || $economical->job_street || $economical->job_location)
-                                <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span class="text-sm text-black font-semibold">رقم المبنى:</span>
-                                    <span class="text-sm font-semibold text-black">{{ $economical->building_number ?: '-' }}</span>
-                                </div>
-                                <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span class="text-sm text-black font-semibold">الشارع:</span>
-                                    <span class="text-sm font-semibold text-black">{{ $economical->job_street ?: '-' }}</span>
-                                </div>
-                                <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span class="text-sm text-black font-semibold">الموقع:</span>
-                                    <span class="text-sm font-semibold text-black">{{ $economical->job_location ?: '-' }}</span>
-                                </div>
-                                @endif
+                                <div class="space-y-3">
+                                    @if($economical->building)
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                        <span class="text-sm text-black font-semibold">مبنى رقم:</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-bold text-black">{{ $economical->building->building_number ?? $economical->building_id }}</span>
+                                            <a href="{{ route('buildings.buildings.show', $economical->building_id) }}" 
+                                               class="text-xs text-blue-600 hover:underline font-bold flex items-center gap-0.5">
+                                                (عرض ملف المبنى)
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                        <span class="text-sm text-black font-semibold">الحي:</span>
+                                        <span class="text-sm font-semibold text-black">{{ $economical->building->zone->name ?? '-' }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                        <span class="text-sm text-black font-semibold">الشارع:</span>
+                                        <span class="text-sm font-semibold text-black">{{ $economical->building->street->name ?? '-' }}</span>
+                                    </div>
+                                    @elseif($economical->building_number || $economical->job_street || $economical->job_location)
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                        <span class="text-sm text-black font-semibold">رقم المبنى:</span>
+                                        <span class="text-sm font-semibold text-black">{{ $economical->building_number ?: '-' }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                        <span class="text-sm text-black font-semibold">الشارع:</span>
+                                        <span class="text-sm font-semibold text-black">{{ $economical->job_street ?: '-' }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                        <span class="text-sm text-black font-semibold">الموقع:</span>
+                                        <span class="text-sm font-semibold text-black">{{ $economical->job_location ?: '-' }}</span>
+                                    </div>
+                                    @endif
 
-                                @if($economical->unit)
-                                <div class="flex justify-between items-center py-2">
-                                    <span class="text-sm text-black font-semibold">رقم الوحدة/المحل:</span>
-                                    <span class="text-sm font-semibold text-black">{{ $economical->unit->unit_number ?? '-' }} ({{ $economical->unit->unit_name ?? '-' }})</span>
+                                    @if($economical->unit)
+                                    <div class="flex justify-between items-center py-2">
+                                        <span class="text-sm text-black font-semibold">رقم الوحدة/المحل:</span>
+                                        <span class="text-sm font-semibold text-black">{{ $economical->unit->unit_number ?? '-' }} ({{ $economical->unit->unit_name ?? '-' }})</span>
+                                    </div>
+                                    @elseif($economical->unit_number)
+                                    <div class="flex justify-between items-center py-2">
+                                        <span class="text-sm text-black font-semibold">رقم الوحدة/المحل:</span>
+                                        <span class="text-sm font-semibold text-black">{{ $economical->unit_number }}</span>
+                                    </div>
+                                    @endif
                                 </div>
-                                @elseif($economical->unit_number)
-                                <div class="flex justify-between items-center py-2">
-                                    <span class="text-sm text-black font-semibold">رقم الوحدة/المحل:</span>
-                                    <span class="text-sm font-semibold text-black">{{ $economical->unit_number }}</span>
-                                </div>
-                                @endif
                             </div>
+
+                            @if($economical->building || $economical->building_id)
+                            <div class="mt-4 pt-3 border-t border-gray-200/80">
+                                <a href="{{ route('buildings.buildings.show', $economical->building_id) }}" 
+                                   class="w-full py-2.5 px-4 bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-300 rounded-xl text-blue-700 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-2xs group">
+                                    <x-heroicon-s-building-office class="w-4 h-4 text-blue-600" />
+                                    <span>الانتقال إلى صفحة المبنى (مبنى رقم {{ $economical->building->building_number ?? $economical->building_id }})</span>
+                                    <x-heroicon-s-arrow-left class="w-4 h-4 text-blue-500 group-hover:-translate-x-1 transition-transform" />
+                                </a>
+                            </div>
+                            @endif
                         </div>
                     </div>
 

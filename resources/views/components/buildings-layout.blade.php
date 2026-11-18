@@ -38,6 +38,18 @@
                 إدارة المباني
             </a>
 
+            <a href="{{ route('buildings.units.index') }}"
+               class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200
+                      {{ request()->routeIs('buildings.units.*')
+                            ? 'bg-secondary/10 text-secondary-dark shadow-xs border border-secondary/20'
+                            : 'text-tertiary hover:bg-gray-50 hover:text-gray-800' }}">
+                <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0
+                            {{ request()->routeIs('buildings.units.*') ? 'bg-secondary text-white shadow-xs' : 'bg-amber-50 text-secondary' }}">
+                    <x-heroicon-o-squares-plus class="w-4 h-4" />
+                </div>
+                الوحدات العقارية
+            </a>
+
             <a href="{{ route('buildings.licenses.index') }}"
                class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200
                       {{ request()->routeIs('buildings.licenses.*')

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>كشف مسير الرواتب - {{ $payroll->title }}</title>
+    <title>كشف رواتب الموظفين - {{ $payroll->title }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css'])
     <style>
@@ -11,8 +11,15 @@
         @media print {
             .no-print { display: none !important; }
             @page { size: landscape; margin: 8mm; }
-            body { background: white; margin: 0; padding: 0; font-size: 10px; }
-            .print-table th, .print-table td { padding: 4px 6px !important; }
+            body { background: white; margin: 0; padding: 0; font-size: 10px; color: #000; }
+            .print-table th, .print-table td { padding: 4px 6px !important; border-color: #94a3b8 !important; }
+            .print-table tfoot td {
+                background-color: #e2e8f0 !important;
+                color: #000000 !important;
+                border-color: #64748b !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
     </style>
 </head>
@@ -23,13 +30,13 @@
         <a href="{{ route('hr.payroll.show', $payroll->id) }}"
            class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-2xs">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-            <span>الرجوع للمسير</span>
+            <span>الرجوع لكشف الرواتب</span>
         </a>
 
         <button onclick="window.print()"
                 class="px-5 py-2.5 bg-primary hover:bg-primary-dark text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-            <span>طباعة الكشف الكامل (Landscape)</span>
+            <span>طباعة كشف الرواتب (Landscape)</span>
         </button>
     </div>
 
@@ -46,7 +53,7 @@
 
             <div class="text-center">
                 <img src="{{ asset('logo.png') }}" alt="بلدية بيت حانون" class="h-14 w-auto mx-auto mb-1">
-                <h1 class="text-base font-black text-slate-900">كشف مسير رواتب الموظفين العام</h1>
+                <h1 class="text-base font-black text-slate-900">كشف رواتب الموظفين العام</h1>
                 <div class="text-xs font-bold text-primary">{{ $payroll->title }}</div>
             </div>
 
@@ -65,7 +72,6 @@
                     <tr class="bg-slate-200 text-slate-900 font-black text-center border-b border-slate-300">
                         <th class="border border-slate-300 py-1.5 px-1 w-6">#</th>
                         <th class="border border-slate-300 py-1.5 px-2 text-right">الموظف / الرقم الوظيفي</th>
-                        <th class="border border-slate-300 py-1.5 px-1">الدرجة</th>
                         <th class="border border-slate-300 py-1.5 px-1.5">الأساسي</th>
                         <th class="border border-slate-300 py-1.5 px-1.5">طبيعة عمل</th>
                         <th class="border border-slate-300 py-1.5 px-1.5">اجتماعية</th>
@@ -88,10 +94,6 @@
                                 <div class="font-bold text-slate-900 leading-tight">{{ $item->employee_name }}</div>
                                 <div class="font-mono text-[9px] text-slate-500">{{ $item->employee_number }}</div>
                             </td>
-                            <td class="border border-slate-300 py-1 px-1 text-center font-mono">
-                                <div>{{ $item->grade_name }}</div>
-                                <div class="text-[8px] text-slate-500">مربوط {{ $item->step }}</div>
-                            </td>
                             <td class="border border-slate-300 py-1 px-1.5 text-center font-mono font-bold">{{ number_format($item->base_salary, 2) }}</td>
                             <td class="border border-slate-300 py-1 px-1.5 text-center font-mono text-emerald-700">{{ number_format($item->nature_of_work_allowance, 2) }}</td>
                             <td class="border border-slate-300 py-1 px-1.5 text-center font-mono">{{ number_format($item->spouse_allowance + $item->children_allowance, 2) }}</td>
@@ -110,17 +112,29 @@
                         </tr>
                     @endforeach
                 </tbody>
-                <tfoot>
-                    <tr class="bg-slate-900 text-white font-black text-[11px] text-center">
-                        <td colspan="3" class="py-2 border border-slate-800">الإجمالي العام ({{ $payroll->total_employees }} موظف)</td>
-                        <td class="py-2 px-1 font-mono border border-slate-800">{{ number_format($payroll->total_basic_salary, 2) }} ₪</td>
-                        <td colspan="4" class="border border-slate-800"></td>
-                        <td class="py-2 px-1 font-mono text-emerald-300 border border-slate-800">+ {{ number_format($payroll->total_allowances, 2) }} ₪</td>
-                        <td class="py-2 px-1 font-mono border border-slate-800">{{ number_format($payroll->total_basic_salary + $payroll->total_allowances, 2) }} ₪</td>
-                        <td colspan="2" class="border border-slate-800"></td>
-                        <td class="py-2 px-1 font-mono text-rose-300 border border-slate-800">- {{ number_format($payroll->total_deductions, 2) }} ₪</td>
-                        <td class="py-2 px-2 font-mono text-amber-300 text-sm font-black bg-slate-800 border border-slate-700">{{ number_format($payroll->total_net_salary, 2) }} ₪</td>
-                        <td class="border border-slate-800"></td>
+                <tfoot class="border-t-2 border-slate-400">
+                    <tr class="bg-slate-200 text-black font-black text-[11px] text-center">
+                        <td colspan="2" class="py-2.5 px-2 border border-slate-400 text-right font-black text-black bg-slate-200">
+                            الإجمالي العام ({{ $payroll->total_employees }} موظف)
+                        </td>
+                        <td class="py-2.5 px-1 font-mono font-black text-black border border-slate-400 bg-slate-200">
+                            {{ number_format($payroll->total_basic_salary, 2) }} ₪
+                        </td>
+                        <td colspan="4" class="border border-slate-400 bg-slate-200"></td>
+                        <td class="py-2.5 px-1 font-mono font-black text-black border border-slate-400 bg-slate-200">
+                            + {{ number_format($payroll->total_allowances, 2) }} ₪
+                        </td>
+                        <td class="py-2.5 px-1 font-mono font-black text-black border border-slate-400 bg-slate-200">
+                            {{ number_format($payroll->total_basic_salary + $payroll->total_allowances, 2) }} ₪
+                        </td>
+                        <td colspan="2" class="border border-slate-400 bg-slate-200"></td>
+                        <td class="py-2.5 px-1 font-mono font-black text-black border border-slate-400 bg-slate-200">
+                            - {{ number_format($payroll->total_deductions, 2) }} ₪
+                        </td>
+                        <td class="py-2.5 px-2 font-mono text-black text-xs font-black border border-slate-400 bg-slate-300">
+                            {{ number_format($payroll->total_net_salary, 2) }} ₪
+                        </td>
+                        <td class="border border-slate-400 bg-slate-200"></td>
                     </tr>
                 </tfoot>
             </table>
@@ -148,4 +162,3 @@
 
 </body>
 </html>
-
