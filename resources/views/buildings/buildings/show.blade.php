@@ -1,5 +1,5 @@
 <x-buildings-layout>
-    <div x-data="buildingArchiveLinking({{ $building->id }}, '{{ addslashes($building->file_number ?? '') }}', '{{ addslashes($building->main_owner?->full_name ?? $building->building_name ?? '') }}')" class="space-y-6 max-w-7xl mx-auto pb-10">
+    <div x-data="buildingArchiveLinking({{ $building->id }}, '{{ addslashes($building->file_number ?? '') }}', '{{ addslashes($building->main_owner?->full_name ?? $building->building_name ?? '') }}')" class="space-y-6 w-full pb-10">
 
         @if(session('success'))
         <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-center gap-3 shadow-xs font-bold text-sm">

@@ -59,11 +59,11 @@
                 {{-- Forward / Route Button --}}
                 <a href="{{ route('correspondence.memos.forward-page', $memo->id) }}"
                    class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-secondary hover:bg-amber-700 shadow-xs transition-all flex items-center gap-1.5"
-                   title="تحويل المراسلة مع توجيه إداري في صفحة جديدة">
+                   title="رد أو إعادة توجيه المراسلة مع توجيه إداري">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
                     </svg>
-                    <span>تحويل مع توجيه إداري</span>
+                    <span>رد / إعادة توجيه</span>
                 </a>
 
                 {{-- Complete / Close Button --}}
@@ -76,6 +76,16 @@
                     <span>إنجاز وإغلاق المراسلة</span>
                 </button>
             @else
+                {{-- Forward / Route Button even when closed --}}
+                <a href="{{ route('correspondence.memos.forward-page', $memo->id) }}"
+                   class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-secondary hover:bg-amber-700 shadow-xs transition-all flex items-center gap-1.5"
+                   title="رد أو إعادة توجيه المراسلة مع توجيه إداري">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+                    </svg>
+                    <span>رد / إعادة توجيه</span>
+                </a>
+
                 <div class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
                     <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -359,26 +369,58 @@
                 @if ($memo->attachments->count() > 0)
                     <div class="space-y-2">
                         @foreach ($memo->attachments as $attachment)
+                            @php
+                                $ext = strtolower(pathinfo($attachment->file_name, PATHINFO_EXTENSION));
+                                $previewUrl = route('correspondence.memos.attachments.preview', $attachment->id);
+                                $downloadUrl = route('correspondence.memos.attachments.download', $attachment->id);
+                                $safeFileName = addslashes($attachment->file_name);
+                                $safeUploader = addslashes($attachment->uploader->name ?? 'موظف');
+                            @endphp
                             <div class="p-2.5 rounded-xl border border-gray-100 bg-slate-50/60 hover:bg-slate-50 hover:border-primary/30 transition-all flex items-center justify-between gap-2 group">
-                                <div class="flex items-center gap-2.5 min-w-0">
-                                    <div class="w-8 h-8 rounded-lg bg-amber-50 text-secondary flex items-center justify-center shrink-0">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                        </svg>
-                                    </div>
-                                    <div class="min-w-0">
-                                        <h4 class="text-xs font-bold text-slate-800 truncate" title="{{ $attachment->file_name }}">
+                                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                    <button type="button"
+                                            onclick="openAttachmentModal('{{ $previewUrl }}', '{{ $downloadUrl }}', '{{ $safeFileName }}', '{{ $ext }}', '{{ $attachment->formatted_size }}', '{{ $safeUploader }}')"
+                                            class="w-8 h-8 rounded-lg bg-amber-50 text-secondary hover:bg-amber-100 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+                                            title="معاينة المرفق">
+                                        @if(in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']))
+                                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            </svg>
+                                        @elseif($ext === 'pdf')
+                                            <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                            </svg>
+                                        @else
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            </svg>
+                                        @endif
+                                    </button>
+                                    <div class="min-w-0 flex-1">
+                                        <button type="button"
+                                                onclick="openAttachmentModal('{{ $previewUrl }}', '{{ $downloadUrl }}', '{{ $safeFileName }}', '{{ $ext }}', '{{ $attachment->formatted_size }}', '{{ $safeUploader }}')"
+                                                class="text-xs font-bold text-slate-800 hover:text-primary transition-colors truncate block w-full text-right cursor-pointer"
+                                                title="اضغط لمعاينة المرفق: {{ $attachment->file_name }}">
                                             {{ $attachment->file_name }}
-                                        </h4>
+                                        </button>
                                         <div class="text-[10px] text-tertiary">
                                             <span>{{ $attachment->formatted_size }}</span> • <span>{{ $attachment->uploader->name ?? 'موظف' }}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="shrink-0">
-                                    <a href="{{ route('correspondence.memos.attachments.download', $attachment->id) }}"
-                                       class="p-1.5 rounded-lg bg-white border border-gray-200 text-slate-700 hover:text-primary hover:border-primary shadow-xs transition-colors inline-flex items-center justify-center"
+                                <div class="shrink-0 flex items-center gap-1">
+                                    <button type="button"
+                                            onclick="openAttachmentModal('{{ $previewUrl }}', '{{ $downloadUrl }}', '{{ $safeFileName }}', '{{ $ext }}', '{{ $attachment->formatted_size }}', '{{ $safeUploader }}')"
+                                            class="p-1.5 rounded-lg bg-white border border-gray-200 text-slate-600 hover:text-primary hover:border-primary shadow-2xs transition-colors inline-flex items-center justify-center cursor-pointer"
+                                            title="معاينة المرفق في نافذة منبثقة">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                    </button>
+                                    <a href="{{ $downloadUrl }}"
+                                       class="p-1.5 rounded-lg bg-white border border-gray-200 text-slate-600 hover:text-primary hover:border-primary shadow-2xs transition-colors inline-flex items-center justify-center"
                                        title="تحميل الملف">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -549,6 +591,103 @@
         </div>
     </div>
 
+    {{-- 5. Attachment Preview Popup Modal --}}
+    <div id="attachment_preview_modal" class="fixed inset-0 z-50 hidden overflow-hidden" aria-labelledby="attachment-modal-title" role="dialog" aria-modal="true">
+        {{-- Backdrop --}}
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="closeAttachmentModal()"></div>
+
+        <div class="fixed inset-0 flex items-center justify-center p-2 sm:p-4 text-center z-10 pointer-events-none">
+            <div class="pointer-events-auto relative transform overflow-hidden rounded-2xl sm:rounded-3xl bg-white text-right shadow-2xl transition-all w-full max-w-5xl h-[95vh] flex flex-col border border-slate-200">
+                
+                {{-- Modal Header --}}
+                <div class="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-slate-50/90 shrink-0">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div id="attach_modal_icon" class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200/80 text-secondary flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                            </svg>
+                        </div>
+                        <div class="min-w-0">
+                            <h3 id="attach_modal_title" class="text-sm font-black text-slate-800 truncate" title="اسم المرفق">معاينة المرفق</h3>
+                            <p class="text-[11px] font-bold text-slate-500">
+                                <span id="attach_modal_size">0 KB</span> • بواسطة <span id="attach_modal_uploader">موظف</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Actions --}}
+                    <div class="flex items-center gap-2 shrink-0">
+                        <a id="attach_modal_newtab" href="#" target="_blank" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer" title="فتح في تبويب مستقل">
+                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            <span class="hidden sm:inline">نافذة مستقلة</span>
+                        </a>
+
+                        <a id="attach_modal_download" href="#" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-primary hover:bg-teal-700 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer" title="تحميل الملف للجهاز">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            <span>تحميل</span>
+                        </a>
+                        
+                        <button type="button" 
+                                onclick="closeAttachmentModal()" 
+                                class="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                                title="إغلاق النافذة">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Modal Body --}}
+                <div class="flex-1 min-h-0 bg-slate-100 p-2 sm:p-3 overflow-hidden flex flex-col relative justify-center items-center">
+                    {{-- Container for PDF / Documents (Iframe) --}}
+                    <iframe id="attach_modal_iframe" 
+                            src="about:blank" 
+                            class="w-full h-full rounded-2xl bg-white border border-gray-200 shadow-inner hidden"
+                            title="معاينة المستند"></iframe>
+
+                    {{-- Container for Images --}}
+                    <div id="attach_modal_img_container" class="w-full h-full flex items-center justify-center overflow-auto p-4 hidden">
+                        <img id="attach_modal_image" src="" alt="معاينة الصورة" class="max-h-full max-w-full object-contain rounded-xl shadow-lg border border-slate-200 bg-white">
+                    </div>
+
+                    {{-- Container for Non-previewable files (e.g. zip, docx, etc.) --}}
+                    <div id="attach_modal_fallback" class="p-8 text-center max-w-md bg-white rounded-2xl border border-slate-200 shadow-sm hidden space-y-4">
+                        <div class="w-16 h-16 rounded-2xl bg-amber-50 text-secondary mx-auto flex items-center justify-center">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 id="fallback_file_name" class="font-bold text-slate-800 text-sm mb-1 truncate">اسم الملف</h4>
+                            <p class="text-xs text-slate-500">هذا النوع من الملفات لا يدعم المعاينة التفاعلية المباشرة داخل المتصفح، يمكنك تحميله مباشرة إلى جهازك لفتحه.</p>
+                        </div>
+                        <a id="fallback_download_btn" href="#" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-teal-700 text-white font-bold text-xs shadow-sm transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            <span>تحميل الملف الآن</span>
+                        </a>
+                    </div>
+                </div>
+
+                {{-- Modal Footer --}}
+                <div class="flex items-center justify-between px-6 py-2.5 border-t border-gray-100 bg-white text-xs shrink-0">
+                    <span class="text-slate-500 font-medium">مستند مؤرشف ومرفق بمراسلة داخلية رسمية - بلدية بيت حانون.</span>
+                    <button type="button" 
+                            onclick="closeAttachmentModal()" 
+                            class="px-4 py-1.5 rounded-xl border border-slate-300 font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+                        إغلاق
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
     <script>
         function openPrintModal() {
@@ -579,10 +718,64 @@
             }
         }
 
+        function openAttachmentModal(previewUrl, downloadUrl, fileName, ext, fileSize, uploader) {
+            const modal = document.getElementById('attachment_preview_modal');
+            const iframe = document.getElementById('attach_modal_iframe');
+            const imgContainer = document.getElementById('attach_modal_img_container');
+            const img = document.getElementById('attach_modal_image');
+            const fallback = document.getElementById('attach_modal_fallback');
+            
+            document.getElementById('attach_modal_title').innerText = fileName;
+            document.getElementById('attach_modal_title').title = fileName;
+            document.getElementById('attach_modal_size').innerText = fileSize;
+            document.getElementById('attach_modal_uploader').innerText = uploader;
+            document.getElementById('attach_modal_newtab').href = previewUrl;
+            document.getElementById('attach_modal_download').href = downloadUrl;
+            document.getElementById('fallback_file_name').innerText = fileName;
+            document.getElementById('fallback_download_btn').href = downloadUrl;
+
+            // Reset view state
+            iframe.classList.add('hidden');
+            iframe.src = 'about:blank';
+            imgContainer.classList.add('hidden');
+            img.src = '';
+            fallback.classList.add('hidden');
+
+            const lowerExt = (ext || '').toLowerCase();
+            const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'];
+            const docExts = ['pdf'];
+
+            if (imageExts.includes(lowerExt)) {
+                img.src = previewUrl;
+                imgContainer.classList.remove('hidden');
+            } else if (docExts.includes(lowerExt)) {
+                iframe.src = previewUrl;
+                iframe.classList.remove('hidden');
+            } else {
+                fallback.classList.remove('hidden');
+            }
+
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeAttachmentModal() {
+            const modal = document.getElementById('attachment_preview_modal');
+            const iframe = document.getElementById('attach_modal_iframe');
+            const img = document.getElementById('attach_modal_image');
+            if (iframe) iframe.src = 'about:blank';
+            if (img) img.src = '';
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
         // Close on Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closePrintModal();
+                closeAttachmentModal();
             }
         });
     </script>

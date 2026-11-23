@@ -27,6 +27,7 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::get('/buildings', [PortalController::class, 'buildings'])->name('buildings');
         Route::get('/units', [PortalController::class, 'units'])->name('units');
         Route::get('/crafts', [PortalController::class, 'crafts'])->name('crafts');
+        Route::get('/damage-certificate/{building_id}', [PortalController::class, 'damageCertificate'])->name('damage-certificate');
         Route::post('/logout', [PortalController::class, 'logout'])->name('logout');
     });
 });

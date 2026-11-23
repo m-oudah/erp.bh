@@ -16,6 +16,7 @@ Route::middleware(['auth', 'module.access:correspondence'])->prefix('corresponde
     Route::post('/memos/{memo}/forward', [MemoController::class, 'forward'])->name('memos.forward');
     Route::post('/memos/{memo}/close', [MemoController::class, 'close'])->name('memos.close');
     Route::post('/memos/{memo}/attachments', [MemoController::class, 'addAttachment'])->name('memos.attachments.store');
+    Route::get('/attachments/{attachment}/preview', [MemoController::class, 'previewAttachment'])->name('memos.attachments.preview');
     Route::get('/attachments/{attachment}/download', [MemoController::class, 'downloadAttachment'])->name('memos.attachments.download');
 });
 

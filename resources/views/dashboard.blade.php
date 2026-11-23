@@ -21,7 +21,8 @@
             $canTransactions = $user?->canAccessModule('transactions');
             $canCorrespondence = $user?->canAccessModule('correspondence');
             $canHr = $user?->canAccessModule('hr');
-            $hasAnyModule = $canArchive || $canBuildings || $canCrafts || $canCustomers || $canTransactions || $canCorrespondence || $canHr;
+            $canDamage = $user?->canAccessModule('damage');
+            $hasAnyModule = $canArchive || $canBuildings || $canCrafts || $canCustomers || $canTransactions || $canCorrespondence || $canHr || $canDamage;
         @endphp
 
         {{-- 4-Column Grid --}}
@@ -68,9 +69,9 @@
                             <div class="w-12 h-12 rounded-2xl bg-amber-50 text-secondary group-hover:bg-secondary group-hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm shrink-0">
                                 <x-heroicon-s-building-office class="w-6 h-6" style="color: inherit;" />
                             </div>
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80 shrink-0">
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                نشط جزئياً
+                           <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shrink-0">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                نشط بالكامل
                             </span>
                         </div>
 
@@ -287,6 +288,41 @@
                         <span>دخول النظام</span>
                         <div class="w-8 h-8 rounded-xl bg-slate-100 group-hover:bg-primary group-hover:text-white text-slate-600 flex items-center justify-center transition-all">
                             <x-heroicon-s-arrow-left class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                        </div>
+                    </div>
+                </a>
+            @endif
+
+            {{-- 8. Module: Damage Assessment & Needs Analysis (منظومة حصر الأضرار وتقييم الاحتياجات) --}}
+            @if($canDamage)
+                <a href="{{ route('damage.dashboard') }}"
+                   class="group relative bg-white rounded-3xl p-5 border-2 border-orange-200 hover:border-orange-500 shadow-[0_4px_20px_-4px_rgba(249,115,22,0.12)] hover:shadow-xl hover:shadow-orange-500/15 transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5 min-h-[230px] bg-gradient-to-b from-white via-white to-orange-50/20">
+                    <div>
+                        <div class="flex items-start justify-between gap-3 mb-4">
+                            <div class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm shrink-0 ring-1 ring-orange-200">
+                                <x-heroicon-s-chart-bar-square class="w-6 h-6" style="color: inherit;" />
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-orange-50 text-orange-700 border border-orange-200 shrink-0">
+                                <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
+                                منظومة مركزية
+                            </span>
+                        </div>
+
+                        <h3 class="text-lg font-extrabold text-slate-900 group-hover:text-orange-600 transition-colors tracking-tight leading-snug">
+                            حصر الأضرار وتقييم الاحتياجات
+                        </h3>
+                        <p class="text-xs text-slate-500 font-normal leading-relaxed mt-2">
+                            حصر قطاعي شامل، تقدير كميات وتكاليف هندسية، إفادات QR، وبوابة المانحين والخريطة التفاعلية
+                        </p>
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs font-bold text-orange-600 pt-4 mt-4 border-t border-orange-100 group-hover:text-orange-700 transition-colors">
+                        <span class="flex items-center gap-1.5">
+                            <span>دخول المنظومة</span>
+                            <x-heroicon-s-arrow-left class="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        </span>
+                        <div class="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 group-hover:bg-orange-600 group-hover:text-white flex items-center justify-center transition-all shadow-xs">
+                            <x-heroicon-s-chevron-left class="w-4 h-4" />
                         </div>
                     </div>
                 </a>

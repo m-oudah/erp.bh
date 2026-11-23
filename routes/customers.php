@@ -21,6 +21,7 @@ Route::middleware(['auth', 'verified', 'module.access:customers'])->prefix('cust
     Route::get('/subscriptions/{id}', [BhmCustomerController::class, 'showSubscription'])->name('subscriptions.show')->middleware('can:Read-Subscriptions');
     Route::get('/customers/{id}', [BhmCustomerController::class, 'showCustomer'])->name('show')->middleware('can:Read-Subscriptions');
     Route::get('/citizens/{id}', [BhmCustomerController::class, 'showCustomer'])->name('citizens.show')->middleware('can:Read-Subscriptions');
+    Route::get('/citizens/{id}/print', [BhmCustomerController::class, 'printCitizen'])->name('citizens.print')->middleware('can:Read-Subscriptions');
 });
 
 // Direct aliases without prefix for modal scripts

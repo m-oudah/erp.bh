@@ -5,7 +5,9 @@
         </x-slot>
     @endif
 
-    <div class="max-w-7xl mx-auto pb-10 flex flex-col md:flex-row gap-6">
+    <div class="w-full pb-10">
+        <div class="bg-white/60 backdrop-blur-sm border border-gray-100 rounded-3xl p-6 min-h-[500px] shadow-[0_2px_20px_-3px_rgba(6,81,237,0.05)]">
+            <div class="flex flex-col md:flex-row gap-6">
         
         <!-- Sidebar Navigation -->
         <div class="w-full md:w-1/4 shrink-0">
@@ -45,5 +47,7 @@
             {{ $slot }}
         </div>
 
+            </div>
+        </div>
     </div>
 </x-app-layout>

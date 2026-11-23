@@ -250,8 +250,10 @@ class MemoController extends Controller
             'targetDepartment',
             'attachments.uploader',
             'attachments.archiveDocument',
-            'movements.fromUser',
-            'movements.toUser',
+            'movements.fromUser.department',
+            'movements.toUser.department',
+            'movements.toDepartment',
+            'movements.attachments',
         ]);
 
         $departments = Department::where('is_active', true)->with('users')->orderBy('order')->get();
@@ -264,9 +266,42 @@ class MemoController extends Controller
             'job_title' => $u->job_title ?? 'موظف',
         ])->values();
 
+        $groupedMovements = [];
+        foreach ($memo->movements as $m) {
+            $lastIdx = count($groupedMovements) - 1;
+            if (
+                $lastIdx >= 0 &&
+                $groupedMovements[$lastIdx]['action_type'] === $m->action_type &&
+                $groupedMovements[$lastIdx]['from_user_id'] === $m->from_user_id &&
+                $groupedMovements[$lastIdx]['directive_text'] === $m->directive_text &&
+                abs(strtotime((string)$groupedMovements[$lastIdx]['created_at']) - strtotime((string)$m->created_at)) <= 30
+            ) {
+                if ($m->toUser && !in_array($m->toUser->id, array_map(fn($u) => $u->id, $groupedMovements[$lastIdx]['recipients']))) {
+                    $groupedMovements[$lastIdx]['recipients'][] = $m->toUser;
+                }
+            } else {
+                $initialRecipients = [];
+                if ($m->action_type === 'إنشاء المراسلة' && $memo->recipients->isNotEmpty()) {
+                    $initialRecipients = $memo->recipients->all();
+                } elseif ($m->toUser) {
+                    $initialRecipients = [$m->toUser];
+                }
+
+                $groupedMovements[] = [
+                    'movement' => $m,
+                    'action_type' => $m->action_type,
+                    'from_user_id' => $m->from_user_id,
+                    'fromUser' => $m->fromUser,
+                    'directive_text' => $m->directive_text,
+                    'created_at' => $m->created_at,
+                    'recipients' => $initialRecipients,
+                ];
+            }
+        }
+
         $oldAssigneeIds = old('assignee_ids', old('to_user_id') ? [(int)old('to_user_id')] : []);
 
-        return view('correspondence.memos.forward', compact('memo', 'departments', 'users', 'usersList', 'oldAssigneeIds'));
+        return view('correspondence.memos.forward', compact('memo', 'departments', 'users', 'usersList', 'oldAssigneeIds', 'groupedMovements'));
     }
 
     public function forward(Request $request, InternalMemo $memo)
@@ -323,6 +358,21 @@ class MemoController extends Controller
         $this->correspondenceService->storeAttachment($memo, $request->file('attachment'), null, auth()->user());
 
         return back()->with('success', 'تم رفع المرفق وأرشفته تلقائياً في الأرشيف المركزي.');
+    }
+
+    public function previewAttachment(MemoAttachment $attachment)
+    {
+        if (!Storage::disk('public')->exists($attachment->file_path)) {
+            abort(404, 'الملف غير موجود على الخادم.');
+        }
+
+        $fullPath = Storage::disk('public')->path($attachment->file_path);
+        $mimeType = @mime_content_type($fullPath) ?: ($attachment->mime_type ?: 'application/octet-stream');
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . rawurlencode($attachment->file_name) . '"'
+        ]);
     }
 
     public function downloadAttachment(MemoAttachment $attachment)

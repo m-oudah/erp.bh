@@ -9,101 +9,127 @@
     <style>
         body {
             font-family: 'Cairo', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            background-color: #f1f5f9;
-            color: #000;
+            background-color: #f8fafc;
+            color: #0f172a;
         }
 
-        .slip-outer-frame {
-            border: 1.5px solid #333333;
-            background-color: #ffffff;
-        }
-
-        .slip-box {
-            border: 1px solid #333333;
-        }
-
-        .slip-table {
-            border-collapse: collapse;
+        .table-custom {
+            border-collapse: separate;
+            border-spacing: 0;
             width: 100%;
         }
 
-        .slip-table th, .slip-table td {
-            border: 1px solid #333333;
-            padding: 2.5px 6px;
+        .table-custom th, .table-custom td {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 3.5px 7px;
         }
 
-        .header-teal {
-            background-color: #a3d9cf !important;
-            color: #000000 !important;
-            font-weight: 800;
+        .table-custom tr:last-child td {
+            border-bottom: none;
         }
 
-        .net-highlight {
-            background-color: #a3d9cf !important;
-            color: #000000 !important;
-            font-weight: 900;
+        .admin-grid {
+            display: grid !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            width: 100% !important;
+            gap: 12px !important;
         }
 
-        .admin-box {
-            border: 1px solid #333333;
-            display: flex;
-            background-color: #ffffff;
+        .financial-row {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            width: 100% !important;
+            gap: 16px !important;
         }
 
-        .admin-col-group {
-            display: flex;
-            flex: 1;
+        .financial-col-additions {
+            width: 100% !important;
+            min-width: 0 !important;
         }
 
-        .admin-col-group:first-child {
-            border-left: 1px solid #333333;
-        }
-
-        .admin-labels {
-            border-left: 1px solid #333333;
-            padding: 5px 6px;
-            font-weight: bold;
-            color: #1e293b;
-        }
-
-        .admin-values {
-            padding: 5px 8px;
-            font-weight: 600;
-            color: #000000;
+        .financial-col-deductions {
+            width: 100% !important;
+            min-width: 0 !important;
         }
 
         @page {
-            size: landscape;
-            margin: 6mm;
+            size: A4 portrait;
+            margin: 6mm 8mm;
         }
 
         @media print {
             .no-print {
                 display: none !important;
             }
-            body {
-                background: white !important;
+            html, body {
+                background: #ffffff !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                color: #000 !important;
+                color: #000000 !important;
+                width: 100% !important;
+                height: auto !important;
+                font-size: 10px !important;
             }
             .print-container {
                 max-width: 100% !important;
                 width: 100% !important;
-                padding: 8px !important;
-                margin: 0 !important;
+                margin: 0 auto !important;
+                padding: 4mm 5mm !important;
                 box-shadow: none !important;
-                border: 1.5px solid #000 !important;
+                border: 1px solid #64748b !important;
+                border-radius: 12px !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                page-break-after: avoid !important;
+                break-after: avoid !important;
             }
-            .slip-outer-frame, .slip-box, .slip-table th, .slip-table td,
-            .admin-box, .admin-col-group:first-child, .admin-labels {
-                border-color: #000 !important;
+            .print-border {
+                border-color: #94a3b8 !important;
             }
-            .header-teal, .net-highlight {
-                background-color: #a3d9cf !important;
-                color: #000 !important;
+            .print-bg-light {
+                background-color: #f8fafc !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+            }
+            .print-bg-teal {
+                background-color: #ccfbf1 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .print-bg-dark {
+                background-color: #0f172a !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .financial-row {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                width: 100% !important;
+                gap: 12px !important;
+            }
+            .financial-col-additions {
+                width: 100% !important;
+                min-width: 0 !important;
+                display: block !important;
+            }
+            .financial-col-deductions {
+                width: 100% !important;
+                min-width: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            .admin-grid {
+                display: grid !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                width: 100% !important;
+                gap: 8px !important;
+            }
+            .hero-salary-card {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: center !important;
             }
         }
     </style>
@@ -123,7 +149,7 @@
         $empNumClean = $emp ? str_replace('EMP-', '', $emp->employee_number) : str_replace('EMP-', '', $item->employee_number);
         $empNumClean = ltrim($empNumClean, '0') ?: $empNumClean;
 
-        // Sequence / Dept code for top right box (like 102 in the photo)
+        // Sequence / Dept code
         $deptCode = $emp?->department?->code;
         if (!$deptCode || $deptCode === 'ROOT') {
             $deptCode = '102';
@@ -184,363 +210,366 @@
     @endphp
 
     {{-- Control Action Bar (Hidden on Print) --}}
-    <div class="max-w-[1150px] mx-auto mb-3 flex flex-wrap items-center justify-between gap-3 no-print">
+    <div class="w-full mb-4 p-3 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 no-print">
         <a href="{{ route('hr.payroll.show', $payroll->id) }}"
-           class="px-4 py-2 rounded-xl bg-white border border-slate-300 text-slate-800 text-xs font-bold hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-2xs">
-            <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-            <span>الرجوع لمسير الرواتب ({{ $payroll->title }})</span>
+           style="background-color: #f8fafc; color: #0f172a; border: 1.5px solid #cbd5e1;"
+           class="px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-slate-100 transition-all flex items-center gap-2 shadow-xs cursor-pointer">
+            <svg class="w-4 h-4 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            <span class="font-extrabold text-slate-900">الرجوع لكشف الرواتب ({{ $payroll->title }})</span>
         </a>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2.5">
             <a href="{{ route('hr.payroll.export', $payroll->id) }}"
-               class="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5">
-                <svg class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               style="background-color: #059669; color: #ffffff;"
+               class="px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                <span>تصدير المسير لإكسل</span>
+                <span class="font-extrabold text-white">تصدير المسير لإكسل</span>
             </a>
 
             <button onclick="window.print()"
-                    class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer">
-                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                <span>طباعة قسيمة الراتب</span>
+                    style="background-color: #1d4ed8; color: #ffffff;"
+                    class="px-5 py-2.5 rounded-xl font-extrabold text-xs hover:bg-blue-800 transition-all flex items-center gap-2 shadow-md cursor-pointer">
+                <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span class="text-white font-extrabold">طباعة قسيمة الراتب (A4)</span>
             </button>
         </div>
     </div>
 
-    {{-- Main Printable Payslip Container (Exact Replica of Municipal Slip) --}}
-    <div class="max-w-[1150px] mx-auto bg-white p-4 sm:p-5 print-container slip-outer-frame shadow-xs">
+    {{-- Main Printable Document (A4 Portrait Container) --}}
+    <div class="w-full bg-white p-5 sm:p-7 print-container border border-slate-300 rounded-3xl shadow-sm space-y-4">
 
-        {{-- Top Header Row (Matching Attached Image Exactly) --}}
-        <div class="slip-box p-2 mb-3 flex items-center justify-between text-xs bg-white relative">
-            {{-- Right Section: Sequence No. & Municipality Info --}}
-            <div class="text-right flex flex-col items-start gap-1">
-                <div class="border border-slate-800 px-3 py-0.5 inline-block text-center font-mono font-bold text-xs bg-white">
-                    {{ $deptCode }}
-                </div>
-                <div class="text-[12px] font-bold text-slate-900">
-                    بلدية بيت حانون-الشئون الادارية-بيانات الموظفين
+        {{-- 1. Modern Header Row --}}
+        <div class="pb-3 border-b border-slate-200 flex items-center justify-between gap-3">
+            {{-- Right: Municipality Crest & Branding --}}
+            <div class="flex items-center gap-3">
+                <img src="{{ asset('logo.png') }}" alt="بلدية بيت حانون" class="w-12 h-12 object-contain shrink-0" onerror="this.style.display='none'">
+                <div>
+                    <div class="text-[11px] font-bold text-slate-500 leading-tight">دولة فلسطين - وزارة الحكم المحلي</div>
+                    <div class="text-sm font-black text-slate-900 leading-tight mt-0.5">بلدية بيت حانون - الشئون الإدارية</div>
+                    <div class="text-[10px] font-extrabold text-teal-700">قسم الرواتب والمستحقات</div>
                 </div>
             </div>
 
-            {{-- Center Section: Main Title --}}
-            <div class="text-center absolute left-1/2 -translate-x-1/2">
-                <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-normal">
-                    قسيمة راتب موظف عن شهر {{ $monthName }} لسنة {{ $payroll->year }}
+            {{-- Center: Slip Title Badge --}}
+            <div class="text-center">
+                <span class="inline-block px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-800 text-[11px] font-black tracking-wide">
+                    قسيمة راتب موظف
+                </span>
+                <h1 class="text-sm sm:text-base font-black text-slate-900 mt-1">
+                    عن شهر {{ $monthName }} لسنة {{ $payroll->year }}
                 </h1>
             </div>
 
-            {{-- Left Section: Department --}}
-            <div class="text-left font-bold text-sm text-slate-900 pl-2">
-                قسم الرواتب
+            {{-- Left: Slip ID & Dept Code --}}
+            <div class="text-left font-mono space-y-1">
+                <div class="flex items-center justify-end gap-1.5">
+                    <span class="text-[10px] font-sans text-slate-500 font-bold">الرمز:</span>
+                    <span class="px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-black text-slate-900">{{ $deptCode }}</span>
+                </div>
+                <div class="text-[10px] text-slate-500 font-sans">
+                    الرقم: <span class="font-bold text-slate-800 font-mono">#{{ sprintf('%03d', $empNumClean) }}</span>
+                </div>
             </div>
         </div>
 
-        {{-- Main Two-Column Layout:
-             In RTL:
-             Column 1 (first child in HTML) renders on the RIGHT: Administrative Data (البيانات الادارية)
-             Column 2 (second child in HTML) renders on the LEFT: Financial Data (البيانات المالية)
-        --}}
-        <div class="grid grid-cols-12 gap-4 items-start">
-
-            {{-- RIGHT COLUMN (52% width): Administrative Data (البيانات الادارية) --}}
-            <div class="col-span-12 lg:col-span-6 space-y-2">
-                
-                {{-- Section Title --}}
-                <div class="text-xs font-bold text-slate-900 pr-1">
-                    البيانات الادارية :
-                </div>
-
-                {{-- Administrative Details Box (4 vertical columns, no horizontal borders) --}}
-                <div class="admin-box text-xs leading-normal">
-                    
-                    {{-- Right Sub-Block (Sub-col 1 in RTL: Labels + Values) --}}
-                    <div class="admin-col-group">
-                        {{-- Values Column (Center/Right aligned) --}}
-                        <div class="admin-values flex-1 flex flex-col justify-between py-1.5 space-y-1 text-slate-900">
-                            <div>{{ $empNumClean }}</div>
-                            <div class="font-bold truncate">{{ $item->employee_name }}</div>
-                            <div>{{ $item->job_title }}</div>
-                            <div>{{ $contractType }}</div>
-                            <div class="truncate">{{ $bankName }}</div>
-                            <div>{{ $dependents }}</div>
-                            <div class="flex items-center justify-between text-[11px]">
-                                <span>{{ $natureRate }} %</span>
-                                <span class="text-slate-700">عدد الخاضعين</span>
-                                <span class="pl-1">0</span>
-                            </div>
-                            <div>0</div>
-                        </div>
-
-                        {{-- Labels Column --}}
-                        <div class="admin-labels w-[28%] flex flex-col justify-between py-1.5 space-y-1 text-right text-slate-800">
-                            <div>رقم الموظف</div>
-                            <div>اسم الموظف</div>
-                            <div>الوظيفة</div>
-                            <div>نوع الموظف</div>
-                            <div>اسم البنك</div>
-                            <div>عدد الاولاد</div>
-                            <div>د.ط.العمل</div>
-                            <div>عدد العائل</div>
+        {{-- 2. Administrative Information Card (بطاقة البيانات الإدارية والوظيفية) --}}
+        <div class="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200 space-y-2.5">
+            {{-- Top Employee Summary Row --}}
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-200/80">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-slate-900 text-white font-mono font-black flex items-center justify-center text-xs shadow-xs shrink-0">
+                        {{ $empNumClean }}
+                    </div>
+                    <div>
+                        <div class="text-sm font-black text-slate-900 leading-tight">{{ $item->employee_name }}</div>
+                        <div class="text-[11px] font-bold text-slate-600 mt-0.5">
+                            {{ $item->job_title }} • <span class="text-teal-700">{{ $contractType }}</span>
                         </div>
                     </div>
-
-                    {{-- Left Sub-Block (Sub-col 2 in RTL: Labels + Values) --}}
-                    <div class="admin-col-group">
-                        {{-- Values Column --}}
-                        <div class="admin-values flex-1 flex flex-col justify-between py-1.5 space-y-1 text-slate-900 font-mono">
-                            <div>{{ $nationalId }}</div>
-                            <div class="font-sans">{{ $deptDirectorate }}</div>
-                            <div class="font-sans">{{ $deptSection }}</div>
-                            <div>{{ $accountNo }}</div>
-                            <div class="font-sans">{{ $maritalStatus }}</div>
-                            <div class="font-sans">{{ $gradeName }}</div>
-                            <div>{{ $stepVal }}</div>
-                            <div>0</div>
-                            <div>{{ $emp?->grade?->category ?? '2' }}</div>
-                        </div>
-
-                        {{-- Labels Column --}}
-                        <div class="admin-labels w-[34%] flex flex-col justify-between py-1.5 space-y-1 text-right text-slate-800">
-                            <div>رقم الهوية</div>
-                            <div>الدائرة</div>
-                            <div>القسم</div>
-                            <div>رقم الحساب</div>
-                            <div>الحالة الاجتماعية</div>
-                            <div>الدرجة</div>
-                            <div>ع . بعرض الترقية</div>
-                            <div>ع . زيادة الراتب</div>
-                            <div>الفئة</div>
-                        </div>
-                    </div>
-
                 </div>
 
-                {{-- Below Administrative Box: Notice Box (Right) & Empty Box (Left) --}}
-                <div class="grid grid-cols-2 gap-3 pt-1">
-                    {{-- Right Box: Official Notice --}}
-                    <div class="slip-box p-3 text-center flex flex-col justify-center items-center min-h-[85px] bg-white">
-                        <div class="font-bold text-xs text-slate-900 leading-relaxed">
-                            في حالة وجود أي خطأ في استمارة الراتب
-                        </div>
-                        <div class="font-bold text-[11px] text-slate-800 mt-1">
-                            يرجى مراجعة قسم شؤون الموظفين
-                        </div>
-                    </div>
-
-                    {{-- Left Box: Empty Bordered Frame (Matching Image) --}}
-                    <div class="slip-box min-h-[85px] bg-white"></div>
+                <div class="flex items-center gap-2 text-xs font-mono">
+                    <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold">
+                        هوية: <strong class="text-slate-900">{{ $nationalId }}</strong>
+                    </span>
+                    <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold">
+                        فئة: <strong class="text-slate-900">{{ $emp?->grade?->category ?? '2' }}</strong>
+                    </span>
                 </div>
-
             </div>
 
-
-            {{-- LEFT COLUMN (48% width): Financial Data (البيانات المالية) --}}
-            <div class="col-span-12 lg:col-span-6 space-y-2">
-                
-                {{-- Section Title --}}
-                <div class="text-xs font-bold text-slate-900 pr-1">
-                    البيانات المالية :
+            {{-- Grid of Detailed Administrative Fields (4 Columns in 1 Row) --}}
+            <div class="admin-grid grid grid-cols-4 gap-2.5 text-xs w-full">
+                <div class="p-2.5 bg-white rounded-xl border border-slate-200/90 shadow-2xs">
+                    <span class="text-[10px] text-slate-500 font-bold block mb-0.5">الدائرة / القسم</span>
+                    <span class="font-black text-slate-900 block text-[11px] leading-tight" title="{{ $deptDirectorate }} - {{ $deptSection }}">
+                        {{ $deptDirectorate }} - {{ $deptSection }}
+                    </span>
                 </div>
 
-                {{-- Two Sub-Tables: Right = الاضافات, Left = الخصميات --}}
-                <div class="grid grid-cols-12 gap-3">
+                <div class="p-2.5 bg-white rounded-xl border border-slate-200/90 shadow-2xs">
+                    <span class="text-[10px] text-slate-500 font-bold block mb-0.5">اسم البنك / الحساب</span>
+                    <span class="font-black text-slate-900 block text-[11px] leading-tight" title="{{ $bankName }} ({{ $accountNo }})">
+                        {{ $bankName }} • <span class="font-mono">{{ $accountNo }}</span>
+                    </span>
+                </div>
 
-                    {{-- 1. Right Sub-Table in RTL (62%): الاضافات (Additions) --}}
-                    <div class="col-span-7">
-                        <table class="slip-table text-[11px] leading-tight">
+                <div class="p-2.5 bg-white rounded-xl border border-slate-200/90 shadow-2xs">
+                    <span class="text-[10px] text-slate-500 font-bold block mb-0.5">الحالة / الأولاد / المعالين</span>
+                    <span class="font-black text-slate-900 block text-[11px] leading-tight">
+                        {{ $maritalStatus }} • {{ $dependents }} أولاد • 0 معال
+                    </span>
+                </div>
+
+                <div class="p-2.5 bg-white rounded-xl border border-slate-200/90 shadow-2xs">
+                    <span class="text-[10px] text-slate-500 font-bold block mb-0.5">الدرجة / ع. الترقية / الزيادة</span>
+                    <span class="font-black text-slate-900 block text-[11px] leading-tight">
+                        {{ $gradeName }} • رتبة {{ $stepVal }} • زيادة 0
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {{-- 3. Financial Columns: Additions (Right) & Deductions (Left) - Spanning Full Width (2 Columns in 1 Row) --}}
+        <div class="financial-row grid grid-cols-2 gap-6 w-full">
+
+            {{-- 3.1. RIGHT COLUMN (Additions / الإضافات والاستحقاقات) --}}
+            <div class="financial-col-additions w-full space-y-2">
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-teal-600 inline-block"></span>
+                        <span>بيانات الإضافات والاستحقاقات</span>
+                    </span>
+                    <span class="text-[10px] font-bold text-slate-500">20 بنداً مالياً</span>
+                </div>
+
+                <div class="rounded-2xl border border-slate-300 overflow-hidden bg-white shadow-2xs w-full">
+                    <table class="table-custom text-[11px] leading-tight w-full">
+                        <thead>
+                            <tr class="bg-teal-50/80 text-teal-900 font-black border-b border-teal-200">
+                                <th class="text-right py-1 px-2.5">البند / العلاوة</th>
+                                <th class="text-left py-1 px-2.5 font-mono w-28">المبلغ (₪)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="bg-slate-50/40">
+                                <td class="font-bold text-slate-800">الراتب الأساسي</td>
+                                <td class="font-mono font-black text-left text-slate-900">{{ number_format($baseSalary, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">طبيعة العمل ({{ $natureRate }}%)</td>
+                                <td class="font-mono font-bold text-left text-slate-900">{{ number_format($natureOfWork, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">العلاوة العائلية (زوجة + أبناء)</td>
+                                <td class="font-mono font-bold text-left text-slate-900">{{ number_format($familyAllowance, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">السفر الداخلي</td>
+                                <td class="font-mono text-left text-slate-500">0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">عمل إضافي</td>
+                                <td class="font-mono font-bold text-left text-slate-900">{{ number_format($overtime, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">إضافات ومكافآت</td>
+                                <td class="font-mono font-bold text-left text-slate-900">{{ number_format($bonus, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">علاوة زيادة الراتب</td>
+                                <td class="font-mono text-left text-slate-500">0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">ع . ط . العمل (تكملة)</td>
+                                <td class="font-mono text-left text-slate-500">0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">ع . ط . العمل (68%)</td>
+                                <td class="font-mono text-left text-slate-500">0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">علاوات أخرى</td>
+                                <td class="font-mono font-bold text-left text-slate-900">{{ number_format($otherAllowances, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">علاوة إدارية (منصب)</td>
+                                <td class="font-mono font-bold text-left text-slate-900">{{ number_format($posAllowance, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">علاوة تخصص ومؤهل علمي</td>
+                                <td class="font-mono font-bold text-left text-slate-900">{{ number_format($qualAllowance, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">علاوة مقطوعة</td>
+                                <td class="font-mono text-left text-slate-500">0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">علاوة المعاشات (مساهمة البلدية)</td>
+                                <td class="font-mono text-left text-slate-500">0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">بدل جوال</td>
+                                <td class="font-mono text-left text-slate-500">0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">فرق راتب</td>
+                                <td class="font-mono text-left text-slate-500">0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">ع . غلاء المعيشة</td>
+                                <td class="font-mono font-bold text-left text-slate-900">{{ number_format($costOfLiving, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">علاوة ترقية 5%</td>
+                                <td class="font-mono text-left text-slate-500">0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">علاوة ترقية أقدمية</td>
+                                <td class="font-mono text-left text-slate-500">0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-slate-800">علاوة خطر</td>
+                                <td class="font-mono font-bold text-left text-slate-900">{{ number_format($riskAllowance, 2) }}</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-slate-100 font-black border-t-2 border-slate-300">
+                                <td class="text-right py-2 px-2.5 text-slate-900">مجموع الإضافات (الراتب القائم)</td>
+                                <td class="font-mono font-black text-left text-slate-900 text-xs py-2 px-2.5">{{ number_format($totalAdditions, 2) }} ₪</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            {{-- 3.2. LEFT COLUMN (Deductions / الخصميات والاستقطاعات + كوبون التأمين) --}}
+            <div class="financial-col-deductions w-full space-y-3">
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between px-1">
+                        <span class="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span>
+                            <span>الخصميات والاستقطاعات</span>
+                        </span>
+                        <span class="text-[10px] font-bold text-slate-500">9 بنود</span>
+                    </div>
+
+                    <div class="rounded-2xl border border-slate-300 overflow-hidden bg-white shadow-2xs w-full">
+                        <table class="table-custom text-[11px] leading-tight w-full">
                             <thead>
-                                <tr>
-                                    <th colspan="2" class="header-teal text-center py-0.5 text-xs">
-                                        الاضافات
-                                    </th>
+                                <tr class="bg-rose-50/70 text-rose-900 font-black border-b border-rose-200">
+                                    <th class="text-right py-1 px-2.5">بند الاستقطاع</th>
+                                    <th class="text-left py-1 px-2.5 font-mono w-24">المبلغ (₪)</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y divide-slate-100">
                                 <tr>
-                                    <td class="font-bold text-right text-slate-800 w-[58%]">الاساسي</td>
-                                    <td class="font-mono font-bold text-left text-slate-900 w-[42%]">{{ number_format($baseSalary, 2) }}</td>
+                                    <td class="text-slate-800">تأمين ومعاشات (تقاعد)</td>
+                                    <td class="font-mono font-bold text-left text-slate-900">{{ number_format($pensionDeduct, 2) }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="font-bold text-right text-slate-800">طبيعة العمل</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">{{ number_format($natureOfWork, 2) }}</td>
+                                    <td class="text-slate-800">علاوة معاشات</td>
+                                    <td class="font-mono text-left text-slate-500">0.00</td>
                                 </tr>
                                 <tr>
-                                    <td class="font-bold text-right text-slate-800">العلاوة العائلية</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">{{ number_format($familyAllowance, 2) }}</td>
+                                    <td class="text-slate-800">تأمين صحي حكومي</td>
+                                    <td class="font-mono font-bold text-left text-slate-900">{{ number_format($healthDeduct, 2) }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="font-bold text-right text-slate-800">السفر الداخلي</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">0.00</td>
+                                    <td class="text-slate-800">ضريبة الدخل</td>
+                                    <td class="font-mono text-left text-slate-500">0.00</td>
                                 </tr>
                                 <tr>
-                                    <td class="font-bold text-right text-slate-800">عمل اضافي</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">{{ number_format($overtime, 2) }}</td>
+                                    <td class="text-slate-800">سلف وقروض (القسط)</td>
+                                    <td class="font-mono font-bold text-left text-slate-900">{{ number_format($loanDeduct, 2) }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="font-bold text-right text-slate-800">اضافات</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">{{ number_format($bonus, 2) }}</td>
+                                    <td class="text-slate-800">خصم غياب</td>
+                                    <td class="font-mono text-left text-slate-500">0.00</td>
                                 </tr>
                                 <tr>
-                                    <td class="font-bold text-right text-slate-800">علاوة زيادة الراتب</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">0.00</td>
+                                    <td class="text-slate-800">خصم مياه</td>
+                                    <td class="font-mono text-left text-slate-500">0.00</td>
                                 </tr>
                                 <tr>
-                                    <td class="font-bold text-right text-slate-800">ع . ط . العمل (تكملة)</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">0.00</td>
+                                    <td class="text-slate-800">خصميات أخرى</td>
+                                    <td class="font-mono font-bold text-left text-slate-900">{{ number_format($otherDeduct, 2) }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="font-bold text-right text-slate-800">ع . ط . العمل (68%)</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">0.00</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-bold text-right text-slate-800">علاوات اخرى</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">{{ number_format($otherAllowances, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-bold text-right text-slate-800">علاوة ادارية</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">{{ number_format($posAllowance, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-bold text-right text-slate-800">علاوة تخصص</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">{{ number_format($qualAllowance, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-bold text-right text-slate-800">علاوة مقطوعة</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">0.00</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-bold text-right text-slate-800">علاوة المعاشات</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">0.00</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-bold text-right text-slate-800">بدل جوال</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">0.00</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-bold text-right text-slate-800">فرق راتب</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">0.00</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-bold text-right text-slate-800">ع . غلاء المعيشة</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">{{ number_format($costOfLiving, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-bold text-right text-slate-800">علاوة ترقية 5%</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">0.00</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-bold text-right text-slate-800">علاوة ترقية أقدمية</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">0.00</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-bold text-right text-slate-800">علاوة خطر</td>
-                                    <td class="font-mono font-bold text-left text-slate-900">{{ number_format($riskAllowance, 2) }}</td>
-                                </tr>
-                                {{-- Total Additions --}}
-                                <tr>
-                                    <td class="font-bold text-right text-slate-900 bg-white">مجموع الاضافات</td>
-                                    <td class="font-mono font-bold text-left text-slate-900 bg-white">{{ number_format($totalAdditions, 2) }}</td>
-                                </tr>
-                                {{-- Net Salary Highlight --}}
-                                <tr class="net-highlight">
-                                    <td class="font-bold text-right">الصافي للقبض</td>
-                                    <td class="font-mono font-bold text-left text-xs">{{ number_format($netSalary, 2) }}</td>
+                                    <td class="text-slate-800">خصم جوال</td>
+                                    <td class="font-mono text-left text-slate-500">0.00</td>
                                 </tr>
                             </tbody>
+                            <tfoot>
+                                <tr class="bg-rose-50/50 font-black border-t-2 border-slate-300">
+                                    <td class="text-right py-2 px-2.5 text-rose-950">مجموع الخصميات</td>
+                                    <td class="font-mono font-black text-left text-rose-950 text-xs py-2 px-2.5">{{ number_format($totalDeductions, 2) }} ₪</td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
+                </div>
 
-                    {{-- 2. Left Sub-Table in RTL (38%): الخصميات (Deductions) + Coupon --}}
-                    <div class="col-span-5 flex flex-col justify-between">
-                        <div>
-                            <table class="slip-table text-[11px] leading-tight">
-                                <thead>
-                                    <tr>
-                                        <th colspan="2" class="header-teal text-center py-0.5 text-xs">
-                                            الخصميات
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="font-bold text-right text-slate-800 w-[55%]">تأمين ومعاشات</td>
-                                        <td class="font-mono font-bold text-left text-slate-900 w-[45%]">{{ number_format($pensionDeduct, 2) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="font-bold text-right text-slate-800">علاوة معاشات</td>
-                                        <td class="font-mono font-bold text-left text-slate-900">0.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="font-bold text-right text-slate-800">تأمين صحي</td>
-                                        <td class="font-mono font-bold text-left text-slate-900">{{ number_format($healthDeduct, 2) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="font-bold text-right text-slate-800">ضريبة الدخل</td>
-                                        <td class="font-mono font-bold text-left text-slate-900">0.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="font-bold text-right text-slate-800">القسط</td>
-                                        <td class="font-mono font-bold text-left text-slate-900">{{ number_format($loanDeduct, 2) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="font-bold text-right text-slate-800">غياب</td>
-                                        <td class="font-mono font-bold text-left text-slate-900">0.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="font-bold text-right text-slate-800">خصم مياه</td>
-                                        <td class="font-mono font-bold text-left text-slate-900">0.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="font-bold text-right text-slate-800">خصميات اخرى</td>
-                                        <td class="font-mono font-bold text-left text-slate-900">{{ number_format($otherDeduct, 2) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="font-bold text-right text-slate-800">خصم جوال</td>
-                                        <td class="font-mono font-bold text-left text-slate-900">0.00</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {{-- Total Deductions (Aligned with مجموع الإضافات) & Dashed Coupon Box --}}
-                        <div class="mt-auto pt-2 space-y-3">
-                            <table class="slip-table text-[11px] leading-tight">
-                                <tbody>
-                                    <tr>
-                                        <td class="font-bold text-right text-slate-900 bg-white w-[55%]">مجموع الخصميات</td>
-                                        <td class="font-mono font-bold text-left text-slate-900 bg-white w-[45%]">{{ number_format($totalDeductions, 2) }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                            {{-- Dashed Health Insurance Coupon Box (Bottom Left as in Photo) --}}
-                            <div class="p-2 border-2 border-dashed border-slate-900 text-xs font-mono font-bold text-slate-900 bg-white space-y-0.5">
-                                <div class="flex items-center justify-between text-[11px]">
-                                    <span class="font-sans font-bold">رقم الهوية</span>
-                                    <span>{{ $nationalId }}</span>
-                                </div>
-                                <div class="flex items-center justify-between text-[11px]">
-                                    <span class="font-sans font-bold">تأمين صحي</span>
-                                    <span>{{ number_format($healthDeduct, 2) }}</span>
-                                </div>
-                                <div class="text-left text-[11px] pt-0.5">
-                                    {{ $payroll->year }}/{{ sprintf('%02d', (int)$payroll->month) }}
-                                </div>
-                            </div>
-                        </div>
-
+                {{-- Dashed Health Insurance Coupon Box (Bottom Left as in Municipal Spec) --}}
+                <div class="rounded-2xl border-2 border-dashed border-teal-700/60 p-3 bg-teal-50/40 space-y-1.5 text-xs font-mono w-full">
+                    <div class="flex items-center justify-between text-[11px] font-sans font-bold text-teal-900 pb-1 border-b border-teal-200/60">
+                        <span>قسيمة اقتطاع التأمين الصحي</span>
+                        <span class="text-[10px] text-teal-700 font-mono">{{ $payroll->year }}/{{ sprintf('%02d', (int)$payroll->month) }}</span>
                     </div>
-
+                    <div class="flex items-center justify-between text-[11px]">
+                        <span class="font-sans text-slate-600 font-bold">رقم هوية الموظف:</span>
+                        <span class="font-black text-slate-900">{{ $nationalId }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px]">
+                        <span class="font-sans text-slate-600 font-bold">قيمة التأمين المقتطع:</span>
+                        <span class="font-black text-teal-900">{{ number_format($healthDeduct, 2) }} ₪</span>
+                    </div>
                 </div>
-
-                {{-- Spelled-out Words (Tafqeet) Below Additions & Net Amount --}}
-                <div class="pt-1 text-xs font-bold text-slate-900 text-center leading-normal">
-                    {{ $tafqeetWords }}
-                </div>
-
             </div>
 
+        </div>
+
+        {{-- 4. Net Salary Hero Card & Tafqeet (البطاقة الكبرى لصافي القبض والتفقيط) --}}
+        <div class="hero-salary-card rounded-2xl border-2 border-teal-600 bg-gradient-to-r from-teal-50 via-emerald-50/60 to-white p-3.5 sm:p-4 flex flex-row items-center justify-between gap-3 shadow-xs">
+            <div class="space-y-1 flex-1">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-teal-600 inline-block shrink-0"></span>
+                    <span class="text-xs font-black text-teal-950 tracking-wide uppercase">الصافي المستحق للصرف (Net Salary)</span>
+                </div>
+                <div class="text-xs font-bold text-slate-700 pr-5 leading-normal">
+                    فقط: <span class="font-extrabold text-slate-900 underline decoration-teal-500/50 decoration-2">{{ $tafqeetWords }}</span>
+                </div>
+            </div>
+
+            <div class="text-left shrink-0 sm:border-r sm:border-teal-200/80 sm:pr-4 sm:mr-2">
+                <span class="text-[11px] font-bold text-teal-800 block">المبلغ الصافي للقبض</span>
+                <span class="text-2xl font-black text-teal-950 font-mono tracking-tight">{{ number_format($netSalary, 2) }} <span class="text-sm font-sans">شيكل</span></span>
+            </div>
+        </div>
+
+        {{-- 5. Signatures Row --}}
+        <div class="grid grid-cols-3 gap-4 text-center pt-2 text-xs text-slate-600">
+            <div class="space-y-6">
+                <span class="font-bold block">إعداد: محاسب الرواتب</span>
+                <span class="border-b border-dashed border-slate-300 block w-28 mx-auto"></span>
+            </div>
+            <div class="space-y-6">
+                <span class="font-bold block">تدقيق: المدير المالي</span>
+                <span class="border-b border-dashed border-slate-300 block w-28 mx-auto"></span>
+            </div>
+            <div class="space-y-6">
+                <span class="font-bold block">اعتماد: رئيس البلدية</span>
+                <span class="border-b border-dashed border-slate-300 block w-28 mx-auto"></span>
+            </div>
+        </div>
+
+        {{-- 6. Footer Notice (تذييل الاستمارة) --}}
+        <div class="pt-3 border-t border-slate-200 text-center">
+            <p class="text-xs font-bold text-slate-700">
+                في حالة وجود أي خطأ في استمارة الراتب يرجى مراجعة قسم شؤون الموظفين بالبلدية
+            </p>
         </div>
 
     </div>

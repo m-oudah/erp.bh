@@ -217,15 +217,10 @@
                             <th class="py-3 px-3">#</th>
                             <th class="py-3 px-3">الموظف</th>
                             <th class="py-3 px-3">الوحدة والمسمى</th>
-                            <th class="py-3 px-3">الدرجة</th>
                             <th class="py-3 px-3">الأساسي</th>
                             <th class="py-3 px-3">طبيعة عمل</th>
-                            <th class="py-3 px-3">اجتماعية</th>
-                            <th class="py-3 px-3">إضافي/مكافأة</th>
                             <th class="py-3 px-3">إجمالي العلاوات</th>
                             <th class="py-3 px-3">القائم</th>
-                            <th class="py-3 px-3">التقاعد</th>
-                            <th class="py-3 px-3">تأمين وسلف</th>
                             <th class="py-3 px-3">إجمالي الخصم</th>
                             <th class="py-3 px-3 bg-teal-50 text-teal-900 font-black">الصافي (₪)</th>
                             <th class="py-3 px-3 text-center">قسيمة / تعديل</th>
@@ -243,33 +238,17 @@
                                     <div class="font-bold text-slate-800 text-[11px] truncate max-w-[130px]">{{ $item->job_title }}</div>
                                     <div class="text-[10px] text-tertiary truncate max-w-[130px]">{{ $item->department_name }}</div>
                                 </td>
-                                <td class="py-2.5 px-3">
-                                    <span class="text-[10px] font-bold text-slate-700 block">{{ $item->grade_name }}</span>
-                                    <span class="text-[9px] text-tertiary">مربوط {{ $item->step }}</span>
-                                </td>
                                 <td class="py-2.5 px-3 font-mono font-bold text-slate-800">
                                     {{ number_format($item->base_salary, 2) }}
                                 </td>
                                 <td class="py-2.5 px-3 font-mono text-emerald-700">
                                     {{ number_format($item->nature_of_work_allowance, 2) }}
                                 </td>
-                                <td class="py-2.5 px-3 font-mono text-emerald-700">
-                                    {{ number_format($item->spouse_allowance + $item->children_allowance, 2) }}
-                                </td>
-                                <td class="py-2.5 px-3 font-mono text-emerald-700">
-                                    {{ number_format($item->overtime_allowance + $item->bonus_allowance, 2) }}
-                                </td>
                                 <td class="py-2.5 px-3 font-mono font-bold text-emerald-800">
                                     {{ number_format($item->total_allowances, 2) }}
                                 </td>
                                 <td class="py-2.5 px-3 font-mono font-bold text-slate-900 bg-slate-50/50">
                                     {{ number_format($item->gross_salary, 2) }}
-                                </td>
-                                <td class="py-2.5 px-3 font-mono text-rose-600">
-                                    {{ number_format($item->pension_deduction, 2) }}
-                                </td>
-                                <td class="py-2.5 px-3 font-mono text-rose-600">
-                                    {{ number_format($item->health_insurance_deduction + $item->loan_deduction + $item->other_deductions, 2) }}
                                 </td>
                                 <td class="py-2.5 px-3 font-mono font-bold text-rose-700">
                                     {{ number_format($item->total_deductions, 2) }}
@@ -295,23 +274,34 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="15" class="text-center py-10 text-tertiary">
+                                <td colspan="10" class="text-center py-10 text-tertiary">
                                     لا يوجد موظفون يطابقون شروط البحث
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
-                    <tfoot>
-                        <tr class="bg-slate-900 text-white font-extrabold text-xs">
-                            <td colspan="4" class="py-3 px-3 text-center">الإجمالي العام لمسير الرواتب</td>
-                            <td class="py-3 px-3 font-mono">{{ number_format($payroll->total_basic_salary, 2) }} ₪</td>
-                            <td colspan="3"></td>
-                            <td class="py-3 px-3 font-mono text-emerald-300">+ {{ number_format($payroll->total_allowances, 2) }} ₪</td>
-                            <td class="py-3 px-3 font-mono">{{ number_format($payroll->total_basic_salary + $payroll->total_allowances, 2) }} ₪</td>
-                            <td colspan="2"></td>
-                            <td class="py-3 px-3 font-mono text-rose-300">- {{ number_format($payroll->total_deductions, 2) }} ₪</td>
-                            <td class="py-3 px-3 font-mono text-amber-300 text-base font-black bg-slate-800">{{ number_format($payroll->total_net_salary, 2) }} ₪</td>
-                            <td></td>
+                    <tfoot class="border-t-2 border-slate-300">
+                        <tr class="bg-slate-200 text-slate-900 font-black text-xs">
+                            <td colspan="3" class="py-3 px-3 text-center text-slate-900 font-black bg-slate-200 border-r border-slate-300">
+                                الإجمالي العام لمسير الرواتب
+                            </td>
+                            <td class="py-3 px-3 font-mono font-black text-slate-900 bg-slate-200">
+                                {{ number_format($payroll->total_basic_salary, 2) }} ₪
+                            </td>
+                            <td class="bg-slate-200"></td>
+                            <td class="py-3 px-3 font-mono font-black text-slate-900 bg-slate-200">
+                                + {{ number_format($payroll->total_allowances, 2) }} ₪
+                            </td>
+                            <td class="py-3 px-3 font-mono font-black text-slate-900 bg-slate-200">
+                                {{ number_format($payroll->total_basic_salary + $payroll->total_allowances, 2) }} ₪
+                            </td>
+                            <td class="py-3 px-3 font-mono font-black text-slate-900 bg-slate-200">
+                                - {{ number_format($payroll->total_deductions, 2) }} ₪
+                            </td>
+                            <td class="py-3 px-3 font-mono text-black text-sm font-black bg-slate-300 border-x border-slate-300">
+                                {{ number_format($payroll->total_net_salary, 2) }} ₪
+                            </td>
+                            <td class="bg-slate-200"></td>
                         </tr>
                     </tfoot>
                 </table>

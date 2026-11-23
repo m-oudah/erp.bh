@@ -128,6 +128,24 @@
 
         </div>
 
+        {{-- Damage Assessment Certificate Service Banner --}}
+        <div class="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 rounded-3xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-white shrink-0 shadow-inner">
+                    <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 2V5h1v1H5zM3 13a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3zm2 2v-1h1v1H5zM13 3a1 1 0 00-1 1v3a1 1 0 001 1h3a1 1 0 001-1V4a1 1 0 00-1-1h-3zm1 2v1h1V5h-1z" clip-rule="evenodd"/><path d="M11 4a1 1 0 10-2 0v1a1 1 0 002 0V4zM10 7a1 1 0 011 1v1h2a1 1 0 110 2h-3a1 1 0 01-1-1V8a1 1 0 011-1zM16 9a1 1 0 100 2 1 1 0 000-2zM9 13a1 1 0 011-1h1a1 1 0 110 2v2a1 1 0 11-2 0v-3zM7 11a1 1 0 100-2H4a1 1 0 100 2h3zM17 13a1 1 0 01-1 1h-2a1 1 0 110-2h2a1 1 0 011 1zM16 17a1 1 0 100-2h-3a1 1 0 100 2h3z"/></svg>
+                </div>
+                <div>
+                    <div class="text-xs font-black text-orange-200">خدمة إلكترونية رسمية</div>
+                    <h3 class="text-lg font-black text-white">إصدار إفادة حصر وتقييم الأضرار الإلكترونية (QR Code)</h3>
+                    <p class="text-xs text-orange-100 mt-0.5">احصل على إفادة حصر أضرار رسمية ومعتمدة لمبانيك وعقاراتك المسجلة وموثقة برمز QR الفوري للجهات والمؤسسات المانحة</p>
+                </div>
+            </div>
+            <a href="{{ route('portal.buildings') }}" class="px-5 py-2.5 rounded-2xl bg-white text-orange-600 hover:bg-orange-50 font-black text-xs transition-all shadow-md shrink-0 flex items-center gap-1.5">
+                <span>استعراض مبانيك وإصدار الإفادة</span>
+                <span>←</span>
+            </a>
+        </div>
+
         {{-- Overview Previews: Buildings & Crafts --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 

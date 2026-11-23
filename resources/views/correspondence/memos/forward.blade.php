@@ -103,9 +103,9 @@ function memoForwarder() {
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h2 class="text-base font-black text-slate-800 leading-tight">تحويل وإعادة توجيه مراسلة داخلية</h2>
+                        <h2 class="text-base font-black text-slate-800 leading-tight">رد / إعادة توجيه مراسلة داخلية</h2>
                         <span class="px-2 py-0.5 rounded-md text-[11px] font-black bg-amber-100 text-amber-800 border border-amber-200">
-                            معاد توجيهها (Forward)
+                            رد / توجيه (Forward)
                         </span>
                     </div>
                     <p class="text-xs text-slate-500 mt-0.5">
@@ -160,248 +160,428 @@ function memoForwarder() {
                    @change="handleFiles($event)"
                    class="hidden">
 
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+            {{-- 2 Columns Grid: Right (Form Composer) & Left (Timeline & Directives Trail) --}}
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
                 
-                {{-- Meta Banner: تفاصيل المراسلة المعاد توجيهها --}}
-                <div class="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
-                        <span class="font-bold text-slate-800">المراسلة الأصلية:</span>
-                        <span class="font-mono font-black text-teal-900">{{ $memo->memo_number }}</span>
-                        <span class="px-2 py-0.2 rounded-md font-bold bg-white text-slate-700 border border-amber-200">
-                            {{ $memo->memo_type }}
-                        </span>
-                    </div>
-
-                    <div class="flex items-center gap-3 text-slate-600">
-                        <span>المنشئ الأصلي: <strong class="text-slate-800">{{ $memo->creator->name ?? 'غير محدد' }}</strong></span>
-                        <span class="text-slate-300">|</span>
-                        <span>تاريخ الإنشاء: <strong class="text-slate-800">{{ $memo->created_at->format('Y-m-d H:i') }}</strong></span>
-                    </div>
-                </div>
-
-                {{-- Row 1: حقل الموظف المحول إليه (إلى / To: - متعدد المستلمين مع البحث التفاعلي مثل البريد الإلكتروني) --}}
-                <div class="relative" @click.away="showDropdown = false">
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
-                        <span class="flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                            </svg>
-                            <span>تحويل إلى (الموظف المحول إليه في عهدته)</span>
-                            <span class="text-rose-500">*</span>
-                        </span>
-                        <span class="text-[11px] text-amber-800 font-semibold bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
-                            يمكنك اختيار موظف أو أكثر للتحويل والتوجيه
-                        </span>
-                    </label>
-
-                    {{-- Email "To:" Multi-Recipient Box with Tag Chips --}}
-                    <div class="min-h-[50px] p-2 bg-white rounded-xl border border-gray-200 focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/20 transition-all flex flex-wrap items-center gap-2 cursor-text"
-                         @click="$refs.userInput.focus(); showDropdown = true">
+                {{-- Right Column (8 cols): Forward Composer Form --}}
+                <div class="lg:col-span-8 min-w-0 space-y-5">
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
                         
-                        {{-- To: Prefix Label --}}
-                        <div class="px-2 py-1 bg-amber-50 text-amber-800 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 border border-amber-100">
-                            <svg class="w-3.5 h-3.5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
-                            </svg>
-                            <span>تحويل إلى:</span>
-                        </div>
-
-                        {{-- Selected Users Pills / Chips --}}
-                        <template x-for="user in selectedUsers" :key="user.id">
-                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-950 border border-amber-300 shadow-2xs">
-                                <input type="hidden" name="assignee_ids[]" :value="user.id">
-                                <span class="w-2 h-2 rounded-full bg-secondary shrink-0"></span>
-                                <span x-text="user.name"></span>
-                                <span class="text-[10px] text-amber-800 opacity-80" x-text="'(' + user.department + ')'"></span>
-                                <button type="button"
-                                        @click.stop="removeUser(user.id)"
-                                        class="w-4 h-4 rounded-full hover:bg-amber-200 text-amber-900 inline-flex items-center justify-center transition-colors mr-0.5 cursor-pointer"
-                                        title="إزالة">
-                                    &times;
-                                </button>
-                            </div>
-                        </template>
-
-                        {{-- Active Search Input inside the box --}}
-                        <input type="text"
-                               x-ref="userInput"
-                               x-model="searchQuery"
-                               @focus="showDropdown = true"
-                               @input="showDropdown = true"
-                               @keydown.backspace="handleBackspace()"
-                               :placeholder="selectedUsers.length === 0 ? 'اكتب اسم الموظف أو دائرته للتحويل إليه...' : 'أضف موظفاً آخر...'"
-                               class="flex-1 min-w-[180px] border-0 focus:ring-0 p-1 text-xs sm:text-sm text-slate-800 placeholder-slate-400 bg-transparent">
-                    </div>
-
-                    {{-- Dropdown Search Results --}}
-                    <div x-show="showDropdown && filteredUsers.length > 0"
-                         x-transition
-                         class="absolute z-30 right-0 left-0 mt-1 max-h-60 overflow-y-auto bg-white rounded-2xl border border-gray-200 shadow-xl p-2 space-y-1">
-                        <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 flex items-center justify-between">
-                            <span>نتائج البحث (<span x-text="filteredUsers.length"></span> موظف)</span>
-                            <span class="text-[10px] text-slate-400">انقر على الموظف للإضافة</span>
-                        </div>
-                        <template x-for="user in filteredUsers" :key="user.id">
-                            <div @click="addUser(user)"
-                                 class="p-2.5 rounded-xl hover:bg-amber-50/70 hover:border-amber-200 border border-transparent transition-all flex items-center justify-between gap-3 cursor-pointer group">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-secondary group-hover:text-white transition-colors">
-                                        <span x-text="user.name.charAt(0)"></span>
-                                    </div>
-                                    <div>
-                                        <div class="text-xs font-bold text-slate-800 group-hover:text-secondary transition-colors" x-text="user.name"></div>
-                                        <div class="text-[11px] text-slate-500" x-text="user.department + (user.job_title ? ' - ' + user.job_title : '')"></div>
-                                    </div>
-                                </div>
-                                <span class="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md group-hover:bg-amber-100 transition-colors">
-                                    + اختيار
+                        {{-- Meta Banner: تفاصيل المراسلة المعاد توجيهها --}}
+                        <div class="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+                                <span class="font-bold text-slate-800">المراسلة الأصلية:</span>
+                                <span class="font-mono font-black text-teal-900">{{ $memo->memo_number }}</span>
+                                <span class="px-2 py-0.5 rounded-md font-bold bg-white text-slate-700 border border-amber-200">
+                                    {{ $memo->memo_type }}
                                 </span>
                             </div>
-                        </template>
-                    </div>
 
-                    @error('assignee_ids')
-                        <p class="text-rose-500 text-xs mt-1.5 font-bold">{{ $message }}</p>
-                    @enderror
-                </div>
+                            <div class="flex items-center gap-3 text-slate-600">
+                                <span>المنشئ الأصلي: <strong class="text-slate-800">{{ $memo->creator->name ?? 'غير محدد' }}</strong></span>
+                                <span class="text-slate-300">|</span>
+                                <span>تاريخ الإنشاء: <strong class="text-slate-800">{{ $memo->created_at->format('Y-m-d H:i') }}</strong></span>
+                            </div>
+                        </div>
 
-                {{-- Row 2: موضوع المراسلة --}}
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">موضوع المراسلة المحولة</label>
-                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 flex items-center gap-2">
-                        <span class="text-secondary font-black">إعادة توجيه:</span>
-                        <span>{{ $memo->subject }}</span>
-                    </div>
-                </div>
-
-                {{-- Row 3: شريط أدوات البريد الإلكتروني للمرفقات الإضافية --}}
-                <div class="flex flex-wrap items-center justify-between gap-3 pt-2 pb-1 border-y border-gray-100">
-                    <div class="flex items-center gap-2">
-                        {{-- Attach Files Button --}}
-                        <button type="button"
-                                @click="triggerFileInput()"
-                                class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer shadow-2xs">
-                            <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                            </svg>
-                            <span>إرفاق مستندات إضافية مع التحويل</span>
-                            <template x-if="attachments.length > 0">
-                                <span class="bg-amber-400 text-slate-900 text-[10px] px-1.5 py-0.2 rounded-full font-black" x-text="attachments.length"></span>
-                            </template>
-                        </button>
-                    </div>
-                </div>
-
-                {{-- Attached Files List (New files) --}}
-                <div x-show="attachments.length > 0" x-transition class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
-                    <div class="text-xs font-bold text-slate-700 flex items-center justify-between">
-                        <span class="flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <span>المستندات الإضافية الجديدة المرفقة (<span x-text="attachments.length"></span> ملف)</span>
-                        </span>
-                        <button type="button" @click="triggerFileInput()" class="text-[11px] font-bold text-primary hover:underline">
-                            + إضافة المزيد
-                        </button>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                        <template x-for="(att, idx) in attachments" :key="att.id">
-                            <div class="p-2.5 rounded-xl bg-white border border-gray-200 flex items-center justify-between gap-2 shadow-2xs">
-                                <div class="flex items-center gap-2 min-w-0">
-                                    <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-800 flex items-center justify-center shrink-0">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                        </svg>
-                                    </div>
-                                    <div class="min-w-0">
-                                        <div class="text-xs font-bold text-slate-800 truncate" x-text="att.name"></div>
-                                        <div class="text-[10px] text-tertiary" x-text="att.size"></div>
-                                    </div>
-                                </div>
-                                <button type="button"
-                                        @click="removeFile(idx)"
-                                        class="p-1 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors"
-                                        title="إلغاء المرفق">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        {{-- Row 1: حقل الموظف المحول إليه (إلى / To: - متعدد المستلمين مع البحث التفاعلي مثل البريد الإلكتروني) --}}
+                        <div class="relative" @click.away="showDropdown = false">
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                                <span class="flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                                     </svg>
+                                    <span>تحويل إلى (الموظف المحول إليه في عهدته)</span>
+                                    <span class="text-rose-500">*</span>
+                                </span>
+                                <span class="text-[11px] text-amber-800 font-semibold bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                                    يمكنك اختيار موظف أو أكثر للتحويل والتوجيه
+                                </span>
+                            </label>
+
+                            {{-- Email "To:" Multi-Recipient Box with Tag Chips --}}
+                            <div class="min-h-[50px] p-2 bg-white rounded-xl border border-gray-200 focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/20 transition-all flex flex-wrap items-center gap-2 cursor-text"
+                                 @click="$refs.userInput.focus(); showDropdown = true">
+                                
+                                {{-- To: Prefix Label --}}
+                                <div class="px-2 py-1 bg-amber-50 text-amber-800 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 border border-amber-100">
+                                    <svg class="w-3.5 h-3.5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+                                    </svg>
+                                    <span>تحويل إلى:</span>
+                                </div>
+
+                                {{-- Selected Users Pills / Chips --}}
+                                <template x-for="user in selectedUsers" :key="user.id">
+                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-950 border border-amber-300 shadow-2xs">
+                                        <input type="hidden" name="assignee_ids[]" :value="user.id">
+                                        <span class="w-2 h-2 rounded-full bg-secondary shrink-0"></span>
+                                        <span x-text="user.name"></span>
+                                        <span class="text-[10px] text-amber-800 opacity-80" x-text="'(' + user.department + ')'"></span>
+                                        <button type="button"
+                                                @click.stop="removeUser(user.id)"
+                                                class="w-4 h-4 rounded-full hover:bg-amber-200 text-amber-900 inline-flex items-center justify-center transition-colors mr-0.5 cursor-pointer"
+                                                title="إزالة">
+                                            &times;
+                                        </button>
+                                    </div>
+                                </template>
+
+                                {{-- Active Search Input inside the box --}}
+                                <input type="text"
+                                       x-ref="userInput"
+                                       x-model="searchQuery"
+                                       @focus="showDropdown = true"
+                                       @input="showDropdown = true"
+                                       @keydown.backspace="handleBackspace()"
+                                       :placeholder="selectedUsers.length === 0 ? 'اكتب اسم الموظف أو دائرته للتحويل إليه...' : 'أضف موظفاً آخر...'"
+                                       class="flex-1 min-w-[180px] border-0 focus:ring-0 p-1 text-xs sm:text-sm text-slate-800 placeholder-slate-400 bg-transparent">
+                            </div>
+
+                            {{-- Dropdown Search Results --}}
+                            <div x-show="showDropdown && filteredUsers.length > 0"
+                                 x-transition
+                                 class="absolute z-30 right-0 left-0 mt-1 max-h-60 overflow-y-auto bg-white rounded-2xl border border-gray-200 shadow-xl p-2 space-y-1">
+                                <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 flex items-center justify-between">
+                                    <span>نتائج البحث (<span x-text="filteredUsers.length"></span> موظف)</span>
+                                    <span class="text-[10px] text-slate-400">انقر على الموظف للإضافة</span>
+                                </div>
+                                <template x-for="user in filteredUsers" :key="user.id">
+                                    <div @click="addUser(user)"
+                                         class="p-2.5 rounded-xl hover:bg-amber-50/70 hover:border-amber-200 border border-transparent transition-all flex items-center justify-between gap-3 cursor-pointer group">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-secondary group-hover:text-white transition-colors">
+                                                <span x-text="user.name.charAt(0)"></span>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs font-bold text-slate-800 group-hover:text-secondary transition-colors" x-text="user.name"></div>
+                                                <div class="text-[11px] text-slate-500" x-text="user.department + (user.job_title ? ' - ' + user.job_title : '')"></div>
+                                            </div>
+                                        </div>
+                                        <span class="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md group-hover:bg-amber-100 transition-colors">
+                                            + اختيار
+                                        </span>
+                                    </div>
+                                </template>
+                            </div>
+
+                            @error('assignee_ids')
+                                <p class="text-rose-500 text-xs mt-1.5 font-bold">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Row 2: موضوع المراسلة --}}
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">موضوع المراسلة المحولة</label>
+                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 flex items-center gap-2">
+                                <span class="text-secondary font-black">إعادة توجيه:</span>
+                                <span>{{ $memo->subject }}</span>
+                            </div>
+                        </div>
+
+                        {{-- Row 3: شريط أدوات البريد الإلكتروني للمرفقات الإضافية --}}
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 pb-1 border-y border-gray-100">
+                            <div class="flex items-center gap-2">
+                                {{-- Attach Files Button --}}
+                                <button type="button"
+                                        @click="triggerFileInput()"
+                                        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer shadow-2xs">
+                                    <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                    </svg>
+                                    <span>إرفاق مستندات إضافية مع التحويل</span>
+                                    <template x-if="attachments.length > 0">
+                                        <span class="bg-amber-400 text-slate-900 text-[10px] px-1.5 py-0.2 rounded-full font-black" x-text="attachments.length"></span>
+                                    </template>
                                 </button>
                             </div>
-                        </template>
-                    </div>
-                </div>
-
-                {{-- Row 4: مربع نص لكتابة التوجيه الإداري الجديد --}}
-                <div class="space-y-1.5">
-                    <label class="block text-xs font-bold text-slate-800 flex items-center justify-between">
-                        <span class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-secondary"></span>
-                            <span>الشروحات والتوجيهات الإدارية الجديدة</span>
-                            <span class="text-rose-500">*</span>
-                        </span>
-                        <span class="text-[11px] text-tertiary">حدد الإجراء والمطلوب تنفيذه بدقة من الموظف المحول إليه</span>
-                    </label>
-                    <textarea name="directive_text"
-                              rows="6"
-                              required
-                              placeholder="اكتب التوجيه أو الشرح الإداري المطلوب تنفيذه... مثال: يرجى المتابعة الفورية والتدقيق المالي وإفادتنا بالنتيجة خلال 48 ساعة."
-                              class="w-full text-base rounded-xl border-gray-200 focus:border-secondary focus:ring-secondary p-4 leading-relaxed font-semibold text-slate-800 shadow-2xs">{{ old('directive_text') }}</textarea>
-                    @error('directive_text')
-                        <p class="text-rose-500 text-xs mt-1 font-bold">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                {{-- Row 5: المحتوى الأصلي للمراسلة (غير قابل للتعديل / Read-Only Quoted Block) --}}
-                <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-3">
-                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/70 pb-2.5">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-                            </svg>
-                            <span class="text-xs font-extrabold text-slate-700">المحتوى الأصلي للمراسلة (غير قابل للتعديل)</span>
                         </div>
-                        <span class="text-[11px] font-semibold text-slate-500">
-                            من: <strong>{{ $memo->creator->name ?? 'غير محدد' }}</strong> — في {{ $memo->created_at->format('Y-m-d H:i') }}
-                        </span>
-                    </div>
 
-                    {{-- Original Text Body --}}
-                    <div class="bg-white p-4 rounded-xl border border-slate-200/70 text-slate-700 text-sm leading-relaxed whitespace-pre-line font-medium select-text">
-                        {{ $memo->content }}
-                    </div>
-
-                    {{-- Original Attachments --}}
-                    @if ($memo->attachments->count() > 0)
-                        <div class="pt-2">
-                            <span class="text-xs font-bold text-slate-600 block mb-2">المرفقات والمستندات الأصلية ({{ $memo->attachments->count() }}):</span>
+                        {{-- Attached Files List (New files) --}}
+                        <div x-show="attachments.length > 0" x-transition class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                            <div class="text-xs font-bold text-slate-700 flex items-center justify-between">
+                                <span class="flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>المستندات الإضافية الجديدة المرفقة (<span x-text="attachments.length"></span> ملف)</span>
+                                </span>
+                                <button type="button" @click="triggerFileInput()" class="text-[11px] font-bold text-primary hover:underline">
+                                    + إضافة المزيد
+                                </button>
+                            </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                                @foreach ($memo->attachments as $att)
+                                <template x-for="(att, idx) in attachments" :key="att.id">
                                     <div class="p-2.5 rounded-xl bg-white border border-gray-200 flex items-center justify-between gap-2 shadow-2xs">
                                         <div class="flex items-center gap-2 min-w-0">
-                                            <div class="w-7 h-7 rounded-lg bg-teal-50 text-teal-800 flex items-center justify-center shrink-0">
+                                            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-800 flex items-center justify-center shrink-0">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                                 </svg>
                                             </div>
                                             <div class="min-w-0">
-                                                <div class="text-xs font-bold text-slate-800 truncate" title="{{ $att->file_name }}">{{ $att->file_name }}</div>
-                                                <div class="text-[10px] text-tertiary">{{ $att->formatted_size }}</div>
+                                                <div class="text-xs font-bold text-slate-800 truncate" x-text="att.name"></div>
+                                                <div class="text-[10px] text-tertiary" x-text="att.size"></div>
                                             </div>
                                         </div>
-                                        <a href="{{ route('correspondence.memos.attachments.download', $att->id) }}"
-                                           class="p-1 rounded-lg text-primary hover:bg-teal-50"
-                                           title="تحميل">
+                                        <button type="button"
+                                                @click="removeFile(idx)"
+                                                class="p-1 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors"
+                                                title="إلغاء المرفق">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                             </svg>
-                                        </a>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        {{-- Row 4: مربع نص لكتابة التوجيه الإداري الجديد --}}
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-800 flex items-center justify-between">
+                                <span class="flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                    <span>الشروحات والتوجيهات الإدارية الجديدة</span>
+                                    <span class="text-rose-500">*</span>
+                                </span>
+                                <span class="text-[11px] text-tertiary">حدد الإجراء والمطلوب تنفيذه بدقة من الموظف المحول إليه</span>
+                            </label>
+                            <textarea name="directive_text"
+                                      rows="5"
+                                      required
+                                      placeholder="اكتب التوجيه أو الشرح الإداري المطلوب تنفيذه... مثال: يرجى المتابعة الفورية والتدقيق المالي وإفادتنا بالنتيجة خلال 48 ساعة."
+                                      class="w-full text-base rounded-xl border-gray-200 focus:border-secondary focus:ring-secondary p-4 leading-relaxed font-semibold text-slate-800 shadow-2xs">{{ old('directive_text') }}</textarea>
+                            @error('directive_text')
+                                <p class="text-rose-500 text-xs mt-1 font-bold">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Row 5: المحتوى الأصلي للمراسلة (غير قابل للتعديل / Read-Only Quoted Block) --}}
+                        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/70 pb-2.5">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                                    </svg>
+                                    <span class="text-xs font-extrabold text-slate-700">المحتوى الأصلي للمراسلة (غير قابل للتعديل)</span>
+                                </div>
+                                <span class="text-[11px] font-semibold text-slate-500">
+                                    من: <strong>{{ $memo->creator->name ?? 'غير محدد' }}</strong> — في {{ $memo->created_at->format('Y-m-d H:i') }}
+                                </span>
+                            </div>
+
+                            {{-- Original Text Body --}}
+                            <div class="bg-white p-4 rounded-xl border border-slate-200/70 text-slate-700 text-sm leading-relaxed whitespace-pre-line font-medium select-text">
+                                {{ $memo->content }}
+                            </div>
+
+                            {{-- Original Attachments --}}
+                            @if ($memo->attachments->count() > 0)
+                                <div class="pt-2">
+                                    <span class="text-xs font-bold text-slate-600 block mb-2">المرفقات والمستندات الأصلية ({{ $memo->attachments->count() }}):</span>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        @foreach ($memo->attachments as $att)
+                                            <div class="p-2.5 rounded-xl bg-white border border-gray-200 flex items-center justify-between gap-2 shadow-2xs">
+                                                <div class="flex items-center gap-2 min-w-0">
+                                                    <div class="w-7 h-7 rounded-lg bg-teal-50 text-teal-800 flex items-center justify-center shrink-0">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <div class="text-xs font-bold text-slate-800 truncate" title="{{ $att->file_name }}">{{ $att->file_name }}</div>
+                                                        <div class="text-[10px] text-tertiary">{{ $att->formatted_size }}</div>
+                                                    </div>
+                                                </div>
+                                                <a href="{{ route('correspondence.memos.attachments.download', $att->id) }}"
+                                                   class="p-1 rounded-lg text-primary hover:bg-teal-50"
+                                                   title="تحميل">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                    </svg>
+                                                </a>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Left Column (4 cols): Timeline & Routing of Directives (الخط الزمني ومسار التوجيهات) --}}
+                <div class="lg:col-span-4 min-w-0 space-y-5">
+                    
+                    {{-- Quick Summary of Memo Meta Card --}}
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                            <span class="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                بطاقة المعاملة الإدارية
+                            </span>
+                            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-md {{ $memo->status === 'تم الإنجاز' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-800 border border-amber-200' }}">
+                                {{ $memo->status }}
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                <span class="text-[10px] text-tertiary block font-bold">المنشئ الأصلي:</span>
+                                <span class="font-bold text-slate-800 truncate block mt-0.5">{{ $memo->creator->name ?? 'غير محدد' }}</span>
+                                <span class="text-[10px] text-slate-400 block truncate">{{ $memo->creator->department->name ?? 'بلدية بيت حانون' }}</span>
+                            </div>
+                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                <span class="text-[10px] text-tertiary block font-bold">في عهدة حالياً:</span>
+                                <span class="font-bold text-teal-800 truncate block mt-0.5">{{ $memo->assignee->name ?? 'غير محدد' }}</span>
+                                <span class="text-[10px] text-slate-400 block truncate">{{ $memo->assignee->department->name ?? 'بلدية بيت حانون' }}</span>
+                            </div>
+                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                <span class="text-[10px] text-tertiary block font-bold">رقم المعاملة:</span>
+                                <span class="font-mono font-bold text-slate-800 block mt-0.5">{{ $memo->memo_number }}</span>
+                            </div>
+                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                <span class="text-[10px] text-tertiary block font-bold">تاريخ المعاملة:</span>
+                                <span class="font-bold text-slate-800 block mt-0.5">{{ $memo->created_at->format('Y-m-d') }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Timeline Card: الخط الزمني ومسار التوجيهات --}}
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6 space-y-4">
+                        @php
+                            if (!isset($groupedMovements)) {
+                                $groupedMovements = [];
+                                foreach ($memo->movements as $m) {
+                                    $lastIdx = count($groupedMovements) - 1;
+                                    if (
+                                        $lastIdx >= 0 &&
+                                        $groupedMovements[$lastIdx]['action_type'] === $m->action_type &&
+                                        $groupedMovements[$lastIdx]['from_user_id'] === $m->from_user_id &&
+                                        $groupedMovements[$lastIdx]['directive_text'] === $m->directive_text &&
+                                        abs(strtotime((string)$groupedMovements[$lastIdx]['created_at']) - strtotime((string)$m->created_at)) <= 30
+                                    ) {
+                                        if ($m->toUser && !in_array($m->toUser->id, array_map(fn($u) => $u->id, $groupedMovements[$lastIdx]['recipients']))) {
+                                            $groupedMovements[$lastIdx]['recipients'][] = $m->toUser;
+                                        }
+                                    } else {
+                                        $initialRecipients = [];
+                                        if ($m->action_type === 'إنشاء المراسلة' && $memo->recipients->isNotEmpty()) {
+                                            $initialRecipients = $memo->recipients->all();
+                                        } elseif ($m->toUser) {
+                                            $initialRecipients = [$m->toUser];
+                                        }
+
+                                        $groupedMovements[] = [
+                                            'movement' => $m,
+                                            'action_type' => $m->action_type,
+                                            'from_user_id' => $m->from_user_id,
+                                            'fromUser' => $m->fromUser,
+                                            'directive_text' => $m->directive_text,
+                                            'created_at' => $m->created_at,
+                                            'recipients' => $initialRecipients,
+                                        ];
+                                    }
+                                }
+                            }
+                        @endphp
+
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                            <h3 class="text-sm sm:text-base font-black text-slate-800 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span>الخط الزمني ومسار التوجيهات</span>
+                            </h3>
+                            <span class="text-xs text-tertiary font-bold bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
+                                {{ count($groupedMovements) }} مراحل
+                            </span>
+                        </div>
+
+                        @if (empty($groupedMovements) || count($groupedMovements) === 0)
+                            <div class="text-center py-8 text-xs text-slate-400">
+                                لا توجد حركات سابقة مسجلة لهذه المراسلة.
+                            </div>
+                        @else
+                            {{-- Vertical Timeline List --}}
+                            <div class="relative pl-1 pr-4 sm:pr-5 space-y-5 before:absolute before:right-2 before:top-3 before:bottom-3 before:w-0.5 before:bg-teal-200">
+                                @foreach ($groupedMovements as $item)
+                                    @php
+                                        $movement = $item['movement'];
+                                    @endphp
+                                    <div class="relative flex items-start gap-3">
+                                        {{-- Node Marker --}}
+                                        <div class="w-5 h-5 rounded-full bg-white border-2 border-primary flex items-center justify-center shrink-0 z-10 -mr-2.5 shadow-xs">
+                                            <div class="w-2 h-2 rounded-full bg-secondary"></div>
+                                        </div>
+
+                                        <div class="flex-1 bg-slate-50/90 p-3.5 sm:p-4 rounded-xl border border-slate-100 shadow-2xs space-y-2.5">
+                                            {{-- Stage Action & Time --}}
+                                            <div class="flex flex-wrap items-center justify-between gap-1.5 border-b border-slate-200/60 pb-2">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="w-2 h-2 rounded-full bg-teal-600"></span>
+                                                    <span class="font-extrabold text-xs sm:text-sm text-slate-900">{{ $item['action_type'] }}</span>
+                                                </div>
+                                                <span class="text-[11px] text-slate-500 font-semibold" title="{{ $movement->created_at }}">
+                                                    {{ $movement->created_at->diffForHumans() }} ({{ $movement->created_at->format('Y-m-d H:i') }})
+                                                </span>
+                                            </div>
+
+                                            {{-- Users (From -> To) --}}
+                                            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                                                <span class="text-[11px] text-slate-500 font-bold">بواسطة:</span>
+                                                <span class="font-extrabold text-teal-900 bg-teal-50 px-2.5 py-1 rounded-lg border border-teal-100 shadow-2xs flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                    </svg>
+                                                    <span>{{ $item['fromUser']->name ?? 'غير محدد' }}</span>
+                                                </span>
+
+                                                @if (!empty($item['recipients']))
+                                                    <div class="flex items-center gap-0.5 text-secondary font-bold text-xs mx-0.5">
+                                                        <span>إلى</span>
+                                                        <svg class="w-3.5 h-3.5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div class="flex flex-wrap items-center gap-1">
+                                                        @foreach ($item['recipients'] as $rec)
+                                                            <span class="font-extrabold text-slate-900 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200/70 shadow-2xs flex items-center gap-1">
+                                                                <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                                </svg>
+                                                                <span>{{ $rec->name }}</span>
+                                                                @if ($rec->department)
+                                                                    <span class="text-[10px] font-semibold text-amber-800 opacity-80">({{ $rec->department->name }})</span>
+                                                                @endif
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            {{-- Directive Text (الشرح والتوجيه الإداري) --}}
+                                            @if ($item['directive_text'])
+                                                <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs space-y-1">
+                                                    <div class="text-[11px] font-black text-secondary flex items-center gap-1">
+                                                        <svg class="w-3.5 h-3.5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                                                        </svg>
+                                                        <span>الشرح والتوجيه الإداري:</span>
+                                                    </div>
+                                                    <div class="text-xs sm:text-sm font-semibold text-slate-800 leading-relaxed whitespace-pre-line pt-0.5">
+                                                        {{ $item['directive_text'] }}
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>
-                        </div>
-                    @endif
+                        @endif
+                    </div>
                 </div>
             </div>
 

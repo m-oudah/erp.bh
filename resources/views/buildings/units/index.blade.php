@@ -26,73 +26,6 @@
             </div>
         </div>
 
-        {{-- Summary Cards Grid --}}
-        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-            {{-- 1. Total Units --}}
-            <div class="bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-2xl p-4 border border-blue-100/80 shadow-2xs">
-                <div class="flex items-center justify-between text-blue-700 mb-2">
-                    <span class="text-[11px] font-extrabold">إجمالي الوحدات</span>
-                    <div class="w-7 h-7 rounded-lg bg-blue-500 text-white flex items-center justify-center shadow-2xs">
-                        <x-heroicon-s-squares-plus class="w-4 h-4" />
-                    </div>
-                </div>
-                <div class="text-2xl font-black text-blue-950">{{ number_format($stats['total_units']) }}</div>
-                <div class="text-[10px] text-blue-600/80 font-bold mt-0.5">وحدة مسجلة بالكامل</div>
-            </div>
-
-            {{-- 2. Residential --}}
-            <a href="{{ route('buildings.units.index', ['usage' => 'residential']) }}"
-               class="bg-gradient-to-br from-emerald-50 to-teal-50/50 rounded-2xl p-4 border border-emerald-100/80 shadow-2xs hover:-translate-y-0.5 transition-transform block">
-                <div class="flex items-center justify-between text-emerald-700 mb-2">
-                    <span class="text-[11px] font-extrabold">وحدات سكنية</span>
-                    <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-2xs">
-                        <x-heroicon-s-home class="w-4 h-4" />
-                    </div>
-                </div>
-                <div class="text-2xl font-black text-emerald-950">{{ number_format($stats['residential']) }}</div>
-                <div class="text-[10px] text-emerald-600/80 font-bold mt-0.5">شقق ومنازل</div>
-            </a>
-
-            {{-- 3. Commercial --}}
-            <a href="{{ route('buildings.units.index', ['usage' => 'commercial']) }}"
-               class="bg-gradient-to-br from-amber-50 to-orange/10 rounded-2xl p-4 border border-amber-200/80 shadow-2xs hover:-translate-y-0.5 transition-transform block">
-                <div class="flex items-center justify-between text-amber-800 mb-2">
-                    <span class="text-[11px] font-extrabold">وحدات تجارية</span>
-                    <div class="w-7 h-7 rounded-lg bg-orange text-white flex items-center justify-center shadow-2xs">
-                        <x-heroicon-s-building-storefront class="w-4 h-4" />
-                    </div>
-                </div>
-                <div class="text-2xl font-black text-amber-950">{{ number_format($stats['commercial']) }}</div>
-                <div class="text-[10px] text-amber-700/80 font-bold mt-0.5">محلات ومخازن</div>
-            </a>
-
-            {{-- 4. Industrial --}}
-            <a href="{{ route('buildings.units.index', ['usage' => 'industrial']) }}"
-               class="bg-gradient-to-br from-purple-50 to-violet-50/50 rounded-2xl p-4 border border-purple-100/80 shadow-2xs hover:-translate-y-0.5 transition-transform block">
-                <div class="flex items-center justify-between text-purple-700 mb-2">
-                    <span class="text-[11px] font-extrabold">وحدات صناعية</span>
-                    <div class="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center shadow-2xs">
-                        <x-heroicon-s-cog-6-tooth class="w-4 h-4" />
-                    </div>
-                </div>
-                <div class="text-2xl font-black text-purple-950">{{ number_format($stats['industrial']) }}</div>
-                <div class="text-[10px] text-purple-600/80 font-bold mt-0.5">ورش ومصانع</div>
-            </a>
-
-            {{-- 5. Other Usages --}}
-            <a href="{{ route('buildings.units.index', ['usage' => 'other']) }}"
-               class="bg-gradient-to-br from-slate-50 to-gray-100/80 rounded-2xl p-4 border border-slate-200 shadow-2xs hover:-translate-y-0.5 transition-transform block col-span-2 sm:col-span-1">
-                <div class="flex items-center justify-between text-slate-700 mb-2">
-                    <span class="text-[11px] font-extrabold">استخدامات أخرى</span>
-                    <div class="w-7 h-7 rounded-lg bg-slate-600 text-white flex items-center justify-center shadow-2xs">
-                        <x-heroicon-s-building-office-2 class="w-4 h-4" />
-                    </div>
-                </div>
-                <div class="text-2xl font-black text-slate-900">{{ number_format($stats['other_usages']) }}</div>
-                <div class="text-[10px] text-slate-500 font-bold mt-0.5">تعليمي، صحي، ديني...</div>
-            </a>
-        </div>
-
         {{-- Search & Filters Card --}}
         @php
             $hasActiveFilters = request()->anyFilled([
@@ -447,6 +380,96 @@
                 </div>
             </div>
             @endif
+        </div>
+
+        {{-- Summary Cards Grid (صناديق ملخصات المعلومات - أسفل الصفحة) --}}
+        <div class="space-y-4 pt-6 mt-4 border-t border-gray-200/70">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5 text-xs font-black text-gray-800 pr-1">
+                    <div class="w-7 h-7 rounded-xl bg-orange/10 text-orange-dark flex items-center justify-center shadow-2xs">
+                        <x-heroicon-s-chart-bar class="w-4 h-4 text-orange" />
+                    </div>
+                    <span>ملخص إحصائيات الوحدات العقارية</span>
+                </div>
+                <span class="text-[11px] text-gray-400 font-bold">حسب طبيعة الاستخدام</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5">
+                {{-- 1. Total Units --}}
+                <a href="{{ route('buildings.units.index') }}"
+                   class="bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-2xl p-5 border border-blue-100/90 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col justify-between h-full min-h-[115px]">
+                    <div class="flex items-center justify-between text-blue-700 mb-3">
+                        <span class="text-xs font-black">إجمالي الوحدات</span>
+                        <div class="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-2xs">
+                            <x-heroicon-s-squares-plus class="w-4 h-4" />
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-black text-blue-950 font-mono">{{ number_format($stats['total_units']) }}</div>
+                        <div class="text-[11px] text-blue-600/90 font-bold mt-1">وحدة مسجلة بالكامل</div>
+                    </div>
+                </a>
+
+                {{-- 2. Residential --}}
+                <a href="{{ route('buildings.units.index', ['usage' => 'residential']) }}"
+                   class="bg-gradient-to-br from-emerald-50 to-teal-50/50 rounded-2xl p-5 border border-emerald-100/90 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col justify-between h-full min-h-[115px]">
+                    <div class="flex items-center justify-between text-emerald-700 mb-3">
+                        <span class="text-xs font-black">وحدات سكنية</span>
+                        <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-2xs">
+                            <x-heroicon-s-home class="w-4 h-4" />
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-black text-emerald-950 font-mono">{{ number_format($stats['residential']) }}</div>
+                        <div class="text-[11px] text-emerald-600/90 font-bold mt-1">شقق ومنازل</div>
+                    </div>
+                </a>
+
+                {{-- 3. Commercial --}}
+                <a href="{{ route('buildings.units.index', ['usage' => 'commercial']) }}"
+                   class="bg-gradient-to-br from-amber-50 to-orange/10 rounded-2xl p-5 border border-amber-200/90 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col justify-between h-full min-h-[115px]">
+                    <div class="flex items-center justify-between text-amber-800 mb-3">
+                        <span class="text-xs font-black">وحدات تجارية</span>
+                        <div class="w-8 h-8 rounded-xl bg-orange text-white flex items-center justify-center shadow-2xs">
+                            <x-heroicon-s-building-storefront class="w-4 h-4" />
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-black text-amber-950 font-mono">{{ number_format($stats['commercial']) }}</div>
+                        <div class="text-[11px] text-amber-700/90 font-bold mt-1">محلات ومخازن</div>
+                    </div>
+                </a>
+
+                {{-- 4. Industrial --}}
+                <a href="{{ route('buildings.units.index', ['usage' => 'industrial']) }}"
+                   class="bg-gradient-to-br from-purple-50 to-violet-50/50 rounded-2xl p-5 border border-purple-100/90 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col justify-between h-full min-h-[115px]">
+                    <div class="flex items-center justify-between text-purple-700 mb-3">
+                        <span class="text-xs font-black">وحدات صناعية</span>
+                        <div class="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-2xs">
+                            <x-heroicon-s-cog-6-tooth class="w-4 h-4" />
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-black text-purple-950 font-mono">{{ number_format($stats['industrial']) }}</div>
+                        <div class="text-[11px] text-purple-600/90 font-bold mt-1">ورش ومصانع</div>
+                    </div>
+                </a>
+
+                {{-- 5. Other Usages --}}
+                <a href="{{ route('buildings.units.index', ['usage' => 'other']) }}"
+                   class="bg-gradient-to-br from-slate-50 to-gray-100/80 rounded-2xl p-5 border border-slate-200 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col justify-between h-full min-h-[115px]">
+                    <div class="flex items-center justify-between text-slate-700 mb-3">
+                        <span class="text-xs font-black">استخدامات أخرى</span>
+                        <div class="w-8 h-8 rounded-xl bg-slate-600 text-white flex items-center justify-center shadow-2xs">
+                            <x-heroicon-s-building-office-2 class="w-4 h-4" />
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-black text-slate-900 font-mono">{{ number_format($stats['other_usages']) }}</div>
+                        <div class="text-[11px] text-slate-500 font-bold mt-1">تعليمي، صحي، ديني...</div>
+                    </div>
+                </a>
+            </div>
         </div>
 
     </div>

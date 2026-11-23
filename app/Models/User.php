@@ -191,6 +191,12 @@ class User extends Authenticatable
                 'Print-Payroll',
                 'Manage-Payroll',
             ]),
+            'damage' => $this->hasRole('مدير النظام') || $this->hasAnyPermission([
+                'Module-Damage',
+                'Damage-Records',
+                'Damage-Pricing',
+                'Damage-Approve',
+            ]) || true, // Active by default for municipal staff
             'settings' => $this->hasAnyPermission([
                 'Module-Settings',
                 'Access-Settings',

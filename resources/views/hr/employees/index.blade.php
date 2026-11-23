@@ -126,16 +126,31 @@
                                 <td class="py-3.5 px-4 text-slate-600">
                                     {{ $emp->department?->name ?? '—' }}
                                 </td>
-                                <td class="py-3.5 px-4">
+                                <td class="py-3.5 px-4 whitespace-nowrap">
                                     @if($emp->grade)
-                                        <span class="inline-flex items-center gap-1 text-emerald-700 font-bold">
-                                            <span>{{ $emp->grade->grade_code }}</span>
-                                            <span class="text-tertiary text-[10px]">مربوط ({{ $emp->current_step }})</span>
+                                        <div class="flex flex-col gap-1">
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-teal-50 text-teal-800 border border-teal-200">
+                                                    {{ str_starts_with($emp->grade->category, 'الفئة') ? $emp->grade->category : 'الفئة ' . $emp->grade->category }}
+                                                </span>
+                                                <span class="font-extrabold text-slate-800 text-xs">
+                                                    {{ $emp->grade->grade_name }}
+                                                </span>
+                                            </div>
+                                            @if($emp->current_step > 0)
+                                                <div class="text-[10px] text-slate-500 font-bold">
+                                                    مربوط الدرجة: <span class="font-mono text-slate-700">({{ $emp->current_step }})</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @elseif($emp->job_title && (str_contains($emp->job_title, 'رئيس البلدية') || str_contains($emp->job_title, 'مجلس')))
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-200">
+                                            الفئة العليا / منصب قيادي
                                         </span>
-                                    @elseif($emp->custom_base_salary)
-                                        <span class="text-slate-700 font-bold">مقطوع ({{ number_format($emp->custom_base_salary) }} ₪)</span>
                                     @else
-                                        <span class="text-slate-400">—</span>
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                            كادر خاص / بدون درجة
+                                        </span>
                                     @endif
                                 </td>
                                 <td class="py-3.5 px-4">

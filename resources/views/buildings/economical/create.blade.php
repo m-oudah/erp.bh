@@ -87,7 +87,7 @@
             }
          }"
          x-init="@if(old('building_id')) loadUnits('{{ old('building_id') }}') @endif"
-         class="space-y-6 max-w-7xl mx-auto pb-20">
+         class="space-y-6 w-full pb-20">
 
         {{-- Page Header --}}
         <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">

@@ -8,17 +8,16 @@
                 </svg>
             </a>
             <div>
-                <div class="flex items-center gap-2 flex-wrap">
-                    <h2 class="text-xl font-black text-slate-900 tracking-tight font-mono">{{ $transaction->transaction_number }}</h2>
-                    <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                         {{ optional($transaction->transactionType)->name ?? 'معاملة عامة' }}
-                    </span>
+                    </h2>
                     <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold {{ $transaction->status_badge_class }}">
                         {{ $transaction->status_label }}
                     </span>
                 </div>
-                <h1 class="text-xs font-bold text-tertiary mt-1">
-                    مقدمة من: <span class="text-slate-800 font-extrabold">{{ $transaction->customer->name ?? $transaction->customer->full_name ?? 'مواطن' }}</span>
+                <h1 class="text-xs font-bold text-tertiary mt-1.5 flex items-center gap-2">
+                    <span>مقدمة من: <span class="text-slate-800 font-extrabold">{{ $transaction->customer->name ?? $transaction->customer->full_name ?? 'مواطن' }}</span></span>
                     @if($transaction->customer && $transaction->customer->id_no)
                         <span class="font-mono text-slate-400 mr-1.5">(هوية: {{ $transaction->customer->id_no }})</span>
                     @endif
@@ -166,12 +165,21 @@
         <div class="lg:col-span-4 space-y-5">
             {{-- Status Card --}}
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <span class="text-xs font-bold text-slate-400 block mb-2">حالة المعاملة الحالية</span>
+                <div class="flex items-center justify-between mb-2.5">
+                    <span class="text-xs font-bold text-slate-400">حالة المعاملة الحالية</span>
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-black font-mono bg-teal-50 text-teal-800 border border-teal-200/80 shadow-2xs">
+                        {{ $transaction->transaction_number }}
+                    </span>
+                </div>
                 <div class="p-3 rounded-xl {{ $transaction->status_badge_class }} flex items-center justify-between">
                     <span class="font-black text-xs">{{ $transaction->status_label }}</span>
                     <div class="w-2.5 h-2.5 rounded-full {{ $transaction->status === 'approved' ? 'bg-emerald-500' : ($transaction->status === 'returned' ? 'bg-amber-500' : 'bg-primary') }}"></div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-slate-500 space-y-2">
+                <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-slate-500 space-y-2.5">
+                    <div class="flex justify-between items-center py-1.5 px-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span class="font-bold text-slate-600">رقم المعاملة:</span>
+                        <span class="font-black text-teal-800 font-mono text-sm">{{ $transaction->transaction_number }}</span>
+                    </div>
                     <div class="flex justify-between">
                         <span>نوع المعاملة:</span>
                         <span class="font-bold text-slate-800">{{ optional($transaction->transactionType)->name ?? '-' }}</span>

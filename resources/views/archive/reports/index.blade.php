@@ -1,159 +1,154 @@
 <x-archive-layout>
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6 px-1 print:hidden">
-        <h3 class="font-bold text-xl text-black flex items-center gap-2">
-            <x-heroicon-s-chart-bar class="w-7 h-7 text-orange" />
-            تقارير الأرشيف
-        </h3>
-        <div class="flex gap-3">
-            <a href="{{ route('archive.reports.export') }}" class="flex items-center gap-2 bg-green-50 text-green-700 hover:bg-green-100 px-4 py-2 rounded-xl font-bold text-sm transition-colors shadow-sm">
-                <x-heroicon-s-document-arrow-down class="w-5 h-5" />
-                تصدير (CSV)
-            </a>
-            <button onclick="window.print()" class="flex items-center gap-2 bg-navy text-white hover:bg-navy-dark px-4 py-2 rounded-xl font-bold text-sm transition-colors shadow-sm">
-                <x-heroicon-s-printer class="w-5 h-5" />
-                طباعة التقرير
-            </button>
-        </div>
-    </div>
-
-    <!-- Print Header (Hidden on Screen) -->
-    <div class="hidden print:block mb-8 text-center border-b-2 border-gray-200 pb-4">
-        <h1 class="text-2xl font-bold text-black mb-2">تقرير نظام الأرشيف</h1>
-        <p class="text-black font-medium text-sm">تاريخ الطباعة: {{ now()->format('Y-m-d H:i') }}</p>
-    </div>
-
-    <!-- Overview Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 p-6 flex items-center gap-6 print:border-gray-300 print:shadow-none">
-            <div class="w-16 h-16 rounded-2xl bg-orange/10 text-orange flex items-center justify-center shrink-0">
-                <x-heroicon-s-folder-open class="w-8 h-8" />
+    <div class="space-y-5">
+        {{-- Header & Export / Print Actions --}}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-amber-50 text-secondary flex items-center justify-center shrink-0" style="color: rgb(217 119 6);">
+                    <x-heroicon-s-chart-bar class="w-5 h-5" />
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-800">تقارير وإحصائيات الأرشيف الإلكتروني</h3>
+                    <p class="text-[11px] text-slate-400">كشف تحليلي لتوزيع الملفات والوثائق الرقمية حسب الأنواع والتصنيفات</p>
+                </div>
             </div>
-            <div>
-                <h4 class="text-black font-bold text-sm mb-1">إجمالي الملفات</h4>
-                <div class="text-3xl font-black text-navy">{{ number_format($totalFiles) }}</div>
+
+            <div class="flex items-center gap-2">
+                <a href="{{ route('archive.reports.export') }}"
+                   class="flex items-center gap-1.5 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/80 px-3.5 py-2 rounded-xl font-bold text-xs transition-colors shadow-2xs">
+                    <x-heroicon-s-document-arrow-down class="w-4 h-4 text-emerald-700" />
+                    <span>تصدير البيانات (CSV)</span>
+                </a>
+                <button type="button" onclick="window.print()"
+                        class="flex items-center gap-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 px-3.5 py-2 rounded-xl font-bold text-xs transition-colors shadow-2xs cursor-pointer">
+                    <x-heroicon-s-printer class="w-4 h-4 text-slate-600" />
+                    <span>طباعة التقرير</span>
+                </button>
             </div>
         </div>
 
-        <div class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 p-6 flex items-center gap-6 print:border-gray-300 print:shadow-none">
-            <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
-                <x-heroicon-s-document-duplicate class="w-8 h-8" />
+        {{-- Print Header (Hidden on Screen) --}}
+        <div class="hidden print:block mb-6 text-center border-b-2 border-slate-200 pb-4">
+            <h1 class="text-2xl font-black text-slate-900 mb-1">بلدية بيت حانون - تقرير نظام الأرشيف الإلكتروني</h1>
+            <p class="text-xs text-slate-500 font-mono">تاريخ الاستخراج: {{ now()->format('Y/m/d H:i') }}</p>
+        </div>
+
+        {{-- Overview KPI Cards (Matching Correspondence Style) --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 print:grid-cols-2">
+            <div class="p-4 rounded-2xl border bg-white border-gray-100 shadow-2xs flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-bold text-slate-500">إجمالي المجلدات والملفات</span>
+                    <div class="text-3xl font-black text-slate-800 tracking-tight mt-1">{{ number_format($totalFiles) }}</div>
+                    <span class="text-[11px] font-semibold text-teal-700">ملف ومجلد مؤرشف في النظام</span>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
+                    <x-heroicon-s-folder-open class="w-6 h-6" />
+                </div>
             </div>
-            <div>
-                <h4 class="text-black font-bold text-sm mb-1">إجمالي الوثائق المرفوعة</h4>
-                <div class="text-3xl font-black text-navy">{{ number_format($totalDocuments) }}</div>
+
+            <div class="p-4 rounded-2xl border bg-white border-gray-100 shadow-2xs flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-bold text-slate-500">إجمالي الوثائق الرقمية المحفوظة</span>
+                    <div class="text-3xl font-black text-slate-800 tracking-tight mt-1">{{ number_format($totalDocuments) }}</div>
+                    <span class="text-[11px] font-semibold text-amber-700">مستند ومرفق رقمي مسجل</span>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-secondary flex items-center justify-center shrink-0" style="color: rgb(217 119 6);">
+                    <x-heroicon-s-document-duplicate class="w-6 h-6" />
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Files By Type -->
-        <div class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 overflow-hidden print:border-gray-300 print:shadow-none">
-            <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50">
-                <h4 class="font-bold text-black flex items-center gap-2">
-                    <x-heroicon-o-chart-pie class="w-5 h-5 text-black" />
-                    توزيع الملفات حسب النوع
-                </h4>
+        {{-- Two Tables: Files by Type & Docs by Category --}}
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            {{-- Files By Type --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div class="px-3.5 py-2.5 border-b border-gray-100 bg-slate-50/70 flex items-center gap-2">
+                    <x-heroicon-o-chart-pie class="w-4 h-4 text-teal-700" />
+                    <h4 class="text-xs font-black text-slate-800">توزيع الملفات حسب نوع المجلد</h4>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs">
+                        <thead>
+                            <tr class="bg-slate-50/80 border-b border-gray-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                                <th class="py-2 px-3">نوع المجلد</th>
+                                <th class="py-2 px-3 w-28 text-center">العدد</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach($filesByType as $type)
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <td class="py-2.5 px-3 font-bold text-slate-800">{{ $type->name }}</td>
+                                <td class="py-2.5 px-3 text-center font-bold text-teal-800 font-mono">{{ number_format($type->files_count) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="p-0">
-                <table class="w-full text-right text-sm">
-                    <thead class="bg-gray-100 text-black text-xs uppercase border-b border-gray-200 font-bold">
-                        <tr>
-                            <th class="px-6 py-3 font-bold text-black">نوع الملف</th>
-                            <th class="px-6 py-3 w-32 text-center font-bold text-black">العدد</th>
+
+            {{-- Documents By Category --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div class="px-3.5 py-2.5 border-b border-gray-100 bg-slate-50/70 flex items-center gap-2">
+                    <x-heroicon-o-tag class="w-4 h-4 text-secondary" style="color: rgb(217 119 6);" />
+                    <h4 class="text-xs font-black text-slate-800">توزيع الوثائق حسب التصنيف الأرشيفي</h4>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs">
+                        <thead>
+                            <tr class="bg-slate-50/80 border-b border-gray-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                                <th class="py-2 px-3">تصنيف الوثيقة</th>
+                                <th class="py-2 px-3 w-28 text-center">العدد</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach($documentsByCategory as $cat)
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <td class="py-2.5 px-3 font-bold text-slate-800">{{ $cat->name }}</td>
+                                <td class="py-2.5 px-3 text-center font-bold text-secondary font-mono" style="color: rgb(217 119 6);">{{ number_format($cat->documents_count) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{-- Recent Uploads Table --}}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="px-3.5 py-2.5 border-b border-gray-100 bg-slate-50/70 flex items-center gap-2">
+                <x-heroicon-o-clock class="w-4 h-4 text-slate-600" />
+                <h4 class="text-xs font-black text-slate-800">أحدث الوثائق المضافة للنظام (آخر 10)</h4>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right text-xs min-w-[550px]">
+                    <thead>
+                        <tr class="bg-slate-50/80 border-b border-gray-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                            <th class="py-2 px-3">رقم الوثيقة</th>
+                            <th class="py-2 px-3">اسم الوثيقة</th>
+                            <th class="py-2 px-3">الملف التابع</th>
+                            <th class="py-2 px-3 text-center">النوع</th>
+                            <th class="py-2 px-3">بواسطة</th>
+                            <th class="py-2 px-3 text-center">التاريخ</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-50">
-                        @foreach($filesByType as $type)
-                        <tr class="hover:bg-gray-50/50 transition-colors">
-                            <td class="px-6 py-3 font-bold text-black">{{ $type->name }}</td>
-                            <td class="px-6 py-3 text-center font-bold text-navy bg-gray-50/30">{{ number_format($type->files_count) }}</td>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse($recentDocuments as $doc)
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="py-2.5 px-3 font-mono font-bold text-slate-700">#{{ $doc->document_no ?: $doc->id }}</td>
+                            <td class="py-2.5 px-3 font-bold text-teal-800">{{ $doc->document_name }}</td>
+                            <td class="py-2.5 px-3 text-slate-700 font-medium">{{ $doc->archiveFile ? $doc->archiveFile->file_name : '—' }}</td>
+                            <td class="py-2.5 px-3 text-center font-mono font-bold text-[10px] text-slate-600 uppercase">{{ strtoupper($doc->document_type) }}</td>
+                            <td class="py-2.5 px-3 text-slate-600">{{ $doc->addedBy ? $doc->addedBy->name : 'موظف' }}</td>
+                            <td class="py-2.5 px-3 text-center font-mono text-[11px] text-slate-500">{{ $doc->created_at->format('Y/m/d') }}</td>
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr>
+                            <td colspan="6" class="py-8 text-center text-slate-400 text-xs">لا توجد وثائق مضافة مؤخراً</td>
+                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Documents By Category -->
-        <div class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 overflow-hidden print:border-gray-300 print:shadow-none">
-            <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50">
-                <h4 class="font-bold text-black flex items-center gap-2">
-                    <x-heroicon-o-tag class="w-5 h-5 text-black" />
-                    توزيع الوثائق حسب التصنيف
-                </h4>
-            </div>
-            <div class="p-0">
-                <table class="w-full text-right text-sm">
-                    <thead class="bg-gray-100 text-black text-xs uppercase border-b border-gray-200 font-bold">
-                        <tr>
-                            <th class="px-6 py-3 font-bold text-black">تصنيف الوثيقة</th>
-                            <th class="px-6 py-3 w-32 text-center font-bold text-black">العدد</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-50">
-                        @foreach($documentsByCategory as $cat)
-                        <tr class="hover:bg-gray-50/50 transition-colors">
-                            <td class="px-6 py-3 font-bold text-black">{{ $cat->name }}</td>
-                            <td class="px-6 py-3 text-center font-bold text-navy bg-gray-50/30">{{ number_format($cat->documents_count) }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
-
-    <!-- Recent Uploads -->
-    <div class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 overflow-hidden print:border-gray-300 print:shadow-none">
-        <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50">
-            <h4 class="font-bold text-black flex items-center gap-2">
-                <x-heroicon-o-clock class="w-5 h-5 text-black" />
-                أحدث الوثائق المضافة (آخر 10)
-            </h4>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-right text-sm">
-                <thead class="bg-gray-100 text-black text-xs uppercase border-b border-gray-200 font-bold">
-                    <tr>
-                        <th class="px-6 py-3 font-bold text-black">رقم الوثيقة</th>
-                        <th class="px-6 py-3 font-bold text-black">الاسم</th>
-                        <th class="px-6 py-3 font-bold text-black">الملف التابع</th>
-                        <th class="px-6 py-3 font-bold text-black">النوع</th>
-                        <th class="px-6 py-3 font-bold text-black">بواسطة</th>
-                        <th class="px-6 py-3 font-bold text-black">التاريخ</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
-                    @forelse($recentDocuments as $doc)
-                    <tr class="hover:bg-gray-50/50 transition-colors">
-                        <td class="px-6 py-3 font-bold text-black">{{ $doc->document_no }}</td>
-                        <td class="px-6 py-3 font-bold text-navy">{{ $doc->document_name }}</td>
-                        <td class="px-6 py-3 font-semibold text-black">{{ $doc->archiveFile ? $doc->archiveFile->file_name : '-' }}</td>
-                        <td class="px-6 py-3 font-bold text-black">{{ strtoupper($doc->document_type) }}</td>
-                        <td class="px-6 py-3 font-semibold text-black">{{ $doc->addedBy ? $doc->addedBy->name : '-' }}</td>
-                        <td class="px-6 py-3 font-semibold text-black" dir="ltr">{{ $doc->created_at->format('Y-m-d') }}</td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">لا توجد وثائق مضافة مؤخراً</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-    
-    <!-- Custom CSS for Print View -->
-    <style>
-        @media print {
-            body { background: #fff !important; }
-            .print\:hidden { display: none !important; }
-            .print\:block { display: block !important; }
-            .shadow-\[0_2px_10px_-3px_rgba\(6\,81\,237\,0\.05\)\] { box-shadow: none !important; }
-            /* Hide the sidebar from archive-layout */
-            aside, .w-1\/4 { display: none !important; }
-            .w-3\/4, .lg\:w-3\/4 { width: 100% !important; margin: 0 !important; }
-        }
-    </style>
 </x-archive-layout>

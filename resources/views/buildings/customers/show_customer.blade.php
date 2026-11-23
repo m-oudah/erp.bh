@@ -32,10 +32,10 @@
             </div>
             
             <div class="flex items-center gap-2 shrink-0">
-                <button type="button" onclick="window.print()" class="inline-flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-3.5 rounded-xl shadow-2xs transition-colors text-xs">
-                    <x-heroicon-o-printer class="w-4 h-4 text-gray-600" />
+                <a href="{{ route('customers.citizens.print', $customer->id) }}" target="_blank" class="inline-flex items-center gap-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200/90 font-bold py-2.5 px-3.5 rounded-xl shadow-2xs transition-colors text-xs cursor-pointer" title="طباعة كشف ملف وسجلات المواطن في نافذة مستقلة">
+                    <x-heroicon-o-printer class="w-4 h-4 text-teal-700" />
                     <span>طباعة الملف</span>
-                </button>
+                </a>
                 @if(auth()->user()?->can('Update-Citizen') || auth()->user()?->can('Update-Client') || auth()->user()?->can('bhm.subscriptions.edit'))
                 <a href="{{ route('customers.citizens.edit', $customer->id) }}" class="inline-flex items-center gap-1.5 bg-orange hover:bg-orange-dark text-white font-bold py-2.5 px-4 rounded-xl shadow-sm transition-colors text-xs">
                     <x-heroicon-o-pencil-square class="w-4 h-4" />
@@ -329,6 +329,39 @@
                     </span>
                 </div>
             </a>
+
+            {{-- CARD 7: DAMAGE RECORDS --}}
+            @if(isset($damageRecords) && $damageRecords->count() > 0)
+            <a href="{{ route('damage.records.index', ['search' => $customer->id_no]) }}" target="_blank" class="bg-white rounded-3xl p-6 border border-rose-100/90 shadow-2xs hover:shadow-lg hover:border-rose-500 hover:-translate-y-1 transition-all flex flex-col justify-between group relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-2.5 h-full bg-rose-500"></div>
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-700 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-rose-700 group-hover:text-white transition-all shadow-xs">
+                            <x-heroicon-o-exclamation-triangle class="w-6 h-6" />
+                        </div>
+                        <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-rose-50 text-rose-800 border border-rose-200">
+                            {{ $damageRecords->count() }} {{ $damageRecords->count() === 1 ? 'سجل حصر أضرار' : 'سجلات حصر أضرار' }}
+                        </span>
+                    </div>
+
+                    <h4 class="text-lg font-black text-gray-900 mb-1.5 group-hover:text-rose-700 transition-colors flex items-center gap-2">
+                        <span>حصر الأضرار والاحتياجات</span>
+                        <x-heroicon-m-arrow-top-right-on-square class="w-4 h-4 text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </h4>
+                    <p class="text-xs text-gray-500 leading-relaxed mb-4">
+                        يوجد <strong>{{ $damageRecords->count() }}</strong> سجل حصر أضرار وتقييم مسجل باسم المواطن في منظومة حصر الأضرار.
+                    </p>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100 flex items-center justify-between">
+                    <span class="text-xs font-bold text-gray-400 group-hover:text-rose-700 transition-colors">منظومة حصر الأضرار</span>
+                    <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-rose-50 text-rose-800 group-hover:bg-rose-700 group-hover:text-white transition-all shadow-2xs">
+                        <span>فتح السجلات</span>
+                        <x-heroicon-m-arrow-top-right-on-square class="w-3.5 h-3.5" />
+                    </span>
+                </div>
+            </a>
+            @endif
 
         </div>
 

@@ -484,7 +484,7 @@
         }
     </script>
 
-    <div x-data="buildingEditor({{ $building->id }}, {{ json_encode(old('file_number', $building->file_number ?? '')) }}, {{ json_encode($archiveFileData ?? null) }})" class="space-y-6 max-w-7xl mx-auto pb-16">
+    <div x-data="buildingEditor({{ $building->id }}, {{ json_encode(old('file_number', $building->file_number ?? '')) }}, {{ json_encode($archiveFileData ?? null) }})" class="space-y-6 w-full pb-16">
 
         {{-- Form Start --}}
         <form action="{{ route('buildings.buildings.update', $building->id) }}"

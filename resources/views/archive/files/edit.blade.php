@@ -1,12 +1,12 @@
-<x-archive-layout>
+<x-archive-layout :with-sidebar="false">
     <div class="flex justify-between items-center mb-2 px-1">
-        <h3 class="font-bold text-lg text-black flex items-center gap-2">
-            <x-heroicon-o-pencil-square class="w-5 h-5 text-black" />
-            تعديل الملف: {{ $file->file_name }}
+        <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+            <x-heroicon-o-pencil-square class="w-5 h-5 text-secondary" style="color: rgb(217 119 6);" />
+            <span>تعديل الملف: {{ $file->file_name }}</span>
         </h3>
-        <a href="{{ route('archive.files.show', $file->id) }}" class="text-sm text-black hover:text-navy flex items-center gap-1 font-bold">
-            <x-heroicon-o-arrow-right class="w-4 h-4" />
-            العودة للملف
+        <a href="{{ route('archive.files.show', $file->id) }}" class="flex items-center gap-2 text-xs font-bold text-slate-700 hover:text-slate-900 transition-colors bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-xl">
+            <span>العودة للملف</span>
+            <x-heroicon-o-arrow-left class="w-4 h-4" />
         </a>
     </div>
 

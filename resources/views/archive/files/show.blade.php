@@ -1,11 +1,11 @@
-<x-archive-layout>
+<x-archive-layout :with-sidebar="false">
     <div class="flex justify-between items-center mb-2 px-1">
-        <h3 class="font-bold text-lg text-black flex items-center gap-2">
-            <x-heroicon-s-folder-open class="w-6 h-6 text-orange" />
-            تفاصيل الملف: {{ $file->file_no }}
+        <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+            <x-heroicon-s-folder-open class="w-6 h-6 text-secondary" style="color: rgb(217 119 6);" />
+            <span>تفاصيل الملف: {{ $file->file_no }}</span>
         </h3>
-        <a href="{{ route('archive.files.index') }}" class="flex items-center gap-2 text-sm font-bold text-black hover:text-navy-dark transition-colors bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl">
-            الرجوع للقائمة
+        <a href="{{ route('archive.files.index') }}" class="flex items-center gap-2 text-xs font-bold text-slate-700 hover:text-slate-900 transition-colors bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-xl">
+            <span>الرجوع لسجل الملفات</span>
             <x-heroicon-o-arrow-left class="w-4 h-4" />
         </a>
     </div>

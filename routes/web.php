@@ -108,3 +108,4 @@ require __DIR__.'/transactions.php';
 require __DIR__.'/correspondence.php';
 require __DIR__.'/portal.php';
 require __DIR__.'/hr.php';
+require __DIR__.'/damage.php';

@@ -1,311 +1,436 @@
 <x-buildings-layout>
     <div class="space-y-6">
 
-        {{-- Page Header --}}
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
-                <p class="text-gray-400 mt-1 text-sm">إحصائيات ونظرة عامة على نظام التنظيم والأبنية والتراخيص</p>
+        {{-- 1. Main Stats Cards (Damage Module Style) --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {{-- Card 1: Total Buildings --}}
+            <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs relative overflow-hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-bold text-slate-500">إجمالي المباني المسجلة</span>
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <x-heroicon-s-building-office class="w-5 h-5" />
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-black text-slate-900">{{ number_format($stats['total_buildings']) }}</span>
+                    <span class="text-xs font-bold text-slate-400">مبنى ومنشأة</span>
+                </div>
+                <div class="mt-3 flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg w-fit">
+                    <x-heroicon-s-check-circle class="w-3.5 h-3.5" />
+                    <span>تم التوثيق والمسح الميداني (GIS)</span>
+                </div>
             </div>
-            <div class="text-xs text-gray-400 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 font-medium">
-                <x-heroicon-o-clock class="w-3.5 h-3.5 inline-block mb-0.5" />
-                {{ now()->translatedFormat('l، d F Y') }}
+
+            {{-- Card 2: Total Units & Real Estate Wealth --}}
+            <div class="bg-white rounded-3xl p-5 border border-blue-200 shadow-xs relative overflow-hidden bg-gradient-to-br from-white to-blue-50/40">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-bold text-blue-950">إجمالي الوحدات العقارية</span>
+                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm shadow-blue-600/30">
+                        <x-heroicon-s-squares-plus class="w-5 h-5" />
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-black text-blue-700">{{ number_format($stats['total_units']) }}</span>
+                    <span class="text-xs font-bold text-blue-900">وحدة عقارية</span>
+                </div>
+                <div class="mt-3 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                    <span>إضافة طوابق:</span>
+                    <span class="font-black text-blue-800">{{ number_format($stats['adding_new_floor']) }} مبنى قيد التوسعة</span>
+                </div>
+            </div>
+
+            {{-- Card 3: Construction & Compliance Stages --}}
+            <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-bold text-slate-500">حالة التراخيص والامتثال</span>
+                    <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                        <x-heroicon-s-shield-check class="w-5 h-5" />
+                    </div>
+                </div>
+                <div class="space-y-1.5 text-xs font-bold">
+                    <div class="flex items-center justify-between">
+                        <span class="text-emerald-600 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> مرخص ومستوفٍ الرسوم
+                        </span>
+                        <span class="font-extrabold text-emerald-700">{{ number_format($stats['licensed_compliant']) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-amber-600 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> غير مستوفٍ / متبقي طوابق
+                        </span>
+                        <span class="font-extrabold text-amber-700">{{ number_format($stats['licensed_non_compliant'] + $stats['licensed_pending_floor']) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-rose-600 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-rose-500"></span> غير مرخص
+                        </span>
+                        <span class="font-extrabold text-rose-700">{{ number_format($stats['unlicensed']) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Card 4: Building Licenses & Approvals --}}
+            <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-bold text-slate-500">معاملات التراخيص الهندسية</span>
+                    <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+                        <x-heroicon-s-document-check class="w-5 h-5" />
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-black text-slate-900">{{ number_format($stats['total_licenses']) }}</span>
+                    <span class="text-xs font-bold text-slate-400">معاملة ترخيص</span>
+                </div>
+                <div class="mt-3 flex items-center justify-between text-xs font-bold pt-2 border-t border-slate-100">
+                    <span class="text-emerald-700">معتمدة: {{ number_format($stats['approved_licenses']) }}</span>
+                    <span class="text-amber-600">قيد الإجراء: {{ number_format($stats['pending_licenses']) }}</span>
+                </div>
             </div>
         </div>
 
-        {{-- Main 2-Column Grid: Buildings (Right) & Licenses (Left) --}}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-
-            {{-- ==================== RIGHT COLUMN: BUILDINGS (إدارة المباني) ==================== --}}
-            <div class="space-y-4">
-                <div class="flex items-center justify-between mb-1">
-                    <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-xs">
-                            <x-heroicon-s-building-office class="w-4 h-4" />
-                        </div>
-                        <h3 class="text-base font-bold text-gray-800">إدارة المباني</h3>
-                    </div>
-                    <a href="{{ route('buildings.buildings.index') }}" class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
-                        <span>سجل المباني الكامل</span>
-                        <x-heroicon-s-chevron-left class="w-3.5 h-3.5" />
-                    </a>
-                </div>
-
-                {{-- Primary card: total buildings --}}
-                <a href="{{ route('buildings.buildings.index') }}"
-                   class="flex items-center gap-5 rounded-3xl px-6 py-5 hover:-translate-y-0.5 transition-transform duration-300 block group"
-                   style="background: linear-gradient(to left, #1d4ed8, #1e40af); box-shadow: 0 8px 30px -3px rgba(37,99,235,0.35);">
-                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style="background:rgba(255,255,255,0.15);">
-                        <x-heroicon-s-building-office class="w-7 h-7 text-white" />
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-xs font-semibold mb-1" style="color:rgba(219,234,254,0.85);">إجمالي المباني المسجلة</div>
-                        <div class="text-3xl font-black text-white leading-none">{{ number_format($stats['total_buildings']) }}</div>
-                    </div>
-                    <div class="text-xs font-bold shrink-0 flex items-center gap-1 text-white/90 group-hover:text-white">
-                        <span>عرض الكل</span>
-                        <x-heroicon-s-chevron-left class="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                    </div>
+        {{-- 2. Building Types Performance Breakdown --}}
+        <div>
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-base font-black text-slate-900">التصنيف الإنشائي وتوزيع أنماط المباني</h2>
+                <a href="{{ route('buildings.buildings.index') }}" class="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                    <span>عرض كافة سجلات المباني</span>
+                    <x-heroicon-s-arrow-left class="w-3.5 h-3.5" />
                 </a>
+            </div>
 
-                {{-- Sub-stats grid: building license status (2x2) - Interactive Filter Links --}}
-                <div class="grid grid-cols-2 gap-3">
-
-                    {{-- 1. Unlicensed --}}
-                    <a href="{{ route('buildings.buildings.index', ['construction_status' => 0]) }}"
-                       class="bg-white rounded-2xl p-4 border border-red-100 shadow-[0_2px_10px_-3px_rgba(239,68,68,0.08)] hover:-translate-y-1 hover:shadow-md transition-all duration-200 block group cursor-pointer"
-                       title="استعلام وعرض المباني غير المرخصة">
-                        <div class="flex items-center justify-between mb-2.5">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-red-50 text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors flex items-center justify-center shrink-0">
-                                    <x-heroicon-s-x-circle class="w-4 h-4" />
-                                </div>
-                                <span class="text-xs font-bold text-gray-700 group-hover:text-red-600 transition-colors leading-tight">مباني غير مرخصة</span>
-                            </div>
-                            <x-heroicon-s-chevron-left class="w-4 h-4 text-gray-300 group-hover:text-red-500 group-hover:-translate-x-0.5 transition-all" />
-                        </div>
-                        <div class="text-2xl font-extrabold text-red-600">{{ number_format($stats['unlicensed']) }}</div>
-                        <div class="text-[10px] text-gray-400 mt-1 flex items-center justify-between">
-                            <span>{{ $stats['total_buildings'] > 0 ? number_format(($stats['unlicensed'] / $stats['total_buildings']) * 100, 1) : 0 }}% من الإجمالي</span>
-                            <span class="text-red-500 font-bold group-hover:underline">عرض المباني ←</span>
-                        </div>
-                    </a>
-
-                    {{-- 2. Licensed Non-Compliant (fees) --}}
-                    <a href="{{ route('buildings.buildings.index', ['construction_status' => 2]) }}"
-                       class="bg-white rounded-2xl p-4 border border-amber-100 shadow-[0_2px_10px_-3px_rgba(245,158,11,0.08)] hover:-translate-y-1 hover:shadow-md transition-all duration-200 block group cursor-pointer"
-                       title="استعلام وعرض المباني المرخصة وغير المستوفية للرسوم">
-                        <div class="flex items-center justify-between mb-2.5">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-colors flex items-center justify-center shrink-0">
-                                    <x-heroicon-s-exclamation-triangle class="w-4 h-4" />
-                                </div>
-                                <span class="text-xs font-bold text-gray-700 group-hover:text-amber-600 transition-colors leading-tight">غير مستوفية الرسوم</span>
-                            </div>
-                            <x-heroicon-s-chevron-left class="w-4 h-4 text-gray-300 group-hover:text-amber-500 group-hover:-translate-x-0.5 transition-all" />
-                        </div>
-                        <div class="text-2xl font-extrabold text-amber-600">{{ number_format($stats['licensed_non_compliant']) }}</div>
-                        <div class="text-[10px] text-gray-400 mt-1 flex items-center justify-between">
-                            <span>{{ $stats['total_buildings'] > 0 ? number_format(($stats['licensed_non_compliant'] / $stats['total_buildings']) * 100, 1) : 0 }}% من الإجمالي</span>
-                            <span class="text-amber-600 font-bold group-hover:underline">عرض المباني ←</span>
-                        </div>
-                    </a>
-
-                    {{-- 3. Licensed Pending Floor --}}
-                    <a href="{{ route('buildings.buildings.index', ['construction_status' => 3]) }}"
-                       class="bg-white rounded-2xl p-4 border border-orange-100 shadow-[0_2px_10px_-3px_rgba(249,115,22,0.08)] hover:-translate-y-1 hover:shadow-md transition-all duration-200 block group cursor-pointer"
-                       title="استعلام وعرض المباني المرخصة ومتبقي طوابق">
-                        <div class="flex items-center justify-between mb-2.5">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-orange-50 text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-colors flex items-center justify-center shrink-0">
-                                    <x-heroicon-s-arrow-up-circle class="w-4 h-4" />
-                                </div>
-                                <span class="text-xs font-bold text-gray-700 group-hover:text-orange-600 transition-colors leading-tight">مرخصة ومتبقي طوابق</span>
-                            </div>
-                            <x-heroicon-s-chevron-left class="w-4 h-4 text-gray-300 group-hover:text-orange-500 group-hover:-translate-x-0.5 transition-all" />
-                        </div>
-                        <div class="text-2xl font-extrabold text-orange-600">{{ number_format($stats['licensed_pending_floor']) }}</div>
-                        <div class="text-[10px] text-gray-400 mt-1 flex items-center justify-between">
-                            <span>{{ $stats['total_buildings'] > 0 ? number_format(($stats['licensed_pending_floor'] / $stats['total_buildings']) * 100, 1) : 0 }}% من الإجمالي</span>
-                            <span class="text-orange-600 font-bold group-hover:underline">عرض المباني ←</span>
-                        </div>
-                    </a>
-
-                    {{-- 4. Licensed Compliant --}}
-                    <a href="{{ route('buildings.buildings.index', ['construction_status' => 1]) }}"
-                       class="bg-white rounded-2xl p-4 border border-emerald-100 shadow-[0_2px_10px_-3px_rgba(16,185,129,0.08)] hover:-translate-y-1 hover:shadow-md transition-all duration-200 block group cursor-pointer"
-                       title="استعلام وعرض المباني المرخصة والمستوفية للرسوم تماماً">
-                        <div class="flex items-center justify-between mb-2.5">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors flex items-center justify-center shrink-0">
-                                    <x-heroicon-s-check-circle class="w-4 h-4" />
-                                </div>
-                                <span class="text-xs font-bold text-gray-700 group-hover:text-emerald-600 transition-colors leading-tight">مستوفية الرسوم تماماً</span>
-                            </div>
-                            <x-heroicon-s-chevron-left class="w-4 h-4 text-gray-300 group-hover:text-emerald-500 group-hover:-translate-x-0.5 transition-all" />
-                        </div>
-                        <div class="text-2xl font-extrabold text-emerald-600">{{ number_format($stats['licensed_compliant']) }}</div>
-                        <div class="text-[10px] text-gray-400 mt-1 flex items-center justify-between">
-                            <span>{{ $stats['total_buildings'] > 0 ? number_format(($stats['licensed_compliant'] / $stats['total_buildings']) * 100, 1) : 0 }}% من الإجمالي</span>
-                            <span class="text-emerald-600 font-bold group-hover:underline">عرض المباني ←</span>
-                        </div>
-                    </a>
-
-                </div>
-
-                {{-- Extra tags row: historical / abandoned / adding floor - Interactive Filter Links --}}
-                <div class="flex flex-wrap gap-2.5 pt-1">
-                    <a href="{{ route('buildings.buildings.index', ['historical' => 1]) }}"
-                       class="flex items-center gap-2 bg-purple-50 hover:bg-purple-100 border border-purple-100 rounded-xl px-3.5 py-2 transition-all cursor-pointer group hover:-translate-y-0.5 shadow-2xs"
-                       title="استعلام وعرض المباني التاريخية">
-                        <x-heroicon-s-building-library class="w-4 h-4 text-purple-600" />
-                        <span class="text-xs font-bold text-purple-700 group-hover:underline">مباني تاريخية</span>
-                        <span class="text-xs font-extrabold text-purple-900 bg-purple-100/80 px-1.5 py-0.5 rounded-md">{{ number_format($stats['historical']) }}</span>
-                    </a>
-                    <a href="{{ route('buildings.buildings.index', ['abandoned' => 1]) }}"
-                       class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-xl px-3.5 py-2 transition-all cursor-pointer group hover:-translate-y-0.5 shadow-2xs"
-                       title="استعلام وعرض المباني المهجورة">
-                        <x-heroicon-s-no-symbol class="w-4 h-4 text-gray-500" />
-                        <span class="text-xs font-bold text-gray-700 group-hover:underline">مباني مهجورة</span>
-                        <span class="text-xs font-extrabold text-gray-800 bg-white px-1.5 py-0.5 rounded-md">{{ number_format($stats['abandoned']) }}</span>
-                    </a>
-                    <a href="{{ route('buildings.buildings.index', ['adding_new_floor' => 1]) }}"
-                       class="flex items-center gap-2 bg-sky-50 hover:bg-sky-100 border border-sky-100 rounded-xl px-3.5 py-2 transition-all cursor-pointer group hover:-translate-y-0.5 shadow-2xs"
-                       title="استعلام وعرض مباني إضافة طوابق جديدة">
-                        <x-heroicon-s-squares-plus class="w-4 h-4 text-sky-600" />
-                        <span class="text-xs font-bold text-sky-700 group-hover:underline">إضافة طوابق</span>
-                        <span class="text-xs font-extrabold text-sky-900 bg-sky-100/80 px-1.5 py-0.5 rounded-md">{{ number_format($stats['adding_new_floor']) }}</span>
-                    </a>
-                </div>
-
-                {{-- Quick Link to Units --}}
-                <a href="{{ route('buildings.units.index') }}"
-                   class="flex items-center justify-between p-4 bg-gradient-to-l from-indigo-50 to-blue-50/50 hover:from-indigo-100 hover:to-blue-100/70 border border-blue-200/80 rounded-2xl transition-all cursor-pointer group shadow-2xs hover:-translate-y-0.5">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-2xs">
-                            <x-heroicon-s-squares-plus class="w-5 h-5" />
-                        </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                @foreach($topBuildingTypes as $bt)
+                    @php
+                        $bPercent = $stats['total_buildings'] > 0 ? round(($bt->count / $stats['total_buildings']) * 100, 1) : 0;
+                    @endphp
+                    <a href="{{ route('buildings.buildings.index', ['building_type_id' => $bt->building_type_id]) }}"
+                       class="bg-white rounded-3xl p-4 border border-slate-200/80 hover:border-blue-400 shadow-xs hover:shadow-md transition-all group flex flex-col justify-between">
                         <div>
-                            <div class="text-xs font-black text-gray-900 group-hover:text-blue-900">سجل الوحدات العقارية (bhm_units)</div>
-                            <div class="text-[11px] text-gray-500 font-medium">استعلام وبحث وإدارة وتعديل الوحدات واستخداماتها وملاكها</div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-black text-slate-800 group-hover:text-blue-600 transition-colors">
+                                    {{ $bt->name }}
+                                </span>
+                                <span class="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                    {{ $bPercent }}%
+                                </span>
+                            </div>
+                            <div class="text-2xl font-black text-slate-900 mb-1">
+                                {{ number_format($bt->count) }}
+                            </div>
+                            <div class="text-xs font-bold text-blue-600">
+                                مبنى ومنشأة
+                            </div>
                         </div>
+
+                        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                            <span>استعراض المباني</span>
+                            <x-heroicon-s-arrow-left class="w-3.5 h-3.5 text-slate-400 group-hover:-translate-x-1 transition-transform" />
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- 3. Construction Compliance & Top Zones Grid --}}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {{-- Construction Status Bars Card --}}
+            <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-black text-slate-900 mb-4 flex items-center gap-2">
+                        <x-heroicon-s-chart-pie class="w-5 h-5 text-blue-600" />
+                        <span>مستويات الامتثال والتراخيص الإنشائية</span>
+                    </h3>
+
+                    @php
+                        $statuses = [
+                            [
+                                'label' => 'مرخص ومستوفٍ الرسوم تماماً',
+                                'count' => $stats['licensed_compliant'],
+                                'color' => 'bg-emerald-500',
+                                'filter' => 1
+                            ],
+                            [
+                                'label' => 'مرخص وغير مستوفٍ الرسوم',
+                                'count' => $stats['licensed_non_compliant'],
+                                'color' => 'bg-amber-500',
+                                'filter' => 2
+                            ],
+                            [
+                                'label' => 'مرخص ومتبقي طوابق إضافية',
+                                'count' => $stats['licensed_pending_floor'],
+                                'color' => 'bg-orange-500',
+                                'filter' => 3
+                            ],
+                            [
+                                'label' => 'مباني غير مرخصة',
+                                'count' => $stats['unlicensed'],
+                                'color' => 'bg-rose-500',
+                                'filter' => 0
+                            ],
+                        ];
+                    @endphp
+
+                    <div class="space-y-4">
+                        @foreach($statuses as $st)
+                            @php
+                                $sPct = $stats['total_buildings'] > 0 ? round(($st['count'] / $stats['total_buildings']) * 100, 1) : 0;
+                            @endphp
+                            <div>
+                                <div class="flex items-center justify-between text-xs font-bold mb-1.5">
+                                    <a href="{{ route('buildings.buildings.index', ['construction_status' => $st['filter']]) }}" class="text-slate-700 hover:text-blue-600 transition-colors">
+                                        {{ $st['label'] }}
+                                    </a>
+                                    <span class="text-slate-900 font-extrabold">{{ number_format($st['count']) }} ({{ $sPct }}%)</span>
+                                </div>
+                                <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full {{ $st['color'] }} rounded-full" style="width: {{ $sPct }}%"></div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-black text-blue-800 bg-white px-2.5 py-1 rounded-lg border border-blue-200 shadow-2xs">
-                            {{ number_format($stats['total_units'] ?? 0) }} وحدة
-                        </span>
-                        <x-heroicon-s-chevron-left class="w-4 h-4 text-blue-600 group-hover:-translate-x-1 transition-transform" />
+                </div>
+
+                <div class="mt-6 space-y-3">
+                    <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 text-xs text-slate-600 leading-relaxed font-medium">
+                        <span class="font-bold text-slate-800">ملاحظة تنظيمية:</span> تخضع المباني غير المرخصة لإجراءات التسوية والتسجيل الميداني مع ربط ملفاتها بالأرشيف الإلكتروني المركزي وسجل التراخيص.
                     </div>
+
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <a href="{{ route('buildings.buildings.index', ['historical' => 1]) }}"
+                           class="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 border border-purple-100 rounded-xl px-3 py-1.5 text-xs font-bold text-purple-700 transition-all">
+                            <x-heroicon-s-building-library class="w-3.5 h-3.5 text-purple-600" />
+                            <span>مباني تاريخية:</span>
+                            <span class="font-extrabold text-purple-900">{{ number_format($stats['historical']) }}</span>
+                        </a>
+                        <a href="{{ route('buildings.buildings.index', ['abandoned' => 1]) }}"
+                           class="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-700 transition-all">
+                            <x-heroicon-s-no-symbol class="w-3.5 h-3.5 text-gray-500" />
+                            <span>مهجورة:</span>
+                            <span class="font-extrabold text-gray-900">{{ number_format($stats['abandoned']) }}</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Top Zones Table --}}
+            <div class="lg:col-span-2 bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-black text-slate-900 flex items-center gap-2">
+                        <x-heroicon-s-map-pin class="w-5 h-5 text-blue-600" />
+                        <span>توزيع المباني حسب الأحياء والمناطق السكنية</span>
+                    </h3>
+                    <a href="{{ route('buildings.buildings.index') }}" class="text-xs font-bold text-blue-600 flex items-center gap-1">
+                        <span>عرض كافة الأحياء</span>
+                        <x-heroicon-s-arrow-left class="w-3.5 h-3.5" />
+                    </a>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-slate-400 font-bold">
+                                <th class="pb-2.5">المنطقة / الحي</th>
+                                <th class="pb-2.5">عدد المباني</th>
+                                <th class="pb-2.5">نسبة التركز العمراني</th>
+                                <th class="pb-2.5 text-center">إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium">
+                            @forelse($zoneStats as $z)
+                                @php
+                                    $zoneName = $zones[$z->zone_id] ?? ('حي رقم ' . $z->zone_id);
+                                    $zPct = $stats['total_buildings'] > 0 ? round(($z->count / $stats['total_buildings']) * 100, 1) : 0;
+                                @endphp
+                                <tr class="hover:bg-slate-50/80 transition-colors">
+                                    <td class="py-3 font-bold text-slate-900 flex items-center gap-2">
+                                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                                        <span>{{ $zoneName }}</span>
+                                    </td>
+                                    <td class="py-3 font-extrabold text-slate-800">{{ number_format($z->count) }} مبنى</td>
+                                    <td class="py-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-24 sm:w-36 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                <div class="h-full bg-blue-600 rounded-full" style="width: {{ min(100, $zPct * 2.5) }}%"></div>
+                                            </div>
+                                            <span class="text-[11px] font-bold text-slate-600">{{ $zPct }}%</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 text-center">
+                                        <a href="{{ route('buildings.buildings.index', ['zone_id' => $z->zone_id]) }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition-colors">
+                                            تصفية المباني
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="py-6 text-center text-slate-400">لا توجد بيانات متاحة</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{-- 4. Recent Buildings Table --}}
+        <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <x-heroicon-s-clock class="w-5 h-5 text-blue-600" />
+                    <span>أحدث المباني والمنشآت المسجلة والمحدثة</span>
+                </h3>
+                <a href="{{ route('buildings.buildings.index') }}" class="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                    <span>عرض السجل الكامل</span>
+                    <x-heroicon-s-arrow-left class="w-3.5 h-3.5" />
                 </a>
             </div>
 
-            {{-- ==================== LEFT COLUMN: LICENSES (ملخص طلبات التراخيص) ==================== --}}
-            <div class="space-y-4">
-                <div class="flex items-center justify-between mb-1">
-                    <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-xs">
-                            <x-heroicon-s-document-check class="w-4 h-4" />
-                        </div>
-                        <h3 class="text-base font-bold text-gray-800">ملخص طلبات التراخيص</h3>
-                    </div>
-                    <a href="{{ route('buildings.licenses.index') }}" class="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1">
-                        <span>سجل التراخيص</span>
-                        <x-heroicon-s-chevron-left class="w-3.5 h-3.5" />
-                    </a>
-                </div>
-
-                {{-- Primary card: total licenses --}}
-                <a href="{{ route('buildings.licenses.index') }}"
-                   class="flex items-center gap-5 rounded-3xl px-6 py-5 hover:-translate-y-0.5 transition-transform duration-300 block group"
-                   style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 8px 30px -3px rgba(16,185,129,0.30);">
-                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style="background:rgba(255,255,255,0.15);">
-                        <x-heroicon-s-document-check class="w-7 h-7 text-white" />
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-xs font-semibold mb-1" style="color:rgba(209,250,229,0.85);">إجمالي طلبات التراخيص</div>
-                        <div class="text-3xl font-black text-white leading-none">{{ number_format($stats['total_licenses']) }}</div>
-                    </div>
-                    <div class="text-xs font-bold shrink-0 flex items-center gap-1 text-white/90 group-hover:text-white">
-                        <span>عرض الكل</span>
-                        <x-heroicon-s-chevron-left class="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                    </div>
-                </a>
-
-                {{-- Sub-stats grid: licenses status (2x2 matching buildings) - Interactive Filter Links --}}
-                <div class="grid grid-cols-2 gap-3">
-
-                    {{-- 1. Approved Licenses --}}
-                    <a href="{{ route('buildings.licenses.index', ['status' => 1]) }}"
-                       class="bg-white rounded-2xl p-4 border border-emerald-100 shadow-[0_2px_10px_-3px_rgba(16,185,129,0.08)] hover:-translate-y-1 hover:shadow-md transition-all duration-200 block group cursor-pointer"
-                       title="استعلام وعرض طلبات التراخيص المعتمدة">
-                        <div class="flex items-center justify-between mb-2.5">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors flex items-center justify-center shrink-0">
-                                    <x-heroicon-s-check-badge class="w-4 h-4" />
-                                </div>
-                                <span class="text-xs font-bold text-gray-700 group-hover:text-emerald-700 transition-colors leading-tight">طلبات معتمدة ومصدرة</span>
-                            </div>
-                            <x-heroicon-s-chevron-left class="w-4 h-4 text-gray-300 group-hover:text-emerald-500 group-hover:-translate-x-0.5 transition-all" />
-                        </div>
-                        <div class="text-2xl font-extrabold text-emerald-600">{{ number_format($stats['approved_licenses']) }}</div>
-                        <div class="text-[10px] text-gray-400 mt-1 flex items-center justify-between">
-                            <span>{{ $stats['total_licenses'] > 0 ? number_format(($stats['approved_licenses'] / $stats['total_licenses']) * 100, 1) : 0 }}% من الإجمالي</span>
-                            <span class="text-emerald-600 font-bold group-hover:underline">عرض الطلبات ←</span>
-                        </div>
-                    </a>
-
-                    {{-- 2. Pending Licenses --}}
-                    <a href="{{ route('buildings.licenses.index', ['status' => 0]) }}"
-                       class="bg-white rounded-2xl p-4 border border-amber-100 shadow-[0_2px_10px_-3px_rgba(245,158,11,0.08)] hover:-translate-y-1 hover:shadow-md transition-all duration-200 block group cursor-pointer"
-                       title="استعلام وعرض طلبات التراخيص المعلقة">
-                        <div class="flex items-center justify-between mb-2.5">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-colors flex items-center justify-center shrink-0">
-                                    <x-heroicon-s-clock class="w-4 h-4" />
-                                </div>
-                                <span class="text-xs font-bold text-gray-700 group-hover:text-amber-700 transition-colors leading-tight">طلبات معلقة وقيد الإجراء</span>
-                            </div>
-                            <x-heroicon-s-chevron-left class="w-4 h-4 text-gray-300 group-hover:text-amber-500 group-hover:-translate-x-0.5 transition-all" />
-                        </div>
-                        <div class="text-2xl font-extrabold text-amber-600">{{ number_format($stats['pending_licenses']) }}</div>
-                        <div class="text-[10px] text-gray-400 mt-1 flex items-center justify-between">
-                            <span>{{ $stats['total_licenses'] > 0 ? number_format(($stats['pending_licenses'] / $stats['total_licenses']) * 100, 1) : 0 }}% من الإجمالي</span>
-                            <span class="text-amber-600 font-bold group-hover:underline">عرض الطلبات ←</span>
-                        </div>
-                    </a>
-
-                    {{-- 3. Approval Rate --}}
-                    <div class="bg-white rounded-2xl p-4 border border-teal-100 shadow-[0_2px_10px_-3px_rgba(13,148,136,0.08)] hover:-translate-y-0.5 transition-transform duration-200">
-                        <div class="flex items-center gap-2 mb-2.5">
-                            <div class="w-7 h-7 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-                                <x-heroicon-s-chart-bar class="w-4 h-4" />
-                            </div>
-                            <span class="text-xs font-bold text-gray-600 leading-tight">نسبة إنجاز المعاملات</span>
-                        </div>
-                        <div class="text-2xl font-extrabold text-teal-700">
-                            {{ $stats['total_licenses'] > 0 ? number_format(($stats['approved_licenses'] / $stats['total_licenses']) * 100, 0) : 0 }}%
-                        </div>
-                        <div class="text-[10px] text-gray-400 mt-1">
-                            معاملات استوفت الاعتماد
-                        </div>
-                    </div>
-
-                    {{-- 4. Search & Manage Quick Action --}}
-                    <a href="{{ route('buildings.licenses.index') }}"
-                       class="bg-white rounded-2xl p-4 border border-slate-200/80 hover:border-emerald-300 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.04)] hover:-translate-y-1 hover:shadow-md transition-all duration-200 flex flex-col justify-between group">
-                        <div class="flex items-center gap-2 mb-2.5">
-                            <div class="w-7 h-7 rounded-lg bg-slate-50 text-secondary group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors flex items-center justify-center shrink-0">
-                                <x-heroicon-s-magnifying-glass class="w-4 h-4" />
-                            </div>
-                            <span class="text-xs font-bold text-gray-600 leading-tight">البحث والفحص الفني</span>
-                        </div>
-                        <div class="text-xs font-bold text-emerald-700 flex items-center justify-between">
-                            <span>فتح السجل الكامل</span>
-                            <x-heroicon-s-arrow-left class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" />
-                        </div>
-                        <div class="text-[10px] text-gray-400 mt-1">
-                            ربط المواطنين والملفات
-                        </div>
-                    </a>
-
-                </div>
-
-                {{-- Extra tags row for licenses --}}
-                <div class="flex flex-wrap gap-2.5 pt-1">
-                    <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3.5 py-2">
-                        <x-heroicon-s-user-group class="w-4 h-4 text-emerald-600" />
-                        <span class="text-xs font-bold text-emerald-700">ربط المواطنين بالمعاملات</span>
-                        <span class="text-xs font-bold text-emerald-800 bg-emerald-100/60 px-1.5 py-0.5 rounded-md">مفعّل</span>
-                    </div>
-                    <div class="flex items-center gap-2 bg-teal-50 border border-teal-100 rounded-xl px-3.5 py-2">
-                        <x-heroicon-s-archive-box class="w-4 h-4 text-teal-600" />
-                        <span class="text-xs font-bold text-teal-700">ربط الأرشيف المركزي</span>
-                        <span class="text-xs font-bold text-teal-800 bg-teal-100/60 px-1.5 py-0.5 rounded-md">متاح</span>
-                    </div>
-                </div>
-
+            <div class="overflow-x-auto">
+                <table class="w-full text-right text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-100 text-slate-400 font-bold">
+                            <th class="pb-3">رقم المبنى / الملف</th>
+                            <th class="pb-3">المالك الرئيسي</th>
+                            <th class="pb-3">نوع المبنى</th>
+                            <th class="pb-3">الموقع / الحوض والقطعة</th>
+                            <th class="pb-3">الحالة الإنشائية والتنظيمية</th>
+                            <th class="pb-3 text-center">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-medium">
+                        @forelse($recentBuildings as $bld)
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <td class="py-3 font-mono font-bold text-blue-700">
+                                    <div>#{{ $bld->building_number ?: $bld->id }}</div>
+                                    @if($bld->file_number)
+                                        <div class="text-[11px] font-normal text-slate-400">ملف: {{ $bld->file_number }}</div>
+                                    @endif
+                                </td>
+                                <td class="py-3 font-bold text-slate-900">
+                                    {{ $bld->main_owner?->full_name ?? ($bld->building_name ?: 'غير محدد') }}
+                                    @if($bld->owners->count() > 1)
+                                        <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-normal mr-1">
+                                            +{{ $bld->owners->count() - 1 }} شركاء
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="py-3">
+                                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700">
+                                        {{ $bld->buildingType?->name ?? 'غير محدد' }}
+                                    </span>
+                                </td>
+                                <td class="py-3 text-slate-600">
+                                    @if($bld->zone)
+                                        <div>{{ $bld->zone->zone_name }}</div>
+                                    @endif
+                                    @if($bld->street)
+                                        <div class="text-[11px] text-slate-500">{{ $bld->street->street_name }}</div>
+                                    @endif
+                                    @if($bld->block_number || $bld->parcel_number)
+                                        <div class="text-[10px] text-slate-400 font-mono">حوض: {{ $bld->block_number ?: '-' }} / قطعة: {{ $bld->parcel_number ?: '-' }}</div>
+                                    @endif
+                                </td>
+                                <td class="py-3">
+                                    @if($bld->construction_status === 1)
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> مرخص ومستوفٍ
+                                        </span>
+                                    @elseif($bld->construction_status === 2)
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> غير مستوفٍ الرسوم
+                                        </span>
+                                    @elseif($bld->construction_status === 3)
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span> متبقي طوابق
+                                        </span>
+                                    @elseif($bld->construction_status === 0)
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> غير مرخص
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                            قيد التدقيق
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="py-3 text-center">
+                                    <a href="{{ route('buildings.buildings.show', $bld->id) }}" class="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs border border-blue-200 transition-colors">
+                                        <span>تفاصيل</span>
+                                        <x-heroicon-s-arrow-left class="w-3.5 h-3.5" />
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-slate-400">لا توجد مباني مسجلة حديثاً</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
+        </div>
 
+        {{-- 5. Quick Actions Strip --}}
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
+            <a href="{{ route('buildings.buildings.create') }}" class="bg-white p-3.5 rounded-2xl border border-slate-200/80 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all flex items-center gap-3 group">
+                <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <x-heroicon-s-plus class="w-5 h-5" />
+                </div>
+                <div class="min-w-0">
+                    <div class="text-xs font-bold text-slate-800 truncate">إضافة مبنى</div>
+                    <div class="text-[10px] text-slate-400">تسجيل عقار جديد</div>
+                </div>
+            </a>
+
+            <a href="{{ route('buildings.units.create') }}" class="bg-white p-3.5 rounded-2xl border border-slate-200/80 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all flex items-center gap-3 group">
+                <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                    <x-heroicon-s-squares-plus class="w-5 h-5" />
+                </div>
+                <div class="min-w-0">
+                    <div class="text-xs font-bold text-slate-800 truncate">إضافة وحدة</div>
+                    <div class="text-[10px] text-slate-400">شقة أو محل أو مخزن</div>
+                </div>
+            </a>
+
+            <a href="{{ route('buildings.licenses.index') }}" class="bg-white p-3.5 rounded-2xl border border-slate-200/80 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all flex items-center gap-3 group">
+                <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    <x-heroicon-s-document-check class="w-5 h-5" />
+                </div>
+                <div class="min-w-0">
+                    <div class="text-xs font-bold text-slate-800 truncate">سجل التراخيص</div>
+                    <div class="text-[10px] text-slate-400">متابعة المعاملات</div>
+                </div>
+            </a>
+
+            <a href="{{ route('buildings.streets.index') }}" class="bg-white p-3.5 rounded-2xl border border-slate-200/80 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all flex items-center gap-3 group">
+                <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                    <x-heroicon-s-map-pin class="w-5 h-5" />
+                </div>
+                <div class="min-w-0">
+                    <div class="text-xs font-bold text-slate-800 truncate">دليل الشوارع</div>
+                    <div class="text-[10px] text-slate-400">المحاور والأحياء</div>
+                </div>
+            </a>
+
+            <a href="{{ route('buildings.units.index') }}" class="bg-white p-3.5 rounded-2xl border border-slate-200/80 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all flex items-center gap-3 group">
+                <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                    <x-heroicon-s-table-cells class="w-5 h-5" />
+                </div>
+                <div class="min-w-0">
+                    <div class="text-xs font-bold text-slate-800 truncate">سجل الوحدات</div>
+                    <div class="text-[10px] text-slate-400">جدول الوحدات الشامل</div>
+                </div>
+            </a>
+
+            <a href="{{ route('archive.index') }}" class="bg-white p-3.5 rounded-2xl border border-slate-200/80 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all flex items-center gap-3 group">
+                <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                    <x-heroicon-s-archive-box class="w-5 h-5" />
+                </div>
+                <div class="min-w-0">
+                    <div class="text-xs font-bold text-slate-800 truncate">الأرشيف المركزي</div>
+                    <div class="text-[10px] text-slate-400">الملفات الهندسية</div>
+                </div>
+            </a>
         </div>
 
     </div>

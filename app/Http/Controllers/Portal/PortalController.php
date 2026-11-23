@@ -534,5 +534,32 @@ class PortalController extends Controller
 
         return view('portal.crafts.index', compact('crafts', 'citizenName', 'idCard'));
     }
+
+    /**
+     * Issue Official Electronic Damage Assessment Certificate with QR Code for citizen.
+     */
+    public function damageCertificate($buildingId)
+    {
+        $idCard = session('portal_citizen_id');
+
+        $record = \App\Models\Damage\DamageRecord::where('entity_type', 'building')
+            ->where('entity_id', $buildingId)
+            ->first();
+
+        if (!$record) {
+            $record = \App\Models\Damage\DamageRecord::where('citizen_national_id', $idCard)->first();
+        }
+
+        if (!$record) {
+            return redirect()->back()->with('error', 'عذراً، لم يتم العثور على سجل حصر أضرار مرتبط بهذا المبنى.');
+        }
+
+        CitizenAccessLog::logAction($idCard, session('portal_citizen_mobile'), session('portal_citizen_name'), 'print_damage_certificate', ['record_id' => $record->id]);
+
+        $verificationUrl = route('damage.verify-certificate', $record->certificate_uuid);
+        $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&format=svg&data=' . urlencode($verificationUrl);
+
+        return view('damage.certificate.print', compact('record', 'verificationUrl', 'qrUrl'));
+    }
 }
 

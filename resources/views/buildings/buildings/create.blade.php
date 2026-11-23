@@ -156,7 +156,7 @@
         window.buildingPhotoCreator = buildingPhotoCreator;
     </script>
 
-    <div x-data="buildingCreator({{ json_encode(old('file_number', '')) }}, null)" class="space-y-6 max-w-7xl mx-auto pb-16">
+    <div x-data="buildingCreator({{ json_encode(old('file_number', '')) }}, null)" class="space-y-6 w-full pb-16">
 
         {{-- Form Start --}}
         <form action="{{ route('buildings.buildings.store') }}"

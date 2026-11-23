@@ -62,6 +62,35 @@ class BhmDashboardController extends Controller
             'dangerous_economical'     => $dangerousEconomical,
         ];
 
-        return view('buildings.dashboard', compact('stats'));
+        // Top Building Types
+        $topBuildingTypes = BhmBuilding::select('building_type_id', DB::raw('count(*) as count'))
+            ->whereNotNull('building_type_id')
+            ->groupBy('building_type_id')
+            ->orderByDesc('count')
+            ->take(5)
+            ->get()
+            ->map(function ($item) {
+                $type = \App\Models\Buildings\BhmBuildingType::find($item->building_type_id);
+                $item->name = $type ? $type->name : 'غير محدد';
+                return $item;
+            });
+
+        // Top Zones Stats
+        $zoneStats = BhmBuilding::select('zone_id', DB::raw('count(*) as count'))
+            ->whereNotNull('zone_id')
+            ->groupBy('zone_id')
+            ->orderByDesc('count')
+            ->take(6)
+            ->get();
+
+        $zones = \App\Models\Buildings\BhmZone::pluck('zone_name', 'id');
+
+        // Recent Buildings
+        $recentBuildings = BhmBuilding::with(['zone', 'street', 'owners', 'buildingType'])
+            ->latest()
+            ->take(6)
+            ->get();
+
+        return view('buildings.dashboard', compact('stats', 'topBuildingTypes', 'zoneStats', 'zones', 'recentBuildings'));
     }
 }

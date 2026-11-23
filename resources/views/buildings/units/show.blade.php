@@ -1,5 +1,5 @@
 <x-buildings-layout>
-    <div class="space-y-6 max-w-6xl mx-auto pb-12">
+    <div class="space-y-6 w-full pb-12">
 
         {{-- Page Header --}}
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -62,52 +62,80 @@
         </div>
         @endif
 
-        {{-- Key Facts Banner --}}
-        <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
-            <div class="absolute -left-10 -bottom-10 opacity-10 pointer-events-none">
-                <x-heroicon-s-squares-plus class="w-64 h-64 text-white" />
-            </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-6 relative z-10">
-                <div>
-                    <div class="text-[11px] text-blue-200 font-bold">رقم الوحدة</div>
-                    <div class="text-2xl font-black text-white mt-1">#{{ $unit->unit_number ?: $unit->id }}</div>
-                    <div class="text-[10px] text-blue-300 mt-0.5">في الطابق: {{ $unit->floor ? $unit->floor->floor_name : ('طابق ' . ($unit->floor_number ?? '0')) }}</div>
-                </div>
-
-                <div>
-                    <div class="text-[11px] text-blue-200 font-bold">المبنى التابعة له</div>
-                    <div class="text-xl font-black text-amber-300 mt-1 truncate">
-                        {{ $unit->building ? $unit->building->display_name : 'غير محدد' }}
+        {{-- Key Facts Box (معلومات الوحدة والمبنى والاستخدام) --}}
+        <div class="bg-white rounded-3xl p-6 border border-gray-200/90 shadow-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {{-- 1. Unit Number --}}
+                <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-200/70 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-gray-700">رقم الوحدة</span>
+                        <div class="w-8 h-8 rounded-xl bg-gray-200/80 text-black flex items-center justify-center">
+                            <x-heroicon-s-squares-plus class="w-4 h-4 text-black" />
+                        </div>
                     </div>
-                    <div class="text-[10px] text-blue-300 mt-0.5 font-mono">
-                        {{ $unit->building?->file_number ? ('ملف: ' . $unit->building->file_number) : '—' }}
+                    <div>
+                        <div class="text-2xl font-black text-black">#{{ $unit->unit_number ?: $unit->id }}</div>
+                        <div class="text-xs font-bold text-gray-800 mt-1">في الطابق: {{ $unit->floor ? $unit->floor->floor_name : ('طابق ' . ($unit->floor_number ?? '0')) }}</div>
                     </div>
                 </div>
 
-                <div>
-                    <div class="text-[11px] text-blue-200 font-bold">طبيعة الاستخدام</div>
-                    <div class="text-lg font-black text-emerald-300 mt-1 truncate">
-                        {{ implode(' • ', $unit->usages_list) ?: 'غير محدد' }}
+                {{-- 2. Building / Owner --}}
+                <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-200/70 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-gray-700">المبنى التابعة له</span>
+                        <div class="w-8 h-8 rounded-xl bg-gray-200/80 text-black flex items-center justify-center">
+                            <x-heroicon-s-building-office class="w-4 h-4 text-black" />
+                        </div>
                     </div>
-                    <div class="text-[10px] text-blue-300 mt-0.5">
-                        {{ $unit->profession_name ?: 'بدون مسمى مهني' }}
+                    <div>
+                        <div class="text-base font-black text-black truncate" title="{{ $unit->building ? $unit->building->display_name : 'غير محدد' }}">
+                            {{ $unit->building ? $unit->building->display_name : 'غير محدد' }}
+                        </div>
+                        <div class="text-xs font-mono font-bold text-gray-800 mt-1">
+                            {{ $unit->building?->file_number ? ('ملف: ' . $unit->building->file_number) : '—' }}
+                        </div>
                     </div>
                 </div>
 
-                <div>
-                    <div class="text-[11px] text-blue-200 font-bold">الوضع الراهن</div>
-                    <div class="text-lg font-black text-white mt-1">
-                        @switch((int)$unit->current_situation)
-                            @case(1) قائم ومستغل @break
-                            @case(2) قائم وشاغر @break
-                            @case(3) قيد الإنشاء @break
-                            @case(4) مهجور @break
-                            @default قائم
-                        @endswitch
+                {{-- 3. Usages --}}
+                <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-200/70 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-gray-700">طبيعة الاستخدام</span>
+                        <div class="w-8 h-8 rounded-xl bg-gray-200/80 text-black flex items-center justify-center">
+                            <x-heroicon-s-home class="w-4 h-4 text-black" />
+                        </div>
                     </div>
-                    <div class="text-[10px] text-blue-300 mt-0.5">
-                        تاريخ التسجيل: {{ $unit->creation_date ?: ($unit->created_at ? $unit->created_at->format('Y-m-d') : '—') }}
+                    <div>
+                        <div class="text-base font-black text-black truncate" title="{{ implode(' • ', $unit->usages_list) ?: 'غير محدد' }}">
+                            {{ implode(' • ', $unit->usages_list) ?: 'غير محدد' }}
+                        </div>
+                        <div class="text-xs font-bold text-gray-800 mt-1 truncate">
+                            {{ $unit->profession_name ?: 'بدون مسمى مهني' }}
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 4. Status & Registration Date --}}
+                <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-200/70 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-gray-700">الوضع الراهن</span>
+                        <div class="w-8 h-8 rounded-xl bg-gray-200/80 text-black flex items-center justify-center">
+                            <x-heroicon-s-check-circle class="w-4 h-4 text-black" />
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-base font-black text-black">
+                            @switch((int)$unit->current_situation)
+                                @case(1) قائم ومستغل @break
+                                @case(2) قائم وشاغر @break
+                                @case(3) قيد الإنشاء @break
+                                @case(4) مهجور @break
+                                @default قائم
+                            @endswitch
+                        </div>
+                        <div class="text-xs font-bold text-gray-800 mt-1">
+                            تاريخ التسجيل: {{ $unit->creation_date ?: ($unit->created_at ? $unit->created_at->format('Y-m-d') : '—') }}
+                        </div>
                     </div>
                 </div>
             </div>

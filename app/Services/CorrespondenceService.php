@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ArchiveFile;
 use App\Models\ArchiveFileType;
+use App\Models\Correspondence\Department;
 use App\Models\Correspondence\InternalMemo;
 use App\Models\Correspondence\MemoAttachment;
 use App\Models\Correspondence\MemoMovement;
@@ -38,7 +39,7 @@ class CorrespondenceService
                 'status' => 'قيد المعالجة',
                 'created_by' => $creator->id,
                 'current_assignee_id' => $data['current_assignee_id'] ?? null,
-                'target_department_id' => $data['target_department_id'] ?? null,
+                'target_department_id' => (!empty($data['target_department_id']) && Department::where('id', $data['target_department_id'])->exists()) ? $data['target_department_id'] : null,
                 'linked_archive_file_id' => $data['linked_archive_file_id'] ?? null,
                 'due_date' => $data['due_date'] ?? null,
             ]);
@@ -48,10 +49,14 @@ class CorrespondenceService
             $recipients = User::whereIn('id', $recipientIds)->get();
 
             foreach ($recipients as $recUser) {
+                $recDeptId = (!empty($recUser->department_id) && Department::where('id', $recUser->department_id)->exists())
+                    ? $recUser->department_id
+                    : null;
+
                 DB::table('memo_recipients')->updateOrInsert(
                     ['memo_id' => $memo->id, 'user_id' => $recUser->id],
                     [
-                        'department_id' => $recUser->department_id,
+                        'department_id' => $recDeptId,
                         'status' => 'قيد المعالجة',
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -117,10 +122,14 @@ class CorrespondenceService
 
             // 1. Add all forwarded recipients to memo_recipients
             foreach ($toUsers as $user) {
+                $userDeptId = (!empty($user->department_id) && Department::where('id', $user->department_id)->exists())
+                    ? $user->department_id
+                    : null;
+
                 DB::table('memo_recipients')->updateOrInsert(
                     ['memo_id' => $memo->id, 'user_id' => $user->id],
                     [
-                        'department_id' => $user->department_id,
+                        'department_id' => $userDeptId,
                         'status' => 'قيد المعالجة',
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -131,11 +140,15 @@ class CorrespondenceService
             // 2. Create Movement for each recipient
             $movements = [];
             foreach ($toUsers as $user) {
+                $userDeptId = (!empty($user->department_id) && Department::where('id', $user->department_id)->exists())
+                    ? $user->department_id
+                    : null;
+
                 $m = MemoMovement::create([
                     'memo_id' => $memo->id,
                     'from_user_id' => $fromUser->id,
                     'to_user_id' => $user->id,
-                    'to_department_id' => $user->department_id,
+                    'to_department_id' => $userDeptId,
                     'action_type' => 'تحويل مع توجيه إداري',
                     'directive_text' => $directiveText,
                 ]);

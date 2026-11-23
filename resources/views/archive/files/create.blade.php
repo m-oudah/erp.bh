@@ -1,9 +1,13 @@
-<x-archive-layout>
+<x-archive-layout :with-sidebar="false">
     <div class="flex justify-between items-center mb-2 px-1">
-        <h3 class="font-bold text-lg text-black flex items-center gap-2">
-            <x-heroicon-o-plus-circle class="w-5 h-5 text-black" />
-            إضافة ملف / مجلد جديد
+        <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+            <x-heroicon-o-plus-circle class="w-5 h-5 text-secondary" style="color: rgb(217 119 6);" />
+            <span>إضافة ملف / مجلد جديد</span>
         </h3>
+        <a href="{{ route('archive.files.index') }}" class="flex items-center gap-2 text-xs font-bold text-slate-700 hover:text-slate-900 transition-colors bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-xl">
+            <span>الرجوع لسجل الملفات</span>
+            <x-heroicon-o-arrow-left class="w-4 h-4" />
+        </a>
     </div>
 
     <div class="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 overflow-hidden" 

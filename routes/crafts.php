@@ -22,7 +22,43 @@ Route::middleware(['auth', 'verified', 'module.access:crafts'])->prefix('crafts'
             'unlicensed'      => (clone $e)->where('isLicensed', 2)->count(),
         ];
 
-        return view('crafts.dashboard', compact('stats'));
+        $totalCrafts = \App\Models\Crafts\BhmCraft::count();
+
+        // Top Sectors by economical count
+        $topSectors = \App\Models\Buildings\BhmEconomical::select('job_sector_id', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->whereNotNull('job_sector_id')
+            ->groupBy('job_sector_id')
+            ->orderByDesc('count')
+            ->take(5)
+            ->get()
+            ->map(function ($item) {
+                $sec = \App\Models\Buildings\BhmEconomicalSector::find($item->job_sector_id);
+                $item->name = $sec ? ($sec->sector_name ?: $sec->name) : 'قطاع عام';
+                $item->subname = $sec ? $sec->name : '';
+                return $item;
+            });
+
+        // Top Activities for table
+        $sectorStats = \App\Models\Buildings\BhmEconomical::select('job_sector_id', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->whereNotNull('job_sector_id')
+            ->groupBy('job_sector_id')
+            ->orderByDesc('count')
+            ->take(6)
+            ->get()
+            ->map(function ($item) {
+                $sec = \App\Models\Buildings\BhmEconomicalSector::find($item->job_sector_id);
+                $item->sector_title = $sec ? ($sec->sector_name ?: 'عام') : 'عام';
+                $item->activity_name = $sec ? $sec->name : 'نشاط تجاري/خدماتي';
+                return $item;
+            });
+
+        // Recent Economical activities
+        $recentEconomical = \App\Models\Buildings\BhmEconomical::with(['sector', 'category', 'owners', 'building'])
+            ->latest()
+            ->take(6)
+            ->get();
+
+        return view('crafts.dashboard', compact('stats', 'totalCrafts', 'topSectors', 'sectorStats', 'recentEconomical'));
     })->name('dashboard');
     
     // Economical Activities (Crafts)

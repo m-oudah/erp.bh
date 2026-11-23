@@ -95,7 +95,7 @@
                 this.citizenSearch = '';
             }
          }"
-         class="space-y-6 max-w-7xl mx-auto pb-20">
+         class="space-y-6 w-full pb-20">
 
         {{-- Form Start --}}
         <form action="{{ route('crafts.economical.update', $economical->id) }}"

@@ -220,6 +220,23 @@ class BhmCustomerController extends Controller
 
     public function showCustomer($id)
     {
+        $data = $this->getCitizenFullData($id);
+        return view('buildings.customers.show_customer', $data);
+    }
+
+    public function printCitizen($id)
+    {
+        $data = $this->getCitizenFullData($id);
+        $customer = $data['customer'];
+        $verificationUrl = route('customers.citizens.show', $customer->id);
+        $data['verificationUrl'] = $verificationUrl;
+        $data['qrUrl'] = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&format=svg&data=' . urlencode($verificationUrl);
+
+        return view('buildings.customers.print_citizen', $data);
+    }
+
+    protected function getCitizenFullData($id)
+    {
         $customer = BhmCustomer::findOrFail($id);
         $cleanIdNo = trim($customer->id_no);
 
@@ -335,7 +352,21 @@ class BhmCustomerController extends Controller
             ->latest('id')
             ->get();
 
-        return view('buildings.customers.show_customer', compact(
+        // 7. Damage Records (منظومة حصر الأضرار)
+        $damageRecords = collect();
+        if (class_exists(\App\Models\Damage\DamageRecord::class)) {
+            $damageRecords = \App\Models\Damage\DamageRecord::with(['zone', 'pricingCriteria'])
+                ->where(function($q) use ($cleanIdNo, $customer) {
+                    if (!empty($cleanIdNo)) {
+                        $q->where('citizen_national_id', $cleanIdNo)
+                          ->orWhere('citizen_national_id', $customer->id_no);
+                    }
+                })
+                ->latest()
+                ->get();
+        }
+
+        return compact(
             'customer',
             'buildingOwners',
             'buildings',
@@ -344,8 +375,9 @@ class BhmCustomerController extends Controller
             'economicals',
             'transactions',
             'licenses',
-            'subscriptions'
-        ));
+            'subscriptions',
+            'damageRecords'
+        );
     }
 
     public function searchCitizenApi(Request $request)
